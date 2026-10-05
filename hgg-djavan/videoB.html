@@ -1,0 +1,263 @@
+<!doctype html>
+<html lang="pt-br">
+<head>
+<meta charset="utf-8">
+<title>HGG Djavan Oceano B</title>
+<link href="fonts/fonts.css" rel="stylesheet">
+<style>
+  html, body { margin: 0; background: #000; }
+  canvas { display: block; }
+</style>
+</head>
+<body>
+<canvas id="c" width="1080" height="1920"></canvas>
+<script>
+// Creative B: offer-first + "3 motivos" + light studio look. Same audio cut as A (Oceano 1:37.9–2:01.1).
+// Product pixels are drawn untouched: only scale/translate (drop shadow renders beneath the cutout).
+const W = 1080, H = 1920, DUR = 23.2;
+const C = { bg: '#EEEBE6', bg2: '#E2DED7', ink: '#0b0b0c', mute: 'rgba(11,11,12,0.6)', accent: '#E97E78', accentDeep: '#D9605A', white: '#fff' };
+const ctx = document.getElementById('c').getContext('2d');
+
+const IMG = {};
+function load(name, src) {
+  return new Promise((ok, err) => { const i = new Image(); i.onload = () => { IMG[name] = i; ok(); }; i.onerror = err; i.src = src; });
+}
+
+// ---------- easing / helpers ----------
+const clamp = (x, a = 0, b = 1) => Math.min(b, Math.max(a, x));
+const lerp = (a, b, t) => a + (b - a) * t;
+const eio = t => t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
+const eout = t => 1 - Math.pow(1 - t, 3);
+const eback = t => { const c1 = 1.6, c3 = c1 + 1; return 1 + c3 * Math.pow(t - 1, 3) + c1 * Math.pow(t - 1, 2); };
+const prog = (t, a, b) => clamp((t - a) / (b - a));
+function env(t, a, b, fin = 0.3, fout = 0.2) {
+  if (t < a || t > b) return 0;
+  return Math.min(eout(prog(t, a, a + fin)), 1 - eio(prog(t, b - fout, b)));
+}
+function cam(keys, t) {
+  if (t <= keys[0][0]) return keys[0].slice(1);
+  for (let i = 0; i < keys.length - 1; i++) {
+    const [t0, ...a] = keys[i], [t1, ...b] = keys[i + 1];
+    if (t <= t1) { const p = eio(prog(t, t0, t1)); return a.map((v, k) => lerp(v, b[k], p)); }
+  }
+  return keys[keys.length - 1].slice(1);
+}
+function drawProduct(img, cx, cy, s, ay, alpha = 1, dx = 0, shadow = true) {
+  if (alpha <= 0) return;
+  ctx.save();
+  ctx.globalAlpha = alpha;
+  ctx.imageSmoothingEnabled = true; ctx.imageSmoothingQuality = 'high';
+  if (shadow) { ctx.shadowColor = 'rgba(40,30,25,0.35)'; ctx.shadowBlur = 70 * s; ctx.shadowOffsetY = 34 * s; }
+  ctx.translate(540 + dx, ay); ctx.scale(s / 2, s / 2); ctx.translate(-cx * 2, -cy * 2);
+  ctx.drawImage(img, 0, 0);
+  ctx.restore();
+}
+function text(str, x, y, o = {}) {
+  const { size = 60, weight = 800, color = C.ink, align = 'center', alpha = 1, spacing = 0, family = 'Montserrat', italic = false, dy = 0, maxW = 0, scale = 1 } = o;
+  if (alpha <= 0) return;
+  ctx.save();
+  ctx.globalAlpha = alpha;
+  ctx.font = `${italic ? 'italic ' : ''}${weight} ${size}px "${family}"`;
+  ctx.letterSpacing = spacing + 'px';
+  ctx.textAlign = align; ctx.textBaseline = 'middle'; ctx.fillStyle = color;
+  ctx.translate(x, y + dy); ctx.scale(scale, scale);
+  if (maxW) { const w = ctx.measureText(str).width; if (w > maxW) ctx.scale(maxW / w, 1); }
+  ctx.fillText(str, 0, 0);
+  ctx.restore();
+}
+function rrect(x, y, w, h, r) { ctx.beginPath(); ctx.roundRect(x, y, w, h, r); }
+
+// ---------- background ----------
+function background(t, wave = 0) {
+  const g = ctx.createLinearGradient(0, 0, 0, H);
+  g.addColorStop(0, '#F4F2EE'); g.addColorStop(1, C.bg2);
+  ctx.fillStyle = g; ctx.fillRect(0, 0, W, H);
+  // subtle studio light
+  const r = ctx.createRadialGradient(540, 760, 50, 540, 760, 900);
+  r.addColorStop(0, 'rgba(255,255,255,0.75)'); r.addColorStop(1, 'rgba(255,255,255,0)');
+  ctx.fillStyle = r; ctx.fillRect(0, 0, W, H);
+  // ocean rising (only during the "oceano" moment)
+  if (wave > 0) {
+    for (let i = 0; i < 3; i++) {
+      const base = lerp(H + 40, 1380 - i * 60, eout(wave)), amp = 22 + i * 6, ph = t * (1.1 + i * 0.3) + i * 2;
+      ctx.fillStyle = `rgba(233,126,120,${0.16 + i * 0.07})`;
+      ctx.beginPath(); ctx.moveTo(0, H);
+      for (let x = 0; x <= W; x += 10) ctx.lineTo(x, base + i * 70 + Math.sin(x / 130 + ph) * amp);
+      ctx.lineTo(W, H); ctx.closePath(); ctx.fill();
+    }
+  }
+}
+function progressBar(t) {
+  ctx.fillStyle = 'rgba(11,11,12,0.1)'; ctx.fillRect(0, H - 8, W, 8);
+  ctx.fillStyle = C.ink; ctx.fillRect(0, H - 8, W * (t / DUR), 8);
+}
+function flash(t, at, d = 0.16, max = 0.7) {
+  const p = prog(t, at - 0.01, at + d); if (p <= 0 || p >= 1) return;
+  ctx.fillStyle = `rgba(255,255,255,${max * (1 - eout(p))})`; ctx.fillRect(0, 0, W, H);
+}
+// numbered reason header
+function reason(n, l1, l2, t, a, b) {
+  const e = env(t, a, b, 0.28, 0.15);
+  if (e <= 0) return;
+  const bs = eback(prog(t, a, a + 0.35));
+  ctx.save(); ctx.translate(140, 270); ctx.scale(bs, bs);
+  ctx.fillStyle = C.ink; ctx.beginPath(); ctx.arc(0, 0, 58, 0, Math.PI * 2); ctx.fill();
+  ctx.fillStyle = C.white; ctx.font = '900 52px "Montserrat"'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillText('0' + n, 0, 3);
+  ctx.restore();
+  text(l1, 230, 240, { align: 'left', size: 54, weight: 900, alpha: e, dy: (1 - e) * 24, maxW: 800 });
+  text(l2, 230, 305, { align: 'left', size: 34, weight: 600, color: C.mute, alpha: e, dy: (1 - e) * 24, maxW: 800 });
+}
+
+// song cues: "Vem" 0.66 · "amo" 5.4 · "Você" 8.5 · "deságua" 9.82 · "em" 10.78 · "mim" 11.08 · "e" 11.46 · "eu" 11.94 · "oceano" 12.3 · "Esqueço" 14.64
+const T = { r1: 2.8, r2: 4.6, r3: 6.4, lyric: 8.3, ocean: 12.3, offer: 14.4, cta: 18.4 };
+
+function render(t) {
+  ctx.setTransform(1, 0, 0, 1, 0, 0);
+  ctx.clearRect(0, 0, W, H);
+
+  if (t < T.r1) {
+    // ===== HOOK: 45% OFF + model =====
+    background(t);
+    const up = eout(prog(t, 0, 0.6));
+    const s = lerp(0.98, 1.04, prog(t, 0, T.r1));
+    drawProduct(IMG.modeloFrente, 605, 860, s, lerp(1500, 1170, up));
+    // big discount slam
+    const k = prog(t, 0.12, 0.45), ks = k > 0 ? lerp(1.9, 1, eback(k)) : 0;
+    const shake = k > 0 && k < 1 ? Math.sin(t * 90) * 6 * (1 - k) : 0;
+    text('45% OFF', 540 + shake, 255, { size: 190, weight: 900, color: C.accentDeep, alpha: clamp(k * 3), scale: ks, spacing: -4 });
+    const e2 = env(t, 0.55, T.r1 + 0.1);
+    text('CAMISETA DJAVAN OCEANO', 540, 380, { size: 46, weight: 800, alpha: e2, dy: (1 - e2) * 20, spacing: 3 });
+    // price sticker (off the product, beside the head)
+    const sp = eback(prog(t, 1.0, 1.4));
+    if (sp > 0) {
+      ctx.save(); ctx.translate(205, 640); ctx.rotate(-0.16); ctx.scale(sp, sp);
+      ctx.fillStyle = C.ink; ctx.beginPath(); ctx.arc(0, 0, 128, 0, Math.PI * 2); ctx.fill();
+      ctx.fillStyle = C.white; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+      ctx.font = '700 28px "Montserrat"'; ctx.letterSpacing = '4px'; ctx.fillText('POR', 0, -52);
+      ctx.font = '900 66px "Montserrat"'; ctx.letterSpacing = '-1px'; ctx.fillText('R$ 49', 0, 6);
+      ctx.font = '700 26px "Montserrat"'; ctx.letterSpacing = '0px'; ctx.fillStyle = C.accent; ctx.fillText('6x sem juros', 0, 62);
+      ctx.restore();
+    }
+  } else if (t < T.lyric) {
+    // ===== 3 MOTIVOS =====
+    background(t);
+    if (t < T.r2) {
+      const s = lerp(1.25, 1.38, eio(prog(t, T.r1, T.r2)));
+      drawProduct(IMG.frente, 605, 740, s, 1180);
+      reason(1, 'ESTAMPA EXCLUSIVA', 'DTF em alta definição, resistente à lavagem', t, T.r1, T.r2);
+    } else if (t < T.r3) {
+      const s = lerp(1.1, 1.18, eio(prog(t, T.r2, T.r3)));
+      drawProduct(IMG.modeloFrente, 605, 880, s, 1240);
+      reason(2, 'CAIMENTO OVERSIZED', '100% algodão fio 30.1, macio e encorpado', t, T.r2, T.r3);
+    } else {
+      const p = prog(t, T.r3, T.r3 + 0.3);
+      const dx = lerp(-W * 0.9, 0, eout(p));
+      const s = lerp(1.1, 1.17, eio(prog(t, T.r3, T.lyric)));
+      if (p < 1) for (let k = 3; k >= 1; k--) drawProduct(IMG.modeloCostas, 600, 880, s, 1240, 0.12, dx - k * 70 * (1 - p), false);
+      drawProduct(IMG.modeloCostas, 600, 880, s, 1240, 1, dx);
+      reason(3, 'GOLA REFORÇADA', 'Tamanhos M, G e GG', t, T.r3, T.lyric);
+    }
+    flash(t, T.r2); flash(t, T.r3);
+  } else if (t < T.offer) {
+    // ===== LYRIC: word by word, "oceano" hits =====
+    const wave = prog(t, T.ocean - 0.1, T.ocean + 1.2);
+    background(t, wave);
+    const intro = eout(prog(t, T.lyric, T.lyric + 0.5));
+    const s = lerp(1.1, 0.84, intro) + 0.02 * prog(t, T.lyric, T.offer);
+    drawProduct(IMG.frente, 583, 760, s, lerp(1000, 800, intro));
+    const words = [['você', 8.5], ['deságua', 9.82], ['em', 10.78], ['mim,', 11.08], ['e', 11.46], ['eu', 11.94]];
+    ctx.save(); ctx.font = 'italic 500 62px "Playfair Display"';
+    const widths = words.map(([w]) => ctx.measureText(w + ' ').width);
+    ctx.restore();
+    let x = 540 - widths.reduce((a, b) => a + b, 0) / 2;
+    words.forEach(([w, at], i) => {
+      const e = eout(prog(t, at - 0.05, at + 0.25));
+      text(w, x, 1430, { family: 'Playfair Display', italic: true, weight: 500, size: 62, align: 'left', alpha: e, dy: (1 - e) * 18 });
+      x += widths[i];
+    });
+    const oe = prog(t, T.ocean - 0.05, T.ocean + 0.4);
+    if (oe > 0) text('OCEANO', 540, 1580, { size: 150, weight: 900, color: wave > 0.5 ? C.ink : C.accentDeep, alpha: clamp(oe * 3), scale: lerp(1.6, 1, eback(oe)), spacing: 8 });
+    flash(t, T.ocean, 0.2, 0.6);
+  } else {
+    // ===== OFFER + CTA =====
+    background(t);
+    const p = eio(prog(t, T.offer, T.offer + 0.6));
+    const bob = Math.sin((t - T.offer) * 2.2) * 6 * p;
+    drawProduct(IMG.frente, 583, 760, lerp(0.84, 0.5, p), lerp(800, 470, p) + bob);
+    // ticket card
+    const ce = eout(prog(t, T.offer + 0.3, T.offer + 0.75));
+    if (ce > 0) {
+      ctx.save(); ctx.globalAlpha = ce; ctx.translate(0, (1 - ce) * 60);
+      ctx.shadowColor = 'rgba(0,0,0,0.25)'; ctx.shadowBlur = 50; ctx.shadowOffsetY = 20;
+      ctx.fillStyle = C.ink; rrect(90, 805, 900, 480, 40); ctx.fill();
+      ctx.restore();
+      const a = (d) => env(t, T.offer + d, DUR + 1);
+      text('DE R$ 89,90', 540, 880, { size: 40, weight: 700, color: 'rgba(255,255,255,0.55)', alpha: a(0.55) * ce, spacing: 1 });
+      if (a(0.55) > 0) {
+        ctx.save(); ctx.font = '700 40px "Montserrat"'; ctx.letterSpacing = '1px';
+        const w = ctx.measureText('DE R$ 89,90').width, sp = eout(prog(t, T.offer + 0.8, T.offer + 1.1));
+        ctx.strokeStyle = C.accent; ctx.lineWidth = 5; ctx.beginPath(); ctx.moveTo(540 - w / 2 - 8, 882); ctx.lineTo(540 - w / 2 - 8 + (w + 16) * sp, 882); ctx.stroke(); ctx.restore();
+      }
+      const val = lerp(89.9, 49.0, eout(prog(t, T.offer + 0.9, T.offer + 1.6)));
+      text('R$ ' + val.toFixed(2).replace('.', ','), 540, 990, { size: 150, weight: 900, color: C.white, alpha: a(0.85), spacing: -2 });
+      const bp = eback(prog(t, T.offer + 1.6, T.offer + 2.0));
+      if (bp > 0) {
+        ctx.save(); ctx.translate(905, 840); ctx.rotate(0.12); ctx.scale(bp, bp);
+        ctx.fillStyle = C.accent; rrect(-82, -40, 164, 80, 40); ctx.fill();
+        ctx.fillStyle = '#fff'; ctx.font = '900 44px "Montserrat"'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillText('-45%', 0, 2);
+        ctx.restore();
+      }
+      text('R$ 46,55 NO PIX', 540, 1100, { size: 54, weight: 800, color: C.accent, alpha: a(1.7), spacing: 1 });
+      text('ou 6x de R$ 8,17 sem juros', 540, 1162, { size: 36, weight: 600, color: 'rgba(255,255,255,0.75)', alpha: a(1.9) });
+      // size chips
+      const ze = a(2.1);
+      ['M', 'G', 'GG'].forEach((z, i) => {
+        if (ze <= 0) return;
+        const x = 540 + (i - 1) * 120;
+        ctx.save(); ctx.globalAlpha = ze; ctx.strokeStyle = 'rgba(255,255,255,0.5)'; ctx.lineWidth = 2.5; rrect(x - 46, 1197, 92, 56, 28); ctx.stroke(); ctx.restore();
+        text(z, x, 1226, { size: 28, weight: 800, color: C.white, alpha: ze });
+      });
+    }
+    // coupon
+    const ae = env(t, T.offer + 2.4, DUR + 1);
+    if (ae > 0) {
+      ctx.save(); ctx.globalAlpha = ae; ctx.setLineDash([10, 8]); ctx.strokeStyle = 'rgba(11,11,12,0.55)'; ctx.lineWidth = 2.5;
+      rrect(130, 1312, 820, 70, 14); ctx.stroke(); ctx.restore();
+      text('1ª COMPRA? +5% OFF  ·  CUPOM PRIMEIRACOMPRA', 540, 1348, { size: 27, weight: 800, alpha: ae, maxW: 770 });
+    }
+    // CTA
+    const cb = eback(prog(t, T.cta, T.cta + 0.45));
+    if (cb > 0) {
+      const pulse = 1 + 0.035 * Math.sin((t - T.cta) * 7) * clamp((t - T.cta - 0.5) * 2);
+      ctx.save(); ctx.translate(540, 1460); ctx.scale(cb * pulse, cb * pulse);
+      ctx.shadowColor = 'rgba(217,96,90,0.5)'; ctx.shadowBlur = 40; ctx.shadowOffsetY = 10;
+      ctx.fillStyle = C.accentDeep; rrect(-390, -60, 780, 120, 60); ctx.fill();
+      ctx.shadowColor = 'transparent';
+      ctx.fillStyle = '#fff'; ctx.font = '900 46px "Montserrat"'; ctx.letterSpacing = '2px'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+      ctx.fillText('COMPRAR AGORA  →', 0, 3);
+      ctx.restore();
+    }
+    const te = env(t, T.cta + 0.3, DUR + 1);
+    text('COMPRA 100% SEGURA  ·  TROCA FÁCIL', 540, 1565, { size: 27, weight: 700, color: C.mute, alpha: te, spacing: 2 });
+    if (te > 0) { ctx.save(); ctx.globalAlpha = te; ctx.drawImage(IMG.logo, 540 - 68, 1610, 136, 63); ctx.restore(); }
+  }
+  progressBar(t);
+}
+
+window.ready = (async () => {
+  await Promise.all([
+    load('frente', 'build/frente_2x.png'),
+    load('modeloFrente', 'build/modelo_frente_2x.png'),
+    load('modeloCostas', 'build/modelo_costas_2x.png'),
+    load('logo', 'src/logo.svg'),
+  ]);
+  await document.fonts.load('900 40px "Montserrat"');
+  await document.fonts.load('italic 500 40px "Playfair Display"');
+  await document.fonts.ready;
+  render(0);
+  return true;
+})();
+window.renderAt = t => render(t);
+</script>
+</body>
+</html>

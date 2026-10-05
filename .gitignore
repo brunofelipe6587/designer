@@ -1,9 +1,11 @@
 hgg-djavan/audio/
 hgg-djavan/build/still_*.png
-hgg-djavan/build/c*.png
+hgg-djavan/build/c[0-9].png
+hgg-djavan/build/b[0-9].png
+hgg-djavan/build/contact.png
 hgg-djavan/build/grid_*.png
 hgg-djavan/build/*_2x.png
-hgg-djavan/build/final_tiles.png
+hgg-djavan/build/final*_tiles.png
 hgg-djavan/build/check_*.png
-hgg-djavan/out/video_silent.mp4
+hgg-djavan/out/*_silent.mp4
 hgg-djavan/fonts/g.css

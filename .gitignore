@@ -11,3 +11,5 @@ hgg-djavan/build/check_*.png
 hgg-djavan/out/*_silent.mp4
 hgg-djavan/fonts/g.css
 hgg-djavan/build/audio_c.json
+hgg-djavan/build/d[0-9].png
+hgg-djavan/build/foto_*_2x.png

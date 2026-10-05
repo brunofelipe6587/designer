@@ -1,0 +1,174 @@
+<!doctype html>
+<html lang="pt-br">
+<head>
+<meta charset="utf-8">
+<title>HGG Djavan Oceano D</title>
+<link href="fonts/fontsC.css" rel="stylesheet">
+<script src="build/vo_d.js"></script>
+<style>html, body { margin: 0; background: #000; } canvas { display: block; }</style>
+</head>
+<body>
+<canvas id="c" width="1080" height="1920"></canvas>
+<script>
+// Creative D — UGC-style edit with male AI voiceover (pt-BR) + Oceano bed.
+// Original product photos are only scaled/moved/rotated as a whole (handheld camera); pixels untouched.
+const W = 1080, H = 1920, DUR = 21.0;
+const ctx = document.getElementById('c').getContext('2d');
+const IMG = {};
+const load = (n, s) => new Promise((ok, er) => { const i = new Image(); i.onload = () => { IMG[n] = i; ok(); }; i.onerror = er; i.src = s; });
+const clamp = (x, a = 0, b = 1) => Math.min(b, Math.max(a, x));
+const lerp = (a, b, t) => a + (b - a) * t;
+const eio = t => t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
+const eout = t => 1 - Math.pow(1 - t, 3);
+const eout5 = t => 1 - Math.pow(1 - t, 5);
+const eback = t => { const c1 = 1.7, c3 = c1 + 1; return 1 + c3 * Math.pow(t - 1, 3) + c1 * Math.pow(t - 1, 2); };
+const prog = (t, a, b) => clamp((t - a) / (b - a));
+const Wd = window.VO.words;
+const at = i => Wd[i].t;
+
+// ---------- camera ----------
+// shots: [start, img, keys:[[t, cx, cy, s]...]]  (cx,cy in 1200x1600 source coords mapped to screen centre)
+const SHOTS = [
+  [0.0, 'modelo', [[0.0, 605, 790, 1.36], [0.35, 605, 790, 1.22], [1.9, 605, 800, 1.26], [2.35, 610, 900, 2.0], [2.9, 610, 900, 2.08]]],
+  [at(10), 'frente', [[at(10), 605, 640, 2.7], [at(12) - 0.05, 605, 660, 2.5], [at(12) + 0.35, 615, 930, 2.75], [at(15) - 0.05, 615, 960, 2.7], [at(15) + 0.4, 610, 780, 1.75], [at(18), 610, 770, 1.68]]],
+  [at(18), 'frente', [[at(18), 250, 560, 2.7], [at(23), 280, 600, 2.55]]],                 // fabric macro (body of the tee)
+  [at(23), 'modelo', [[at(23), 605, 900, 1.25], [at(26) - 0.05, 605, 860, 1.22], [at(26) + 0.3, 600, 560, 2.7], [at(28), 600, 555, 2.8]]], // fit → collar
+  [at(28), 'frente', [[at(28), 590, 760, 1.25], [at(41), 590, 760, 1.3], [at(51), 590, 760, 1.34]]], // price section (product above captions)
+  [at(51), 'modelo', [[at(51), 605, 860, 1.3], [18.7, 605, 840, 1.22], [19.3, 605, 760, 1.0], [DUR, 605, 760, 1.03]]],
+];
+function camKeys(K, t) {
+  if (t <= K[0][0]) return K[0].slice(1);
+  for (let i = 0; i < K.length - 1; i++) { const [t0, ...a] = K[i], [t1, ...b] = K[i + 1]; if (t <= t1) { const p = eout5(prog(t, t0, t1)); return a.map((v, k) => lerp(v, b[k], p)); } }
+  return K[K.length - 1].slice(1);
+}
+function shake(t) { // handheld phone feel
+  return [7 * Math.sin(1.3 * t) + 3 * Math.sin(3.7 * t + 1) + 1.5 * Math.sin(7.9 * t),
+          6 * Math.sin(1.1 * t + 2) + 2.5 * Math.sin(4.3 * t) + 1.2 * Math.sin(8.7 * t + 3),
+          0.35 * Math.sin(0.9 * t) + 0.12 * Math.sin(3.1 * t)];
+}
+function drawShot(t, ayOverride) {
+  let k = 0; for (let i = 0; i < SHOTS.length; i++) if (t >= SHOTS[i][0]) k = i;
+  const [st, name, K] = SHOTS[k];
+  let [cx, cy, s] = camKeys(K, t);
+  const punch = 1 + 0.07 * (1 - eout(prog(t, st, st + 0.22))) * (k > 0 ? 1 : 0); // jump-cut punch-in
+  s *= punch;
+  const [dx, dy, rot] = shake(t);
+  const ay = ayOverride ?? 960;
+  ctx.save();
+  ctx.fillStyle = '#fff'; ctx.fillRect(0, 0, W, H);
+  ctx.translate(540 + dx, ay + dy); ctx.rotate(rot * Math.PI / 180);
+  ctx.scale(s / 2, s / 2); ctx.translate(-cx * 2, -cy * 2);
+  ctx.imageSmoothingEnabled = true; ctx.imageSmoothingQuality = 'high';
+  ctx.drawImage(IMG[name], 0, 0);
+  ctx.restore();
+  return { k, st };
+}
+
+// ---------- text helpers ----------
+function strokeText(str, x, y, o = {}) {
+  const { size = 78, color = '#fff', stroke = '#000', sw = 14, scale = 1, alpha = 1, font = 'Montserrat', weight = 900, strike = 0, rot = 0 } = o;
+  if (alpha <= 0) return;
+  ctx.save(); ctx.globalAlpha = alpha; ctx.translate(x, y); ctx.rotate(rot); ctx.scale(scale, scale);
+  ctx.font = `${weight} ${size}px "${font}"`; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.lineJoin = 'round';
+  let w = ctx.measureText(str).width; const maxW = 980; if (w > maxW) { ctx.scale(maxW / w, maxW / w); }
+  ctx.shadowColor = 'rgba(0,0,0,0.35)'; ctx.shadowBlur = 16; ctx.shadowOffsetY = 6;
+  ctx.lineWidth = sw; ctx.strokeStyle = stroke; ctx.strokeText(str, 0, 0);
+  ctx.shadowColor = 'transparent'; ctx.fillStyle = color; ctx.fillText(str, 0, 0);
+  if (strike > 0) { ctx.strokeStyle = '#E8473F'; ctx.lineWidth = 10; ctx.beginPath(); ctx.moveTo(-w / 2 - 10, 4); ctx.lineTo(-w / 2 - 10 + (w + 20) * strike, 4); ctx.stroke(); }
+  ctx.restore();
+}
+function boxText(str, x, y, o = {}) { // TikTok-style text box
+  const { size = 46, alpha = 1, bg = '#fff', color = '#000', scale = 1 } = o;
+  if (alpha <= 0) return;
+  ctx.save(); ctx.globalAlpha = alpha; ctx.translate(x, y); ctx.scale(scale, scale);
+  ctx.font = `800 ${size}px "Montserrat"`; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+  const w = ctx.measureText(str).width + 52, h = size + 34;
+  ctx.shadowColor = 'rgba(0,0,0,0.25)'; ctx.shadowBlur = 20; ctx.shadowOffsetY = 6;
+  ctx.fillStyle = bg; ctx.beginPath(); ctx.roundRect(-w / 2, -h / 2, w, h, 16); ctx.fill();
+  ctx.shadowColor = 'transparent'; ctx.fillStyle = color; ctx.fillText(str, 0, 3);
+  ctx.restore();
+}
+
+// caption chunks: [firstWordIdx, lastWordIdx, text, style]
+const CH = [
+  [0, 2, 'OLHA QUE CAMISETA'], [3, 3, 'ABSURDA', 'y'], [4, 7, 'PRA QUEM É FÃ'], [8, 9, 'DE DJAVAN!', 'y'],
+  [10, 11, 'ESTAMPA EXCLUSIVA', 'y'], [12, 14, 'EM ALTA DEFINIÇÃO'], [15, 17, 'RESISTENTE À LAVAGEM'],
+  [18, 22, 'ALGODÃO FIO 30.1', 'y'], [23, 24, 'CAIMENTO OVERSIZED'], [25, 27, 'E GOLA REFORÇADA', 'y'],
+  [28, 33, 'DE R$ 89,90', 'strike'], [34, 35, 'TÁ SAINDO'], [36, 40, 'POR R$ 49,00', 'big'],
+  [41, 43, 'E NO PIX'], [44, 50, 'R$ 46,55', 'big'],
+  [51, 53, 'CORRE NO SITE'], [54, 55, 'DA HGG', 'y'], [56, 59, 'E GARANTE A SUA!'],
+];
+function captions(t, y) {
+  for (let i = 0; i < CH.length; i++) {
+    const [a, b, txt, st] = CH[i], t0 = at(a) - 0.04;
+    const t1 = i + 1 < CH.length ? at(CH[i + 1][0]) - 0.04 : at(b) + 0.9;
+    if (t < t0 || t >= t1) continue;
+    const p = prog(t, t0, t0 + 0.16), sc = lerp(1.35, 1, eback(p));
+    const big = st === 'big', yel = st === 'y' || big;
+    strokeText(txt, 540, y, { size: big ? 118 : 82, color: yel ? '#FFD60A' : '#fff', scale: sc, sw: big ? 18 : 14, strike: st === 'strike' ? eout(prog(t, at(33), at(33) + 0.3)) : 0 });
+  }
+}
+
+function render(t) {
+  ctx.setTransform(1, 0, 0, 1, 0, 0);
+  const endA = eio(prog(t, 18.75, 19.3));
+  drawShot(t, lerp(960, 820, endA));
+  // subtle phone-video grain + light vignette (overlay only, very light)
+  const v = ctx.createRadialGradient(540, 900, 700, 540, 900, 1300); v.addColorStop(0, 'rgba(0,0,0,0)'); v.addColorStop(1, 'rgba(0,0,0,0.18)');
+  ctx.fillStyle = v; ctx.fillRect(0, 0, W, H);
+
+  // hook text box (top)
+  const ha = clamp(prog(t, 0.05, 0.25)) * (1 - prog(t, at(10) - 0.15, at(10)));
+  boxText('achado pra quem ama MPB', 540, 172, { alpha: ha, scale: lerp(0.8, 1, eback(prog(t, 0.05, 0.35))) });
+
+  // price-section helpers (stickers)
+  if (t >= at(28) && t < at(51)) {
+    const sp = eback(prog(t, at(36), at(36) + 0.35));
+    if (sp > 0) { // -45% sticker
+      ctx.save(); ctx.translate(880, 360); ctx.rotate(0.14); ctx.scale(sp, sp);
+      ctx.fillStyle = '#E8473F'; ctx.beginPath(); ctx.arc(0, 0, 105, 0, Math.PI * 2); ctx.fill();
+      ctx.fillStyle = '#fff'; ctx.font = '900 54px Montserrat'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillText('-45%', 0, -8);
+      ctx.font = '800 22px Montserrat'; ctx.fillText('OFF', 0, 38); ctx.restore();
+    }
+    const pa = eout(prog(t, at(46), at(46) + 0.3));
+    if (pa > 0) boxText('ou 6x de R$ 8,17 sem juros', 540, 1615, { alpha: pa, size: 40, scale: lerp(0.9, 1, pa) });
+  }
+  // captions (lower third; lift a bit at the end card)
+  if (t < 18.9) captions(t, 1490);
+
+  // end card
+  if (t >= 18.75) {
+    const a = eout(prog(t, 18.8, 19.25));
+    ctx.save(); ctx.globalAlpha = a; ctx.translate(0, (1 - a) * 80);
+    ctx.shadowColor = 'rgba(0,0,0,0.25)'; ctx.shadowBlur = 40; ctx.shadowOffsetY = 12;
+    ctx.fillStyle = '#fff'; ctx.beginPath(); ctx.roundRect(70, 1300, 940, 380, 40); ctx.fill(); ctx.restore();
+    if (a > 0) {
+      ctx.save(); ctx.globalAlpha = a; ctx.translate(0, (1 - a) * 80);
+      ctx.fillStyle = '#0d0b0a'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+      ctx.font = '800 34px Montserrat'; ctx.fillText('Camiseta Streetwear Djavan Oceano', 540, 1360);
+      ctx.font = '900 92px Montserrat'; ctx.fillText('R$ 49,00', 430, 1450);
+      ctx.fillStyle = '#E8473F'; ctx.font = '800 34px Montserrat'; ctx.fillText('R$ 46,55 no Pix', 800, 1430);
+      ctx.fillStyle = 'rgba(13,11,10,0.6)'; ctx.font = '700 28px Montserrat'; ctx.fillText('6x R$ 8,17 sem juros', 800, 1475);
+      ctx.restore();
+      const cb = eback(prog(t, 19.2, 19.6)), pulse = 1 + 0.03 * Math.sin((t - 19.6) * 7) * clamp((t - 19.7) * 2);
+      if (cb > 0) {
+        ctx.save(); ctx.translate(540, 1590); ctx.scale(cb * pulse, cb * pulse);
+        ctx.fillStyle = '#0d0b0a'; ctx.beginPath(); ctx.roundRect(-400, -58, 800, 116, 58); ctx.fill();
+        ctx.fillStyle = '#fff'; ctx.font = '900 44px Montserrat'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.letterSpacing = '2px';
+        ctx.fillText('COMPRAR AGORA  →', 0, 3); ctx.restore();
+      }
+      const ca = eout(prog(t, 19.5, 19.9));
+      boxText('+5% OFF na 1ª compra: cupom PRIMEIRACOMPRA', 540, 1760, { alpha: ca, size: 30, bg: '#FFD60A' });
+    }
+  }
+}
+
+window.ready = (async () => {
+  await Promise.all([load('modelo', 'build/foto_modelo_2x.png'), load('frente', 'build/foto_frente_2x.png')]);
+  for (const f of ['900 40px Montserrat', '800 40px Montserrat', '700 40px Montserrat']) await document.fonts.load(f);
+  await document.fonts.ready; render(0); return true;
+})();
+window.renderAt = t => render(t);
+</script>
+</body>
+</html>

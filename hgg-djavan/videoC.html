@@ -1,0 +1,441 @@
+<!doctype html>
+<html lang="pt-br">
+<head>
+<meta charset="utf-8">
+<title>HGG Djavan Oceano C</title>
+<link href="fonts/fontsC.css" rel="stylesheet">
+<script src="build/audio_c.js"></script>
+<style>
+  :root { --accent: #E97E78; --accent2: #F2A65A; --ink: #0d0b0a; }
+  html, body { margin: 0; background: #000; overflow: hidden; }
+  #stage { position: relative; width: 1080px; height: 1920px; overflow: hidden; background: var(--ink); font-family: 'Montserrat', sans-serif; color: #fff; }
+  .abs { position: absolute; left: 0; top: 0; will-change: transform, opacity; }
+  #bg { width: 1080px; height: 1920px; }
+  #world { width: 1080px; height: 1920px; perspective: 1900px; perspective-origin: 540px 760px; }
+  /* vinyl */
+  #vinylWrap { width: 600px; height: 600px; }
+  #vinyl { width: 600px; height: 600px; border-radius: 50%; box-shadow: 0 40px 80px rgba(0,0,0,0.6); }
+  #sheen { width: 600px; height: 600px; border-radius: 50%;
+    background: conic-gradient(from 20deg, rgba(255,255,255,0) 0deg, rgba(255,255,255,0.16) 30deg, rgba(255,255,255,0) 70deg, rgba(255,255,255,0) 180deg, rgba(255,255,255,0.12) 210deg, rgba(255,255,255,0) 250deg);
+    mix-blend-mode: screen; }
+  /* album sleeve (3D card) */
+  #sleeve { width: 640px; height: 640px; transform-style: preserve-3d; }
+  .face { position: absolute; inset: 0; backface-visibility: hidden; overflow: hidden; border-radius: 6px;
+    background: radial-gradient(120% 90% at 50% 35%, #2a2522 0%, #141110 55%, #0a0908 100%);
+    box-shadow: 0 50px 90px rgba(0,0,0,0.65), inset 0 0 0 1px rgba(255,255,255,0.06); }
+  .face.back { transform: rotateY(180deg); }
+  .face img { position: absolute; width: 498px; height: 664px; left: 71px; top: 20px; }
+  .face .tl, .face .tr { position: absolute; top: 26px; font: 700 15px 'Space Mono', monospace; letter-spacing: 3px; color: rgba(255,255,255,0.75); }
+  .face .tl { left: 30px; } .face .tr { right: 30px; }
+  .face .title { position: absolute; left: 30px; bottom: 22px; font: italic 900 64px 'Playfair Display', serif; letter-spacing: -1px; line-height: 1; }
+  .face .credit { position: absolute; right: 30px; bottom: 30px; font: 700 15px 'Space Mono', monospace; letter-spacing: 3px; color: var(--accent); text-align: right; line-height: 1.5; }
+  .face .gloss { position: absolute; inset: 0; background: linear-gradient(125deg, rgba(255,255,255,0.10) 0%, rgba(255,255,255,0) 35%, rgba(255,255,255,0) 70%, rgba(255,255,255,0.05) 100%); pointer-events: none; }
+  /* tonearm */
+  #arm { width: 1080px; height: 1920px; }
+  /* texts */
+  .hook1 { font: 900 74px 'Montserrat'; letter-spacing: 1px; text-align: center; width: 1080px; }
+  .hook2 { font: 800 50px 'Montserrat'; letter-spacing: 6px; color: var(--accent); text-align: center; width: 1080px; }
+  .kara { width: 1080px; text-align: center; font: italic 700 84px 'Playfair Display'; line-height: 1.12; }
+  .kara span { display: inline-block; margin: 0 10px; transform-origin: 50% 70%; }
+  .blank { display: inline-block; min-width: 190px; border-bottom: 6px solid rgba(255,255,255,0.55); position: relative; height: 86px; vertical-align: baseline; }
+  .blank b { position: absolute; left: 0; right: 0; bottom: 4px; text-align: center; font: italic 900 92px 'Playfair Display'; color: var(--accent); }
+  .lyric { width: 1080px; text-align: center; font: italic 500 54px 'Playfair Display'; }
+  .lyric span { display: inline-block; margin: 0 7px; }
+  #track { width: 920px; left: 80px; font: 400 33px 'Space Mono', monospace; }
+  #track .hd { font: 700 22px 'Space Mono'; letter-spacing: 6px; color: var(--accent); margin-bottom: 18px; }
+  #track .row { display: flex; align-items: baseline; height: 62px; white-space: nowrap; }
+  #track .n { color: var(--accent); width: 70px; font-weight: 700; }
+  #track .k { color: #fff; font-weight: 700; }
+  #track .dots { flex: 1; border-bottom: 3px dotted rgba(255,255,255,0.35); margin: 0 14px 10px; }
+  #track .v { color: rgba(255,255,255,0.85); }
+  #oceano { width: 1080px; text-align: center; font: italic 900 228px 'Playfair Display'; letter-spacing: -4px; line-height: 1; white-space: nowrap; }
+  #oceano span { display: inline-block; }
+  #model { width: 1200px; height: 1600px; transform-origin: 0 0; }
+  #model img { width: 1200px; height: 1600px; }
+  /* player */
+  #card { left: 70px; width: 940px; height: 1330px; border-radius: 48px; background: rgba(255,255,255,0.065); border: 1.5px solid rgba(255,255,255,0.14);
+    backdrop-filter: blur(28px); box-shadow: 0 40px 120px rgba(0,0,0,0.5); }
+  .ptitle { width: 940px; text-align: center; font: 800 44px 'Montserrat'; }
+  .psub { width: 940px; text-align: center; font: 700 22px 'Space Mono'; letter-spacing: 5px; color: rgba(255,255,255,0.6); }
+  #pbar { left: 140px; width: 800px; height: 10px; border-radius: 5px; background: rgba(255,255,255,0.18); overflow: hidden; }
+  #pbar i { display: block; height: 100%; background: #fff; border-radius: 5px; }
+  .ptime { font: 700 22px 'Space Mono'; color: rgba(255,255,255,0.6); }
+  .strike { width: 1080px; text-align: center; font: 700 40px 'Montserrat'; color: rgba(255,255,255,0.55); }
+  .strike s { text-decoration: none; position: relative; }
+  .strike s::after { content: ''; position: absolute; left: -6px; top: 52%; height: 5px; width: calc(var(--sp, 0) * (100% + 12px)); background: var(--accent); }
+  .price { width: 1080px; text-align: center; font: 900 128px 'Montserrat'; letter-spacing: -3px; }
+  .pix { width: 1080px; text-align: center; font: 700 38px 'Montserrat'; }
+  .pix em { font-style: normal; color: var(--accent); font-weight: 800; }
+  .coupon { left: 170px; width: 740px; height: 66px; border: 2.5px dashed rgba(255,255,255,0.5); border-radius: 14px; text-align: center; line-height: 66px; font: 800 26px 'Montserrat'; letter-spacing: 0.5px; }
+  .badge { width: 170px; height: 78px; border-radius: 39px; background: var(--accent); font: 900 44px 'Montserrat'; text-align: center; line-height: 80px; }
+  #ctrl { width: 1080px; height: 140px; }
+  #cta { left: 540px; height: 124px; border-radius: 62px; background: #fff; color: var(--ink); overflow: hidden; }
+  #cta .txt { position: absolute; inset: 0; text-align: center; line-height: 126px; font: 900 46px 'Montserrat'; letter-spacing: 2px; white-space: nowrap; color: #fff; }
+  .trust { width: 1080px; text-align: center; font: 700 25px 'Montserrat'; letter-spacing: 2px; color: rgba(255,255,255,0.7); }
+  #flash { width: 1080px; height: 1920px; background: #fff; }
+  #sleeve, #world { will-change: auto !important; }
+</style>
+</head>
+<body>
+<div id="stage">
+  <canvas id="bg" class="abs" width="1080" height="1920"></canvas>
+  <div id="oceano" class="abs"></div>
+  <div id="model" class="abs"><img src="build/modelo_frente_2x.png"></div>
+  <div id="card" class="abs"></div>
+  <div id="world" class="abs">
+    <div id="vinylWrap" class="abs"><canvas id="vinyl" class="abs" width="1200" height="1200"></canvas><div id="sheen" class="abs"></div></div>
+    <div id="sleeve" class="abs">
+      <div class="face front">
+        <img src="build/frente_2x.png">
+        <div class="gloss"></div>
+        <div class="tl">HGG STYLE</div><div class="tr">LADO A</div>
+        <div class="title">Oceano</div><div class="credit">DJAVAN<br>MPB</div>
+      </div>
+      <div class="face back">
+        <img src="build/costas_2x.png">
+        <div class="gloss"></div>
+        <div class="tl">HGG STYLE</div><div class="tr">LADO B</div>
+        <div class="title">Ficha técnica</div>
+      </div>
+    </div>
+  </div>
+  <svg id="arm" class="abs" viewBox="0 0 1080 1920">
+    <g id="armG">
+      <circle cx="0" cy="0" r="46" fill="#2b2826" stroke="#5a5450" stroke-width="4"/>
+      <circle cx="0" cy="0" r="16" fill="#8a837d"/>
+      <line x1="0" y1="0" x2="0" y2="540" stroke="#c9c2bb" stroke-width="12" stroke-linecap="round"/>
+      <line x1="0" y1="540" x2="-34" y2="610" stroke="#c9c2bb" stroke-width="12" stroke-linecap="round"/>
+      <rect x="-62" y="598" width="56" height="34" rx="6" fill="#1d1b1a" stroke="#c9c2bb" stroke-width="4" transform="rotate(-25 -34 615)"/>
+    </g>
+  </svg>
+  <div id="shade" class="abs" style="width:1080px;height:1920px;background:linear-gradient(180deg,rgba(13,11,10,0.9) 0%,rgba(13,11,10,0) 22%,rgba(13,11,10,0) 70%,rgba(13,11,10,0.95) 92%)"></div>
+  <div id="hook1" class="abs hook1">SÓ FÃ DE DJAVAN</div>
+  <div id="hook2" class="abs hook2">TERMINA ESSE VERSO:</div>
+  <div id="kara" class="abs kara"></div>
+  <div id="lyric2" class="abs lyric"></div>
+  <div id="lyric3" class="abs lyric"></div>
+  <div id="track" class="abs"></div>
+  <!-- player -->
+  <div id="ptitle" class="abs ptitle">Camiseta Streetwear Djavan Oceano</div>
+  <div id="psub" class="abs psub">TOCANDO AGORA · HGG STYLE</div>
+  <div id="pbar" class="abs"><i></i></div>
+  <div id="pt0" class="abs ptime">1:38</div><div id="pt1" class="abs ptime">4:39</div>
+  <div id="strike" class="abs strike">DE <s>R$ 89,90</s></div>
+  <div id="price" class="abs price">R$ 49,00</div>
+  <div id="badge" class="abs badge">-45%</div>
+  <div id="pix" class="abs pix"><em>R$ 46,55 no Pix</em> · 6x de R$ 8,17 sem juros</div>
+  <div id="coupon" class="abs coupon">1ª COMPRA? +5% OFF · CUPOM PRIMEIRACOMPRA</div>
+  <svg id="ctrl" class="abs" viewBox="0 0 1080 140">
+    <g id="prev" fill="#fff"><rect x="296" y="46" width="10" height="48" rx="3"/><path d="M372 46 L314 70 L372 94 Z"/></g>
+    <g id="next" fill="#fff"><rect x="774" y="46" width="10" height="48" rx="3"/><path d="M708 46 L766 70 L708 94 Z"/></g>
+  </svg>
+  <div id="cta" class="abs"><svg id="playIcon" class="abs" width="124" height="124" viewBox="0 0 124 124"><path d="M50 36 L92 62 L50 88 Z" fill="#0d0b0a"/></svg><div class="txt">COMPRAR AGORA →</div></div>
+  <div id="trust" class="abs trust">COMPRA 100% SEGURA · TROCA FÁCIL</div>
+  <img id="logo" class="abs" src="build/logo_white.svg" width="160" height="74">
+  <div id="flash" class="abs"></div>
+</div>
+<script>
+// Creative C — "O disco": the tee as an album. Audio = 0.45s vinyl intro + Oceano 1:37.9–2:01.1.
+// Product layers (cover image, back image, model) are only scaled/moved/rotated as flat cards — pixels untouched.
+const W = 1080, H = 1920, OFF = 0.45, DUR = 23.2 + OFF;
+const $ = id => document.getElementById(id);
+const clamp = (x, a = 0, b = 1) => Math.min(b, Math.max(a, x));
+const lerp = (a, b, t) => a + (b - a) * t;
+const eio = t => t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
+const eout = t => 1 - Math.pow(1 - t, 3);
+const eout5 = t => 1 - Math.pow(1 - t, 5);
+const eback = t => { const c1 = 1.7, c3 = c1 + 1; return 1 + c3 * Math.pow(t - 1, 3) + c1 * Math.pow(t - 1, 2); };
+const prog = (t, a, b) => clamp((t - a) / (b - a));
+const env = (t, a, b, fin = 0.3, fout = 0.25) => (t < a || t > b) ? 0 : Math.min(eout(prog(t, a, a + fin)), 1 - eio(prog(t, b - fout, b)));
+function css(el, o) { for (const k in o) el.style[k] = o[k]; }
+function show(el, a) { el.style.opacity = a; el.style.visibility = a > 0.001 ? 'visible' : 'hidden'; }
+function keys(K, t) { // [t, ...values] eased
+  if (t <= K[0][0]) return K[0].slice(1);
+  for (let i = 0; i < K.length - 1; i++) { const [t0, ...a] = K[i], [t1, ...b] = K[i + 1]; if (t <= t1) { const p = eio(prog(t, t0, t1)); return a.map((v, k) => lerp(v, b[k], p)); } }
+  return K[K.length - 1].slice(1);
+}
+let AUD = null;
+const frameOf = t => Math.min(AUD.rms.length - 1, Math.max(0, Math.round(t * AUD.fps)));
+const rms = t => AUD.rms[frameOf(t)];
+const bands = t => AUD.bands[frameOf(t)];
+function beat(t, decay = 0.28) { let v = 0; for (const o of AUD.onsets) { if (o > t) break; const d = t - o; if (d < decay) v = Math.max(v, 1 - d / decay); } return v; }
+
+// song word cues (clip time + OFF)
+const S = x => x + OFF;
+const K1 = [['Vem', 0.66], ['me', 1.98], ['fazer', 2.2], ['feliz', 2.66], ['porque', 3.58], ['eu', 4.5], ['te', 5.04]];
+const AMO = S(5.40);
+const K2 = [['você', 8.5], ['deságua', 9.82], ['em', 10.78], ['mim,', 11.08], ['e', 11.46], ['eu', 11.94]];
+const OCEANO = S(12.30);
+const K3 = [['esqueço', 14.64], ['que', 15.96], ['amar', 16.62], ['é', 17.28], ['quase', 18.96], ['uma', 19.84], ['dor', 20.72]];
+const T = { dive: 6.6, back: 8.95, oce: OCEANO, player: 17.1, cta: 20.0 };
+
+// ---------- build DOM pieces ----------
+function buildWords(el, list, lines) {
+  el.innerHTML = lines.map(line => line.map(i => `<span data-i="${i}">${list[i][0]}</span>`).join('')).join('<br>');
+}
+buildWords($('kara'), K1, [[0, 1, 2, 3], [4, 5, 6]]);
+$('kara').innerHTML += '<span class="blank"><b id="amo">amo</b></span>';
+buildWords($('lyric2'), K2, [[0, 1, 2, 3, 4, 5]]);
+buildWords($('lyric3'), K3, [[0, 1, 2, 3, 4, 5, 6]]);
+$('oceano').innerHTML = 'OCEANO'.split('').map(c => `<span>${c}</span>`).join('');
+const TRACK = [['01', 'ESTAMPA', 'DTF alta definição'], ['02', 'TECIDO', '100% algodão fio 30.1'], ['03', 'MODELAGEM', 'Oversized'], ['04', 'GOLA', 'Reforçada'], ['05', 'TAMANHOS', 'M · G · GG']];
+$('track').innerHTML = '<div class="hd">LADO B — FICHA TÉCNICA</div>' + TRACK.map(r => `<div class="row"><span class="n">${r[0]}</span><span class="k">${r[1]}</span><span class="dots"></span><span class="v">${r[2]}</span></div>`).join('');
+
+// ---------- vinyl (drawn once) ----------
+function drawVinyl() {
+  const c = $('vinyl').getContext('2d'), R = 600;
+  c.translate(600, 600);
+  const g = c.createRadialGradient(0, 0, 0, 0, 0, R);
+  g.addColorStop(0, '#151313'); g.addColorStop(1, '#080707');
+  c.fillStyle = g; c.beginPath(); c.arc(0, 0, R, 0, Math.PI * 2); c.fill();
+  for (let r = 215; r < R - 8; r += 2.2) { // grooves
+    c.strokeStyle = `rgba(255,255,255,${0.025 + 0.03 * Math.abs(Math.sin(r * 0.37))})`; c.lineWidth = 1;
+    c.beginPath(); c.arc(0, 0, r, 0, Math.PI * 2); c.stroke();
+  }
+  [330, 455].forEach(r => { c.strokeStyle = 'rgba(0,0,0,0.9)'; c.lineWidth = 6; c.beginPath(); c.arc(0, 0, r, 0, Math.PI * 2); c.stroke(); }); // track gaps
+  // label
+  const lg = c.createRadialGradient(0, 0, 10, 0, 0, 200); lg.addColorStop(0, '#F08E86'); lg.addColorStop(1, '#D9605A');
+  c.fillStyle = lg; c.beginPath(); c.arc(0, 0, 200, 0, Math.PI * 2); c.fill();
+  c.fillStyle = '#0d0b0a'; c.textAlign = 'center'; c.textBaseline = 'middle';
+  c.font = '900 64px Montserrat'; c.fillText('HGG', 0, -88);
+  c.font = 'italic 900 56px "Playfair Display"'; c.fillText('Oceano', 0, 70);
+  c.font = '700 22px "Space Mono"'; c.fillText('LADO A · 33 RPM', 0, 125);
+  c.fillStyle = '#e9e4df'; c.beginPath(); c.arc(0, 0, 16, 0, Math.PI * 2); c.fill();
+}
+
+// ---------- background canvas ----------
+const bg = $('bg').getContext('2d');
+const NOISE = [];
+function makeNoise() {
+  for (let k = 0; k < 6; k++) {
+    const cv = document.createElement('canvas'); cv.width = cv.height = 256;
+    const c = cv.getContext('2d'), im = c.createImageData(256, 256);
+    let s = 1234 + k * 999; const rnd = () => (s = (s * 16807) % 2147483647) / 2147483647;
+    for (let i = 0; i < im.data.length; i += 4) { const v = rnd() * 255; im.data[i] = im.data[i + 1] = im.data[i + 2] = v; im.data[i + 3] = 255; }
+    c.putImageData(im, 0, 0); NOISE.push(cv);
+  }
+}
+function drawBG(t, mode) {
+  const lvl = rms(t), b = beat(t);
+  const g = bg.createLinearGradient(0, 0, 0, H);
+  g.addColorStop(0, '#16110f'); g.addColorStop(0.6, '#0d0a09'); g.addColorStop(1, '#060505');
+  bg.globalCompositeOperation = 'source-over'; bg.globalAlpha = 1; bg.fillStyle = g; bg.fillRect(0, 0, W, H);
+  // breathing glow, audio-reactive
+  const gy = mode === 'oceano' ? 760 : mode === 'player' ? 640 : 760;
+  const r = bg.createRadialGradient(540, gy, 20, 540, gy, 900);
+  r.addColorStop(0, `rgba(233,126,120,${0.16 + 0.22 * lvl + 0.12 * b})`); r.addColorStop(0.5, `rgba(120,60,50,${0.10 + 0.08 * lvl})`); r.addColorStop(1, 'rgba(0,0,0,0)');
+  bg.fillStyle = r; bg.fillRect(0, 0, W, H);
+  // drifting light leaks
+  bg.globalCompositeOperation = 'lighter';
+  [[0.13, 260, 0], [0.09, 840, 2.1], [0.07, 520, 4.2]].forEach(([a, x0, ph]) => {
+    const x = x0 + Math.sin(t * 0.35 + ph) * 180, y = 300 + Math.cos(t * 0.27 + ph) * 260 + (ph > 3 ? 1100 : 0);
+    const lg = bg.createRadialGradient(x, y, 0, x, y, 520);
+    lg.addColorStop(0, `rgba(242,166,90,${a})`); lg.addColorStop(1, 'rgba(242,166,90,0)');
+    bg.fillStyle = lg; bg.fillRect(0, 0, W, H);
+  });
+  bg.globalCompositeOperation = 'source-over';
+  // equalizers
+  const B = bands(t);
+  if (mode === 'vinyl') { // bottom bars
+    const a = env(t, 0.45, T.dive + 0.4, 0.4, 0.4), n = B.length, bw = 22, gap = 10, x0 = 540 - (n * (bw + gap) - gap) / 2;
+    if (a > 0) for (let i = 0; i < n; i++) {
+      const h = 14 + B[i] * 150 * a; bg.fillStyle = `rgba(233,126,120,${0.35 + 0.5 * B[i]})`;
+      bg.beginPath(); bg.roundRect(x0 + i * (bw + gap), 1700 - h, bw, h, 8); bg.fill();
+    }
+  }
+  if (mode === 'oceano') { // radial ring behind the model's head
+    const a = env(t, T.oce, T.player + 0.3, 0.3, 0.4), n = 72, cx = 540, cy = 700;
+    if (a > 0) for (let i = 0; i < n; i++) {
+      const v = B[Math.floor((i < n / 2 ? i : n - 1 - i) / (n / 2) * B.length) % B.length];
+      const ang = -Math.PI / 2 + i / n * Math.PI * 2, r0 = 360 + 20 * b, len = (12 + v * 120) * a;
+      bg.strokeStyle = `rgba(233,126,120,${(0.3 + 0.6 * v) * a})`; bg.lineWidth = 9; bg.lineCap = 'round';
+      bg.beginPath(); bg.moveTo(cx + Math.cos(ang) * r0, cy + Math.sin(ang) * r0); bg.lineTo(cx + Math.cos(ang) * (r0 + len), cy + Math.sin(ang) * (r0 + len)); bg.stroke();
+    }
+  }
+  // film grain + vignette (background layer only)
+  bg.globalAlpha = 0.07; bg.globalCompositeOperation = 'overlay';
+  const nz = NOISE[Math.floor(t * 24) % NOISE.length];
+  for (let y = 0; y < H; y += 256) for (let x = 0; x < W; x += 256) bg.drawImage(nz, x, y);
+  bg.globalAlpha = 1; bg.globalCompositeOperation = 'source-over';
+  const v = bg.createRadialGradient(540, 900, 500, 540, 900, 1300); v.addColorStop(0, 'rgba(0,0,0,0)'); v.addColorStop(1, 'rgba(0,0,0,0.6)');
+  bg.fillStyle = v; bg.fillRect(0, 0, W, H);
+}
+
+// ---------- karaoke helper ----------
+function karaoke(el, list, t, opts = {}) {
+  const { dim = 0.28, accentLast = false } = opts;
+  el.querySelectorAll('span[data-i]').forEach(sp => {
+    const i = +sp.dataset.i, at = S(list[i][1]);
+    const on = prog(t, at - 0.04, at + 0.18), next = i + 1 < list.length ? S(list[i + 1][1]) : at + 0.8;
+    const active = t >= at && t < next;
+    const pop = active ? 1 + 0.08 * (1 - eout(prog(t, at, at + 0.35))) : 1;
+    sp.style.color = `rgba(255,255,255,${lerp(dim, 1, eout(on))})`;
+    sp.style.transform = `scale(${pop}) translateY(${(1 - eout(on)) * 6}px)`;
+    sp.style.textShadow = active ? `0 0 ${24 * (1 - prog(t, at, at + 0.6))}px rgba(233,126,120,0.9)` : 'none';
+  });
+}
+
+// ---------- main render ----------
+function render(t) {
+  const mode = t < T.oce ? 'vinyl' : t < T.player ? 'oceano' : 'player';
+  drawBG(t, mode);
+  const b = beat(t);
+
+  // ===== sleeve + vinyl choreography =====
+  // sleeve: [t, x(center), y(center), scale, rotY, rotX, rotZ]
+  const SL = [
+    [0.0, 360, 820, 0.74, 18, 6, -3],
+    [0.5, 360, 800, 0.85, 14, 5, -2],
+    [6.4, 370, 790, 0.88, 10, 4, -1.5],
+    [7.2, 584, 728, 3.6, 0, 0, 0],      // dive into the print (eyes)
+    [8.3, 560, 520, 3.75, 0, 0, 0],      // drift down toward necklace/signature
+    [9.2, 540, 640, 1.12, 0, 0, 0],      // pull back
+    [12.5, 540, 640, 1.15, 0, 0, 0],
+  ];
+  let [sx, sy, ss, ry, rx, rz] = keys(SL, t);
+  // flip to "Lado B" (back of the tee) and back to front later
+  let flip = 180 * eio(prog(t, 9.25, 10.05));
+  if (t >= T.player) flip = 360;
+  const sleeve = $('sleeve');
+  let sleeveA = env(t, 0.0, T.oce + 0.05, 0.4, 0.12);
+  if (t >= T.player) { // cover art inside the player
+    const p = eout5(prog(t, T.player + 0.1, T.player + 0.8));
+    sx = 540; sy = lerp(1100, 525, p); ss = lerp(0.3, 0.62, p); ry = 0; rx = lerp(25, 0, p); rz = 0;
+    sleeveA = p;
+  }
+  // subtle float + beat bump while it's an object on screen
+  const flo = t < T.dive ? Math.sin(t * 1.4) * 8 : 0;
+  css(sleeve, { transform: `translate(${sx - 320}px, ${sy - 320 + flo}px) rotateX(${rx}deg) rotateY(${ry + flip}deg) rotateZ(${rz}deg) scale(${ss * (1 + (t < T.dive ? 0.012 * b : 0))})` });
+  // opacity on the 3D container would flatten it (mirrored front); fade each face instead
+  sleeve.style.opacity = 1; sleeve.style.visibility = sleeveA > 0.001 ? 'visible' : 'hidden';
+  sleeve.querySelectorAll('.face').forEach(f => f.style.opacity = sleeveA);
+  const chrome = 1 - env(t, T.dive - 0.1, 9.35, 0.35, 0.3);
+  sleeve.querySelectorAll('.tl,.tr,.title,.credit,.gloss').forEach(e => e.style.opacity = chrome);
+  show($('shade'), env(t, T.dive + 0.2, 9.3, 0.4, 0.3));
+
+  // vinyl: slides out from behind the sleeve, spins at 33⅓ rpm
+  const vw = $('vinylWrap');
+  const out = eout5(prog(t, 0.05, 0.75));
+  let vx = lerp(360, 770, out), vy = 800, vs = 1, va = env(t, 0.0, T.dive + 0.5, 0.25, 0.5);
+  if (t > T.dive - 0.3 && t < T.player) { const p = eio(prog(t, T.dive - 0.3, T.dive + 0.4)); vx = lerp(770, 420, p); vs = lerp(1, 0.9, p); }
+  if (t >= T.player) { const p = eout5(prog(t, T.player + 0.3, T.player + 1.1)); vx = lerp(540, 690, p); vy = 525; vs = 0.56; va = p; }
+  const spin = (t * 200) % 360;
+  css(vw, { transform: `translate(${vx - 300}px, ${vy - 300}px) scale(${vs})` });
+  $('vinyl').style.transform = `rotate(${spin}deg)`;
+  show(vw, va);
+  // z-order: vinyl behind sleeve
+  vw.style.zIndex = 1; sleeve.style.zIndex = 2;
+
+  // tonearm: drops on the record exactly when the music starts
+  const armIn = eout(prog(t, 0.0, 0.25)), drop = eio(prog(t, 0.12, OFF));
+  const lift = prog(t, T.dive - 0.4, T.dive);
+  const ang = lerp(-12, 13.5, drop) - 14 * eio(lift);
+  $('armG').setAttribute('transform', `translate(1015 ${lerp(300, 440, armIn)}) rotate(${ang})`);
+  show($('arm'), env(t, 0, T.dive + 0.1, 0.2, 0.4));
+
+  // ===== S1 hook texts + karaoke =====
+  const h1 = env(t, 0.05, T.dive, 0.3, 0.3), h2 = env(t, 0.3, T.dive, 0.3, 0.3);
+  css($('hook1'), { transform: `translate(0, ${250 + (1 - h1) * 30}px)` }); show($('hook1'), h1);
+  css($('hook2'), { transform: `translate(0, ${345 + (1 - h2) * 30}px)` }); show($('hook2'), h2);
+  const ka = env(t, 0.5, T.dive + 0.1, 0.4, 0.35);
+  css($('kara'), { transform: `translate(0, ${1240 + (1 - ka) * 30}px)` }); show($('kara'), ka);
+  if (ka > 0) {
+    karaoke($('kara'), K1, t);
+    const ap = prog(t, AMO - 0.03, AMO + 0.4), amo = $('amo');
+    amo.style.opacity = ap > 0 ? 1 : 0;
+    amo.style.transform = `scale(${ap > 0 ? lerp(1.9, 1, eback(ap)) : 1})`;
+    amo.style.textShadow = `0 0 ${40 * (1 - prog(t, AMO, AMO + 0.9))}px rgba(233,126,120,1)`;
+  }
+
+  // ===== S3 lyric 2 + tracklist =====
+  const l2 = env(t, S(8.35), T.oce + 0.05, 0.3, 0.1);
+  css($('lyric2'), { transform: `translate(0, ${1035 + (1 - l2) * 20}px)` }); show($('lyric2'), l2);
+  if (l2 > 0) karaoke($('lyric2'), K2, t, { dim: 0.22 });
+  const tr = $('track'), ta = env(t, 10.05, T.oce + 0.05, 0.3, 0.1);
+  css(tr, { transform: `translate(0, ${1135 + (1 - ta) * 20}px)` }); show(tr, ta);
+  if (ta > 0) tr.querySelectorAll('.row').forEach((row, i) => {
+    const p = eout(prog(t, 10.25 + i * 0.42, 10.6 + i * 0.42));
+    row.style.opacity = p; row.style.transform = `translateX(${(1 - p) * -40}px)`;
+  });
+
+  // ===== S4 OCEANO: text behind the model =====
+  const oce = $('oceano'), model = $('model');
+  const oa = env(t, T.oce - 0.02, T.player + 0.25, 0.1, 0.35);
+  show(oce, oa);
+  if (oa > 0) {
+    const sc = lerp(1.0, 1.05, prog(t, T.oce, T.player));
+    css(oce, { transform: `translate(0, ${570}px) scale(${sc})` });
+    oce.querySelectorAll('span').forEach((sp, i) => {
+      const p = prog(t, T.oce + i * 0.05, T.oce + 0.35 + i * 0.05);
+      sp.style.transform = `translateY(${(1 - eback(p)) * 140}px)`; sp.style.opacity = clamp(p * 3);
+      sp.style.color = i % 2 ? '#fff' : '#fff';
+    });
+    oce.style.textShadow = `0 0 ${30 + 50 * b}px rgba(233,126,120,${0.35 + 0.4 * b})`;
+  }
+  const ma = env(t, T.oce, T.player + 0.3, 0.25, 0.35);
+  show(model, ma);
+  if (ma > 0) {
+    const mp = prog(t, T.oce, T.player);
+    const s = lerp(1.22, 1.34, eio(mp)) + 0.01 * b, cx = 605, cy = 860, ay = lerp(1120, 1080, eio(mp)) + (1 - eout5(prog(t, T.oce, T.oce + 0.5))) * 120;
+    const mx = 540 - cx * s;
+    css(model, { transform: `translate(${mx}px, ${ay - cy * s}px) scale(${s})` });
+  }
+  const l3 = env(t, S(14.4), T.player + 0.1, 0.3, 0.25);
+  css($('lyric3'), { transform: `translate(0, ${1660 + (1 - l3) * 20}px)` }); show($('lyric3'), l3);
+  if (l3 > 0) karaoke($('lyric3'), K3, t, { dim: 0.3 });
+
+  // ===== S5 player → checkout =====
+  const P = T.player;
+  const ca = eout5(prog(t, P, P + 0.6));
+  css($('card'), { transform: `translate(0, ${lerp(1900, 205, ca)}px)` }); show($('card'), ca);
+  const el = (id, at, y, dy = 24) => { const a = eout(prog(t, at, at + 0.4)); css($(id), { transform: `translate(${$(id).dataset.x || 0}px, ${y + (1 - a) * dy}px)` }); show($(id), a); return a; };
+  $('ptitle').dataset.x = 70; $('psub').dataset.x = 70;
+  el('ptitle', P + 0.45, 860); el('psub', P + 0.55, 925);
+  const pa = el('pbar', P + 0.65, 985);
+  if (pa > 0) {
+    const cur = 97.9 + Math.max(0, t - OFF), tot = 279;
+    $('pbar').firstChild.style.width = (cur / tot * 100).toFixed(2) + '%';
+    $('pt0').textContent = `${Math.floor(cur / 60)}:${String(Math.floor(cur % 60)).padStart(2, '0')}`;
+  }
+  $('pt0').dataset.x = 140; $('pt1').dataset.x = 880; el('pt0', P + 0.7, 1005); el('pt1', P + 0.7, 1005);
+  const sa = el('strike', P + 0.9, 1060);
+  $('strike').style.setProperty('--sp', eout(prog(t, P + 1.1, P + 1.4)));
+  el('price', P + 1.1, 1105, 30);
+  $('price').textContent = 'R$ ' + lerp(89.9, 49.0, eout(prog(t, P + 1.2, P + 1.9))).toFixed(2).replace('.', ',');
+  const bp = eback(prog(t, P + 1.9, P + 2.3));
+  css($('badge'), { transform: `translate(800px, 1050px) rotate(10deg) scale(${bp})` }); show($('badge'), bp > 0 ? 1 : 0);
+  el('pix', P + 2.0, 1258);
+  el('coupon', P + 2.3, 1330);
+  // controls: play button morphs into the CTA
+  const ctrlA = eout(prog(t, P + 0.8, P + 1.2)), morph = eio(prog(t, T.cta, T.cta + 0.55));
+  css($('ctrl'), { transform: `translate(0, ${1385}px)` }); show($('ctrl'), ctrlA * (1 - morph));
+  const cta = $('cta'), w = lerp(124, 800, morph), pulse = 1 + 0.03 * Math.sin((t - T.cta) * 7) * clamp((t - T.cta - 0.6) * 2);
+  css(cta, { width: w + 'px', transform: `translate(${-w / 2}px, ${1393}px) scale(${t > T.cta + 0.6 ? pulse : 1})`, background: morph > 0.5 ? 'var(--accent)' : '#fff', boxShadow: `0 0 ${50 * morph}px rgba(233,126,120,0.6)` });
+  show(cta, ctrlA);
+  $('playIcon').style.opacity = 1 - clamp(morph * 2.5);
+  $('playIcon').style.transform = `translateX(${w / 2 - 62}px)`;
+  cta.querySelector('.txt').style.opacity = clamp((morph - 0.55) * 3);
+  el('trust', T.cta + 0.6, 1572);
+  const la = eout(prog(t, T.cta + 0.8, T.cta + 1.2));
+  css($('logo'), { transform: `translate(460px, ${1625 + (1 - la) * 20}px)` }); show($('logo'), la);
+
+  // flashes on the two big hits
+  let f = 0;
+  [[OFF, 0.35], [T.oce, 0.55], [T.player, 0.2]].forEach(([at, m]) => { const p = prog(t, at - 0.01, at + 0.22); if (p > 0 && p < 1) f = Math.max(f, m * (1 - eout(p))); });
+  show($('flash'), f);
+}
+
+window.ready = (async () => {
+  const imgs = [...document.images].map(i => i.complete ? null : new Promise(r => { i.onload = r; i.onerror = r; }));
+  await Promise.all(imgs);
+  AUD = window.AUD_DATA;
+  for (const f of ['900 40px Montserrat', 'italic 900 40px "Playfair Display"', 'italic 700 40px "Playfair Display"', 'italic 500 40px "Playfair Display"', '700 20px "Space Mono"', '400 20px "Space Mono"']) await document.fonts.load(f);
+  await document.fonts.ready;
+  drawVinyl(); makeNoise();
+  render(0);
+  return true;
+})();
+window.renderAt = t => render(t);
+</script>
+</body>
+</html>

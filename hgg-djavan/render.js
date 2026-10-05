@@ -11,7 +11,8 @@ const fs = require('fs');
   const page = await browser.newPage({ viewport: { width: 1080, height: 1920 }, deviceScaleFactor: 1 });
   await page.goto('file://' + path.join(__dirname, process.env.PAGE || 'video.html'));
   await page.evaluate(() => window.ready);
-  const canvas = await page.$('#c');
+  const canvas = await page.$('#c') || await page.$('#stage');
+  const DUR = parseFloat(process.env.DUR || '23.2');
 
   if (mode === 'stills') {
     for (const t of rest) {
@@ -19,7 +20,7 @@ const fs = require('fs');
       await canvas.screenshot({ path: path.join(__dirname, 'build', `still_${(process.env.PAGE || 'video.html').replace('.html', '')}_${t}.png`) });
     }
   } else {
-    const fps = parseInt(rest[0] || '30', 10), dur = 23.2, n = Math.round(dur * fps);
+    const fps = parseInt(rest[0] || '30', 10), dur = DUR, n = Math.round(dur * fps);
     const out = path.join(__dirname, 'out', `${(process.env.PAGE || 'video.html').replace('.html', '')}_silent.mp4`);
     const ff = spawn('ffmpeg', ['-y', '-loglevel', 'error', '-f', 'image2pipe', '-framerate', String(fps), '-i', '-',
       '-c:v', 'libx264', '-preset', 'slow', '-crf', '14', '-pix_fmt', 'yuv420p', '-movflags', '+faststart', out], { stdio: ['pipe', 'inherit', 'inherit'] });

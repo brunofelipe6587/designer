@@ -1,0 +1,231 @@
+<!doctype html>
+<html lang="pt-br">
+<head>
+<meta charset="utf-8">
+<title>HGG Djavan O Teste J</title>
+<link href="fonts/fontsC.css" rel="stylesheet">
+<style>html, body { margin: 0; background: #000; } canvas { display: block; }</style>
+</head>
+<body>
+<canvas id="c" width="1080" height="1920"></canvas>
+<script>
+// Creative J — "O TESTE": does the print arrive like the photo? Site photo (top) vs. the client's real footage (bottom),
+// detail by detail, stamped "✓ IGUAL"; verdict report; swinging price tag on "a qualquer preço".
+// Product imagery is only cropped/scaled; nothing on the print is altered.
+const W = 1080, H = 1920, DUR = 22.0;
+const ctx = document.getElementById('c').getContext('2d');
+const C = { paper: '#F5F1E8', grid: 'rgba(47,111,223,0.13)', ink: '#1B1B1B', red: '#D7263D', hl: 'rgba(255,224,102,0.85)', tag: '#E9D5AA', tape: 'rgba(236,226,196,0.82)' };
+const MONO = '"Space Mono", monospace';
+const IMG = {};
+const load = (n, s) => new Promise((ok, er) => { const i = new Image(); i.onload = () => { IMG[n] = i; ok(); }; i.onerror = er; i.src = s; });
+const clamp = (x, a = 0, b = 1) => Math.min(b, Math.max(a, x));
+const lerp = (a, b, t) => a + (b - a) * t;
+const eout = t => 1 - Math.pow(1 - t, 3);
+const eio = t => t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
+const eback = t => { const c1 = 1.7, c3 = c1 + 1; return 1 + c3 * Math.pow(t - 1, 3) + c1 * Math.pow(t - 1, 2); };
+const prog = (t, a, b) => clamp((t - a) / (b - a));
+
+// "Eu Te Devoro" cut from 0:35.9 — "Teu olhar" 0.05 · "devoro" 5.44 · "Te devoraria a qualquer preço" 8.54–11.68 · beat 0.696s
+const S = { t1: 2.14, t2: 4.22, t3: 6.31, verdict: 8.40, price: 11.60, cta: 16.75 };
+const STAMPS = [3.53, 5.62, 7.70];
+// crops: site photo (2x image coords) and real footage (1080x1920 frame coords + time window)
+const TESTS = [
+  { title: 'A ESTAMPA CHEGA', title2: 'IGUAL À FOTO?', site: [172, 760, 2058, 1400], real: [0, 272, 1080, 735], v: [7.4, 8.6] },
+  { title: 'TESTE 1 · O ROSTO', site: [690, 926, 1040, 708], real: [0, 232, 1080, 735], v: [5.35, 6.3] },
+  { title: 'TESTE 2 · O COLAR', site: [780, 1638, 920, 626], real: [235, 946, 600, 408], v: [0.2, 0.6] },
+  { title: 'TESTE 3 · A ASSINATURA', site: [830, 1885, 680, 462], real: [240, 1038, 520, 354], v: [12.3, 12.9] },
+];
+
+const cache = new Map();
+function frameImg(n) {
+  n = clamp(n, 1, 409);
+  if (!cache.has(n)) { const im = new Image(); im.src = `ugc/frames/vd1/${String(n).padStart(4, '0')}.jpg`; cache.set(n, im.decode().then(() => im)); if (cache.size > 40) cache.delete(cache.keys().next().value); }
+  return cache.get(n);
+}
+async function realFrame(v, t, t0, t1) { // ping-pong through the window so short clips keep moving
+  const span = v[1] - v[0], d = (t - t0) * 0.8, ph = (d % (2 * span)), s = ph < span ? ph : 2 * span - ph;
+  return frameImg(Math.floor((v[0] + s) * 30) + 1);
+}
+
+// ---------- paper ----------
+let NOISE;
+function paper() {
+  ctx.fillStyle = C.paper; ctx.fillRect(0, 0, W, H);
+  ctx.strokeStyle = C.grid; ctx.lineWidth = 1.5;
+  for (let x = 0; x <= W; x += 54) { ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, H); ctx.stroke(); }
+  for (let y = 0; y <= H; y += 54) { ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(W, y); ctx.stroke(); }
+  ctx.save(); ctx.globalAlpha = 0.06; ctx.globalCompositeOperation = 'multiply';
+  for (let y = 0; y < H; y += 256) for (let x = 0; x < W; x += 256) ctx.drawImage(NOISE, x, y);
+  ctx.restore();
+}
+function tape(x, y, w, rot) {
+  ctx.save(); ctx.translate(x, y); ctx.rotate(rot); ctx.fillStyle = C.tape;
+  ctx.shadowColor = 'rgba(0,0,0,0.12)'; ctx.shadowBlur = 4; ctx.fillRect(-w / 2, -22, w, 44); ctx.restore();
+}
+function tag(str, x, y, bg, color = '#fff') {
+  ctx.save(); ctx.font = `700 26px ${MONO}`; ctx.letterSpacing = '2px'; const w = ctx.measureText(str).width + 34;
+  ctx.fillStyle = bg; ctx.fillRect(x, y, w, 46); ctx.fillStyle = color; ctx.textBaseline = 'middle'; ctx.fillText(str, x + 17, y + 25); ctx.restore();
+}
+// a taped photo: img region (sx,sy,sw,sh) into a w×h frame centred at (cx,cy)
+function photo(img, crop, cx, cy, w, h, rot, label, labelBg, alpha = 1, sc = 1) {
+  if (alpha <= 0) return;
+  ctx.save(); ctx.globalAlpha = alpha; ctx.translate(cx, cy); ctx.rotate(rot); ctx.scale(sc, sc);
+  ctx.shadowColor = 'rgba(0,0,0,0.25)'; ctx.shadowBlur = 26; ctx.shadowOffsetY = 10;
+  ctx.fillStyle = '#fff'; ctx.fillRect(-w / 2 - 14, -h / 2 - 14, w + 28, h + 28);
+  ctx.shadowColor = 'transparent';
+  ctx.imageSmoothingQuality = 'high';
+  const [sx, sy, sw, sh] = crop; ctx.drawImage(img, sx, sy, sw, sh, -w / 2, -h / 2, w, h);
+  if (label) tag(label, -w / 2 + 120, -h / 2 + 22, labelBg);
+  ctx.restore();
+  tape(cx - w / 2 + 40, cy - h / 2 - 10, 150, rot - 0.5);
+  tape(cx + w / 2 - 40, cy - h / 2 - 10, 150, rot + 0.5);
+}
+// rubber stamp prerendered with ink grain
+function makeStamp(text, w, h, size) {
+  const cv = document.createElement('canvas'); cv.width = w + 40; cv.height = h + 40; const c = cv.getContext('2d');
+  c.translate(20, 20); c.strokeStyle = C.red; c.fillStyle = C.red; c.lineWidth = 12;
+  c.beginPath(); c.roundRect(6, 6, w - 12, h - 12, 18); c.stroke();
+  c.lineWidth = 4; c.beginPath(); c.roundRect(22, 22, w - 44, h - 44, 12); c.stroke();
+  c.font = `900 ${size}px Montserrat, "Noto Color Emoji"`; c.textAlign = 'center'; c.textBaseline = 'middle'; c.fillText(text, w / 2, h / 2 + 4);
+  c.globalCompositeOperation = 'destination-out';
+  let s = 99; const r = () => (s = (s * 16807) % 2147483647) / 2147483647;
+  for (let i = 0; i < 1600; i++) { c.globalAlpha = 0.25 + r() * 0.6; c.beginPath(); c.arc(r() * w, r() * h, r() * 3.2, 0, Math.PI * 2); c.fill(); }
+  return cv;
+}
+function stamp(cv, x, y, rot, t, at) {
+  if (t < at) return 0;
+  const p = prog(t, at, at + 0.12), sc = lerp(2.2, 1, eout(p));
+  ctx.save(); ctx.globalAlpha = 0.92 * clamp(p * 2); ctx.translate(x, y); ctx.rotate(rot); ctx.scale(sc, sc);
+  ctx.drawImage(cv, -cv.width / 2, -cv.height / 2); ctx.restore();
+  return 1 - prog(t, at, at + 0.25); // shake amount
+}
+function headline(str, y, size = 72, hl = false, a = 1) {
+  if (a <= 0) return;
+  ctx.save(); ctx.globalAlpha = a; ctx.font = `700 ${size}px ${MONO}`; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+  let w = ctx.measureText(str).width; const k = Math.min(1, 980 / w); ctx.translate(540, y); ctx.scale(k, k);
+  if (hl) { ctx.fillStyle = C.hl; ctx.beginPath(); ctx.roundRect(-w / 2 - 14, -size * 0.42, w + 28, size * 0.9, 8); ctx.fill(); }
+  ctx.fillStyle = C.ink; ctx.fillText(str, 0, 4); ctx.restore();
+}
+
+let STAMP_OK, STAMP_APROV, STAMP_45;
+async function render(t) {
+  ctx.setTransform(1, 0, 0, 1, 0, 0);
+  // camera shake from stamps
+  let shake = 0;
+  for (const s of [...STAMPS, S.verdict + 0.7]) if (t >= s && t < s + 0.25) shake = Math.max(shake, 1 - prog(t, s, s + 0.25));
+  ctx.translate(Math.sin(t * 90) * 10 * shake, Math.cos(t * 77) * 8 * shake);
+  paper();
+  ctx.save(); ctx.globalAlpha = 0.9; ctx.drawImage(IMG.logo, 64, 70, 120, 56); ctx.restore();
+
+  if (t < S.verdict) {
+    // ===== comparison rounds =====
+    const k = t < S.t1 ? 0 : t < S.t2 ? 1 : t < S.t3 ? 2 : 3;
+    const T = TESTS[k], t0 = [0, S.t1, S.t2, S.t3][k];
+    const inA = k === 0 ? 1 : eout(prog(t, t0, t0 + 0.28));
+    if (k === 0) {
+      headline(T.title, 195, 70);
+      headline(T.title2, 290, 84, true);
+      ctx.fillStyle = C.ink; ctx.font = 'italic 600 38px "Playfair Display"'; ctx.textAlign = 'center'; ctx.fillText('Camiseta do Djavan · HGG', 540, 372);
+    } else {
+      headline(T.title, 230, 64, true, inA);
+      ctx.save(); ctx.globalAlpha = inA; ctx.fillStyle = C.ink; ctx.font = 'italic 600 36px "Playfair Display"'; ctx.textAlign = 'center'; ctx.fillText('foto do site  ×  camiseta real', 540, 320); ctx.restore();
+    }
+    const img = await realFrame(T.v, t, t0);
+    const off = (1 - inA) * 1100;
+    photo(IMG.site, T.site, 540 + off, 735, 900, 612, -0.012, 'FOTO DO SITE', C.ink);
+    photo(img, T.real, 540 - off, 1395, 900, 612, 0.012, 'CAMISETA REAL', C.red);
+    if (k > 0) stamp(STAMP_OK, 760, 1060, -0.2, t, STAMPS[k - 1]);
+  } else if (t < S.price) {
+    // ===== verdict =====
+    const a = eout(prog(t, S.verdict, S.verdict + 0.3));
+    headline('RESULTADO DO TESTE:', 230, 60, true, a);
+    const img = await realFrame([12.3, 12.9], t, S.verdict);
+    photo(img, [90, 520, 900, 900], 540, lerp(1500, 820, a), 760, 760, -0.02, 'CAMISETA REAL', C.red);
+    stamp(STAMP_APROV, 560, 1010, -0.18, t, S.verdict + 0.7);
+    const rows = [['ESTAMPA DTF ALTA DEFINIÇÃO', 9.79], ['100% ALGODÃO FIO 30.1', 10.2], ['OVERSIZED · GOLA REFORÇADA', 10.6], ['TAMANHOS M · G · GG', 11.0]];
+    ctx.font = `700 31px ${MONO}`; ctx.textBaseline = 'middle';
+    rows.forEach(([txt, at], i) => {
+      if (t < at) return;
+      const n = Math.floor(prog(t, at, at + 0.35) * txt.length), y = 1290 + i * 64;
+      ctx.fillStyle = C.ink; ctx.textAlign = 'left'; ctx.fillText(txt.slice(0, n), 90, y);
+      if (n >= txt.length) {
+        const w = ctx.measureText(txt).width; ctx.fillStyle = 'rgba(27,27,27,0.35)';
+        for (let x = 90 + w + 16; x < 900; x += 18) ctx.fillRect(x, y + 8, 8, 4);
+        ctx.fillStyle = C.red; ctx.textAlign = 'right'; ctx.fillText('OK ✓', 990, y);
+      }
+    });
+  } else {
+    // ===== price tag swinging on "a qualquer preço", then CTA =====
+    const tp = t - S.price, cta = t >= S.cta;
+    headline(cta ? 'GARANTA A SUA:' : 'E QUANTO CUSTA?', 230, 64, true, eout(prog(t, cta ? S.cta : S.price, (cta ? S.cta : S.price) + 0.25)));
+    const drop = eback(prog(t, S.price, S.price + 0.45));
+    const ang = 0.42 * Math.exp(-tp * 0.9) * Math.cos(tp * 5.2) + 0.02 * Math.sin(t * 1.3);
+    const px = 540, py = 360;
+    ctx.save(); ctx.translate(px, py + lerp(-700, 0, drop)); ctx.rotate(ang);
+    ctx.strokeStyle = '#8a7a5c'; ctx.lineWidth = 4; ctx.beginPath(); ctx.moveTo(0, 0); ctx.lineTo(0, 150); ctx.stroke();
+    ctx.translate(0, 150);
+    ctx.shadowColor = 'rgba(0,0,0,0.25)'; ctx.shadowBlur = 30; ctx.shadowOffsetY = 14;
+    ctx.fillStyle = C.tag; ctx.beginPath();
+    ctx.moveTo(-80, 0); ctx.lineTo(80, 0); ctx.lineTo(300, 120); ctx.lineTo(300, 560); ctx.lineTo(-300, 560); ctx.lineTo(-300, 120); ctx.closePath(); ctx.fill();
+    ctx.shadowColor = 'transparent';
+    ctx.fillStyle = C.paper; ctx.beginPath(); ctx.arc(0, 50, 20, 0, Math.PI * 2); ctx.fill();
+    ctx.strokeStyle = '#8a7a5c'; ctx.lineWidth = 3; ctx.stroke();
+    ctx.fillStyle = C.ink; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+    ctx.font = `700 30px ${MONO}`; ctx.fillText('CAMISETA DO DJAVAN · HGG', 0, 150);
+    ctx.font = `700 46px ${MONO}`; ctx.fillStyle = 'rgba(27,27,27,0.6)'; ctx.fillText('DE R$ 89,90', 0, 235);
+    const sp = eout(prog(t, S.price + 0.5, S.price + 0.8));
+    ctx.strokeStyle = C.red; ctx.lineWidth = 7; ctx.beginPath(); ctx.moveTo(-170, 237); ctx.lineTo(-170 + 340 * sp, 237); ctx.stroke();
+    ctx.fillStyle = C.ink; ctx.font = '900 138px Montserrat'; ctx.fillText('R$ 49,00', 0, 370);
+    ctx.font = `700 34px ${MONO}`; ctx.fillText('M · G · GG', 0, 480);
+    ctx.restore();
+    stamp(STAMP_45, 830, 600, 0.22, t, S.price + 0.9);
+    // pix / installments (highlighter)
+    const la = eout(prog(t, S.price + 1.3, S.price + 1.6)), lb = eout(prog(t, S.price + 1.7, S.price + 2.0));
+    headline('R$ 46,55 NO PIX', 1170, 52, true, la);
+    headline('ou 6x de R$ 8,17 sem juros', 1250, 38, false, lb);
+    if (!cta) {
+      // real-shirt polaroid + coupon ticket
+      const pa = eout(prog(t, S.price + 2.3, S.price + 2.7));
+      const img = await realFrame([12.3, 12.9], t, S.price);
+      photo(img, [140, 600, 800, 800], lerp(1400, 780, pa), 1520, 360, 360, 0.05, null, null);
+      const ca = eout(prog(t, S.price + 2.7, S.price + 3.1));
+      ctx.save(); ctx.translate(lerp(-500, 330, ca), 1520); ctx.rotate(-0.04);
+      ctx.fillStyle = '#fff'; ctx.shadowColor = 'rgba(0,0,0,0.2)'; ctx.shadowBlur = 18; ctx.fillRect(-250, -110, 500, 220); ctx.shadowColor = 'transparent';
+      ctx.setLineDash([12, 9]); ctx.strokeStyle = C.ink; ctx.lineWidth = 3; ctx.strokeRect(-232, -92, 464, 184); ctx.setLineDash([]);
+      ctx.fillStyle = C.ink; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+      ctx.font = `700 26px ${MONO}`; ctx.fillText('CUPOM 1ª COMPRA', 0, -48);
+      ctx.font = '900 40px Montserrat'; ctx.fillText('PRIMEIRACOMPRA', 0, 8);
+      ctx.fillStyle = C.red; ctx.font = `700 30px ${MONO}`; ctx.fillText('+5% OFF', 0, 60); ctx.restore();
+    } else {
+      const cb = eback(prog(t, S.cta, S.cta + 0.4)), pulse = 1 + 0.03 * Math.sin((t - S.cta - 0.5) * 8) * clamp((t - S.cta - 0.5) * 3);
+      ctx.save(); ctx.translate(540, 1400); ctx.scale(cb * pulse, cb * pulse);
+      ctx.shadowColor = 'rgba(0,0,0,0.3)'; ctx.shadowBlur = 24; ctx.shadowOffsetY = 10;
+      ctx.fillStyle = C.ink; ctx.beginPath(); ctx.roundRect(-430, -66, 860, 132, 20); ctx.fill();
+      ctx.shadowColor = 'transparent'; ctx.fillStyle = '#fff'; ctx.font = '900 46px Montserrat'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+      ctx.fillText('COMPRE NA HGG  →', 0, 3); ctx.restore();
+      headline('hggstyle.com.br', 1530, 40, false, eout(prog(t, S.cta + 0.3, S.cta + 0.6)));
+      headline('cupom PRIMEIRACOMPRA: +5% na 1ª compra', 1610, 30, true, eout(prog(t, S.cta + 0.5, S.cta + 0.8)));
+    }
+  }
+}
+
+function makeNoise() {
+  const cv = document.createElement('canvas'); cv.width = cv.height = 256; const c = cv.getContext('2d'), im = c.createImageData(256, 256);
+  let s = 5; const r = () => (s = (s * 16807) % 2147483647) / 2147483647;
+  for (let i = 0; i < im.data.length; i += 4) { const v = 120 + r() * 135; im.data[i] = im.data[i + 1] = im.data[i + 2] = v; im.data[i + 3] = 255; }
+  c.putImageData(im, 0, 0); return cv;
+}
+window.ready = (async () => {
+  await Promise.all([load('site', 'build/foto_frente_2x.png'), load('logo', 'src/logo.svg')]);
+  for (const f of ['700 40px "Space Mono"', '900 40px Montserrat', 'italic 600 40px "Playfair Display"', '40px "Noto Color Emoji"']) await document.fonts.load(f);
+  await document.fonts.ready;
+  NOISE = makeNoise();
+  STAMP_OK = makeStamp('✓ IGUAL', 420, 170, 82);
+  STAMP_APROV = makeStamp('APROVADA', 640, 190, 104);
+  STAMP_45 = makeStamp('-45%', 260, 130, 72);
+  await render(0); return true;
+})();
+window.renderAt = t => render(t);
+</script>
+</body>
+</html>

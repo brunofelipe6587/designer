@@ -1,0 +1,255 @@
+<!doctype html>
+<html lang="pt-br">
+<head>
+<meta charset="utf-8">
+<title>HGG Djavan Oceano E</title>
+<link href="fonts/fontsC.css" rel="stylesheet">
+<style>html, body { margin: 0; background: #000; } canvas { display: block; }</style>
+</head>
+<body>
+<canvas id="c" width="1080" height="1920"></canvas>
+<script>
+// Creative E — real footage (client videos) edit: hook in frame 1, production story, reveal on "oceano", offer + CTA.
+// Footage frames are only scaled/moved (camera) and blended across adjacent frames for speed-ramp motion blur.
+const W = 1080, H = 1920, DUR = 22.0, FPS_SRC = 30;
+const ctx = document.getElementById('c').getContext('2d');
+const COUNT = { vd1: 409, vd2: 369 };
+const clamp = (x, a = 0, b = 1) => Math.min(b, Math.max(a, x));
+const lerp = (a, b, t) => a + (b - a) * t;
+const eio = t => t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
+const eout = t => 1 - Math.pow(1 - t, 3);
+const eback = t => { const c1 = 1.8, c3 = c1 + 1; return 1 + c3 * Math.pow(t - 1, 3) + c1 * Math.pow(t - 1, 2); };
+const prog = (t, a, b) => clamp((t - a) / (b - a));
+const env = (t, a, b, fin = 0.15, fout = 0.15) => (t < a || t > b) ? 0 : Math.min(eout(prog(t, a, a + fin)), 1 - eio(prog(t, b - fout, b)));
+
+// song cues (Oceano 1:37.9 cut): "amo" 5.4 · "Você" 8.5 · "oceano" 12.3 · "Esqueço" 14.64
+const HIT = 12.3;
+// shots: [t0, t1, video, srcStart, speed, z0, z1, blend]
+const SHOTS = [
+  [0.00, 1.10, 'vd1', 5.60, 1.0, 1.12, 1.20, 0],   // hook: closest print
+  [1.10, 2.20, 'vd1', 7.40, 1.0, 1.05, 1.12, 0],   // whole tee on the table (HGG tag)
+  [2.20, 5.40, 'vd1', 2.40, 0.95, 1.08, 1.18, 0],  // hand over the print
+  [5.40, 8.50, 'vd2', 1.00, 1.08, 1.06, 1.14, 1],  // production: smoothing the DTF transfer
+  [8.50, 11.50, 'vd2', 4.35, 1.05, 1.10, 1.22, 1], // production close
+  [11.50, 12.30, 'vd2', 7.55, 1.65, 1.12, 1.30, 1],// press opening = whip
+  [12.30, 15.70, 'vd2', 9.00, 1.00, 1.22, 1.06, 0],// REVEAL on "oceano"
+  [15.70, 18.20, 'vd1', 9.60, 1.0, 1.06, 1.14, 0], // hands lifting the fabric
+  [18.20, 22.00, 'vd1', 11.90, 0.25, 1.05, 1.16, 1],// offer: slow-mo, settles before the hand enters
+];
+// burned-in stickers in source footage (1080x1920 coords) — replaced by our own link sticker
+const STICKER = { vd1: [267, 1510, 545, 107], vd2: [315, 1342, 447, 163] };
+
+const cache = new Map();
+function frameImg(v, idx) {
+  const n = clamp(idx, 1, COUNT[v]), key = v + n;
+  if (!cache.has(key)) {
+    const im = new Image(); im.src = `ugc/frames/${v}/${String(n).padStart(4, '0')}.jpg`;
+    cache.set(key, im.decode().then(() => im));
+    if (cache.size > 40) cache.delete(cache.keys().next().value);
+  }
+  return cache.get(key);
+}
+function shake(t, amp) {
+  return [amp * (Math.sin(t * 37) * 0.6 + Math.sin(t * 23 + 1) * 0.4), amp * (Math.sin(t * 31 + 2) * 0.6 + Math.sin(t * 19) * 0.4)];
+}
+function handheld(t) { return [4 * Math.sin(1.3 * t) + 2 * Math.sin(3.1 * t + 1), 4 * Math.sin(1.1 * t + 2) + 2 * Math.sin(2.7 * t)]; }
+
+function linkSticker(x, y, w, h, line1, line2) {
+  ctx.save();
+  ctx.shadowColor = 'rgba(0,0,0,0.25)'; ctx.shadowBlur = 18; ctx.shadowOffsetY = 4;
+  ctx.fillStyle = '#fff'; ctx.beginPath(); ctx.roundRect(x, y, w, h, Math.min(h / 2, 30)); ctx.fill();
+  ctx.shadowColor = 'transparent';
+  // link icon
+  const ix = x + 52, iy = y + h / 2;
+  ctx.strokeStyle = '#2F80ED'; ctx.lineWidth = 7; ctx.lineCap = 'round';
+  ctx.save(); ctx.translate(ix, iy); ctx.rotate(-Math.PI / 4);
+  ctx.beginPath(); ctx.roundRect(-22, -11, 26, 22, 11); ctx.stroke(); ctx.beginPath(); ctx.roundRect(-4, -11, 26, 22, 11); ctx.stroke();
+  ctx.restore();
+  ctx.fillStyle = '#111'; ctx.textAlign = 'left'; ctx.textBaseline = 'middle';
+  if (line2) {
+    ctx.font = '600 30px Montserrat'; ctx.fillText(line1, x + 96, iy - 22);
+    ctx.font = '800 42px Montserrat'; ctx.fillText(line2, x + 96, iy + 20);
+  } else { ctx.font = '700 44px Montserrat'; ctx.fillText(line1, x + 96, iy + 2); }
+  ctx.restore();
+}
+
+async function drawFootage(t) {
+  let si = 0; for (let i = 0; i < SHOTS.length; i++) if (t >= SHOTS[i][0]) si = i;
+  const [t0, t1, v, s0, sp, z0, z1, blend] = SHOTS[si];
+  const lt = t - t0;
+  const srcT = s0 + lt * sp;
+  const f = srcT * FPS_SRC + 1;
+  const ia = Math.floor(f);
+  const imgs = [await frameImg(v, ia)];
+  if (blend) imgs.push(await frameImg(v, ia + 1)); // speed-ramp motion blur (frame blend)
+  // camera: eased zoom + punch-in on cut + handheld + impact shake
+  let z = lerp(z0, z1, eio(prog(t, t0, t1)));
+  z *= 1 + 0.09 * (1 - eout(prog(t, t0, t0 + 0.2))) * (si > 0 ? 1 : 0);
+  if (t >= HIT) z *= 1 + 0.10 * (1 - eout(prog(t, HIT, HIT + 0.45)));
+  const [hx, hy] = handheld(t);
+  const imp = t >= HIT ? (1 - prog(t, HIT, HIT + 0.45)) : 0;
+  const [sx, sy] = shake(t, 22 * imp);
+  ctx.save();
+  ctx.translate(540 + hx + sx, 960 + hy + sy); ctx.scale(z, z); ctx.translate(-540, -960);
+  ctx.imageSmoothingEnabled = true; ctx.imageSmoothingQuality = 'high';
+  ctx.globalAlpha = 1; ctx.drawImage(imgs[0], 0, 0, W, H);
+  if (imgs[1]) { ctx.globalAlpha = 0.45; ctx.drawImage(imgs[1], 0, 0, W, H); ctx.globalAlpha = 1; }
+  // replace the burned-in sticker with our link sticker (moves with the footage)
+  const [x, y, w, h] = STICKER[v];
+  if (t >= 18.2) { ctx.save(); ctx.filter = 'blur(22px)'; ctx.fillStyle = 'rgba(8,8,8,0.97)'; ctx.beginPath(); ctx.roundRect(x - 30, y - 24, w + 60, h + 48, 40); ctx.fill(); ctx.restore(); }
+  else if (v === 'vd1') linkSticker(x - 6, y - 4, w + 12, h + 8, 'hggstyle.com.br');
+  else linkSticker(x - 60, y - 6, w + 120, h + 12, 'camiseta do Djavan', 'hggstyle.com.br');
+  ctx.restore();
+  return si;
+}
+
+// ---------- typography ----------
+function stroked(str, x, y, o = {}) {
+  const { size = 96, color = '#fff', scale = 1, alpha = 1, sw = 16, rot = 0, maxW = 1000, align = 'center' } = o;
+  if (alpha <= 0 || scale <= 0) return;
+  ctx.save(); ctx.globalAlpha = alpha; ctx.translate(x, y); ctx.rotate(rot); ctx.scale(scale, scale);
+  ctx.font = `900 ${size}px Montserrat`; ctx.textAlign = align; ctx.textBaseline = 'middle'; ctx.lineJoin = 'round';
+  const w = ctx.measureText(str).width; if (w > maxW) ctx.scale(maxW / w, maxW / w);
+  ctx.shadowColor = 'rgba(0,0,0,0.45)'; ctx.shadowBlur = 24; ctx.shadowOffsetY = 8;
+  ctx.lineWidth = sw; ctx.strokeStyle = '#000'; ctx.strokeText(str, 0, 0);
+  ctx.shadowColor = 'transparent'; ctx.fillStyle = color; ctx.fillText(str, 0, 0);
+  ctx.restore();
+}
+function chip(str, x, y, o = {}) {
+  const { size = 40, alpha = 1, bg = '#FFD60A', color = '#000', scale = 1, align = 'center' } = o;
+  if (alpha <= 0 || scale <= 0) return;
+  ctx.save(); ctx.globalAlpha = alpha; ctx.translate(x, y); ctx.scale(scale, scale);
+  ctx.font = `800 ${size}px Montserrat`; ctx.textBaseline = 'middle';
+  const w = ctx.measureText(str).width + 56, h = size + 36, bx = align === 'left' ? 0 : -w / 2;
+  ctx.shadowColor = 'rgba(0,0,0,0.35)'; ctx.shadowBlur = 22; ctx.shadowOffsetY = 8;
+  ctx.fillStyle = bg; ctx.beginPath(); ctx.roundRect(bx, -h / 2, w, h, 18); ctx.fill();
+  ctx.shadowColor = 'transparent'; ctx.fillStyle = color; ctx.textAlign = 'center'; ctx.fillText(str, bx + w / 2, 3);
+  ctx.restore();
+}
+const pop = (t, a, d = 0.28) => t < a ? 0 : eback(prog(t, a, a + d));
+function check(str, x, y, t, a) { // checklist row with tick
+  const p = pop(t, a, 0.3); if (p <= 0) return;
+  ctx.save(); ctx.translate(x, y); ctx.scale(p, p);
+  ctx.fillStyle = '#FFD60A'; ctx.beginPath(); ctx.arc(0, 0, 34, 0, Math.PI * 2); ctx.fill();
+  ctx.strokeStyle = '#000'; ctx.lineWidth = 8; ctx.lineCap = 'round'; ctx.lineJoin = 'round';
+  ctx.beginPath(); ctx.moveTo(-14, 1); ctx.lineTo(-3, 12); ctx.lineTo(16, -10); ctx.stroke();
+  ctx.restore();
+  stroked(str, x + 60, y + 2, { size: 58, scale: p, align: 'left', sw: 13 });
+}
+function logo(alpha) {
+  if (alpha <= 0) return;
+  ctx.save(); ctx.globalAlpha = alpha;
+  ctx.shadowColor = 'rgba(0,0,0,0.6)'; ctx.shadowBlur = 16;
+  ctx.drawImage(IMG_LOGO, 60, 120, 136 * 1.05, 63 * 1.05);
+  ctx.restore();
+}
+
+async function render(t) {
+  ctx.setTransform(1, 0, 0, 1, 0, 0);
+  ctx.fillStyle = '#000'; ctx.fillRect(0, 0, W, H);
+  await drawFootage(t);
+  // readability gradients (top + bottom, light)
+  let g = ctx.createLinearGradient(0, 0, 0, 560); g.addColorStop(0, 'rgba(0,0,0,0.55)'); g.addColorStop(1, 'rgba(0,0,0,0)');
+  ctx.fillStyle = g; ctx.fillRect(0, 0, W, 560);
+  logo(1);
+
+  // ===== HOOK (0–2.2): product + artist + brand in the first second =====
+  const hk = 1 - prog(t, 2.05, 2.2);
+  if (t < 2.2) {
+    stroked('A CAMISETA', 540, 330, { size: 112, scale: (t < 0.02 ? 1 : pop(t, -0.2, 0.22)) * hk });
+    stroked('DO DJAVAN', 540, 455, { size: 138, color: '#FFD60A', scale: (t < 0.02 ? 1 : pop(t, -0.12, 0.25)) * hk, sw: 18 });
+    chip('CHEGOU NA HGG', 540, 585, { scale: (t < 0.02 ? 1 : pop(t, -0.05)) * hk, bg: '#fff' });
+    // price sticker
+    const sp = pop(t, 0.6, 0.3) * hk;
+    if (sp > 0) {
+      ctx.save(); ctx.translate(880, 820); ctx.rotate(0.16 + Math.sin(t * 6) * 0.03); ctx.scale(sp, sp);
+      ctx.shadowColor = 'rgba(0,0,0,0.4)'; ctx.shadowBlur = 24; ctx.fillStyle = '#E8473F'; ctx.beginPath(); ctx.arc(0, 0, 125, 0, Math.PI * 2); ctx.fill();
+      ctx.shadowColor = 'transparent'; ctx.fillStyle = '#fff'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+      ctx.font = '800 26px Montserrat'; ctx.fillText('SÓ', 0, -56); ctx.font = '900 72px Montserrat'; ctx.fillText('R$ 49', 0, 2);
+      ctx.font = '800 26px Montserrat'; ctx.fillText('-45% OFF', 0, 58); ctx.restore();
+    }
+  }
+  // ===== touch / fabric (2.2–5.4) =====
+  if (t >= 2.2 && t < 5.4) {
+    chip('SENTE ESSE TECIDO', 540, 330, { scale: pop(t, 2.25), alpha: env(t, 2.2, 5.4, 0.01, 0.12), bg: '#fff' });
+    stroked('100% ALGODÃO', 540, 470, { size: 104, color: '#FFD60A', scale: pop(t, 2.55) * env(t, 2.2, 5.4, 0.01, 0.12) });
+    stroked('FIO 30.1 · MACIO E ENCORPADO', 540, 575, { size: 54, scale: pop(t, 2.85) * env(t, 2.2, 5.4, 0.01, 0.12), sw: 12 });
+  }
+  // ===== production story (5.4–11.5) =====
+  if (t >= 5.4 && t < 11.5) {
+    const a = env(t, 5.4, 11.5, 0.01, 0.15);
+    chip('COMO ELA É FEITA:', 540, 330, { scale: pop(t, 5.42) * a, bg: '#fff' });
+    if (t < 8.5) stroked('PRODUÇÃO PRÓPRIA', 540, 470, { size: 100, color: '#FFD60A', scale: pop(t, 5.75) * env(t, 5.4, 8.5, 0.01, 0.12) });
+    else {
+      stroked('ESTAMPA DTF', 540, 470, { size: 112, color: '#FFD60A', scale: pop(t, 8.52) * a });
+      stroked('EM ALTA DEFINIÇÃO', 540, 580, { size: 70, scale: pop(t, 8.8) * a, sw: 13 });
+    }
+  }
+  // ===== reveal on "oceano" (12.3–15.7) =====
+  if (t >= HIT && t < 15.7) {
+    const a = env(t, HIT, 15.7, 0.01, 0.15);
+    stroked('O RESULTADO:', 540, 340, { size: 86, scale: pop(t, HIT, 0.3) * a });
+    chip('resistente à lavagem', 540, 470, { scale: pop(t, 13.3) * a, size: 42 });
+  }
+  // ===== fabric in hand (15.7–18.2): checklist =====
+  if (t >= 15.7 && t < 18.2) {
+    const a = env(t, 15.7, 18.2, 0.01, 0.12);
+    ctx.save(); ctx.globalAlpha = a;
+    check('OVERSIZED', 140, 330, t, 15.75);
+    check('GOLA REFORÇADA', 140, 450, t, 16.35);
+    check('TAMANHOS M · G · GG', 140, 570, t, 16.95);
+    ctx.restore();
+  }
+  // ===== offer + CTA (18.2–22) =====
+  if (t >= 18.2) {
+    const b = eout(prog(t, 18.2, 18.55));
+    ctx.save(); ctx.globalAlpha = 0.72 * b; ctx.fillStyle = '#000'; ctx.beginPath(); ctx.roundRect(50, 1060, 980, 720, 44); ctx.fill(); ctx.restore();
+    g = ctx.createLinearGradient(0, 980, 0, H); g.addColorStop(0, 'rgba(0,0,0,0)'); g.addColorStop(0.45, `rgba(0,0,0,${0.55 * b})`); g.addColorStop(1, `rgba(0,0,0,${0.8 * b})`);
+    ctx.fillStyle = g; ctx.fillRect(0, 980, W, H - 980);
+    stroked('CAMISETA DJAVAN OCEANO', 540, 330, { size: 62, scale: pop(t, 18.25), sw: 12 });
+    // strike price
+    const s1 = pop(t, 18.4);
+    stroked('DE R$ 89,90', 540, 1150, { size: 58, color: 'rgba(255,255,255,0.85)', scale: s1, sw: 11 });
+    if (s1 > 0) {
+      ctx.save(); ctx.font = '900 58px Montserrat'; const w = ctx.measureText('DE R$ 89,90').width, sp = eout(prog(t, 18.6, 18.85));
+      ctx.strokeStyle = '#E8473F'; ctx.lineWidth = 10; ctx.lineCap = 'round';
+      ctx.beginPath(); ctx.moveTo(540 - w / 2 - 10, 1152); ctx.lineTo(540 - w / 2 - 10 + (w + 20) * sp, 1152); ctx.stroke(); ctx.restore();
+    }
+    const val = lerp(89.9, 49.0, eout(prog(t, 18.75, 19.35)));
+    stroked('R$ ' + val.toFixed(2).replace('.', ','), 540, 1285, { size: 170, color: '#FFD60A', scale: pop(t, 18.75, 0.3) * (1 + 0.06 * (1 - prog(t, 19.35, 19.6)) * (t > 19.35 ? 1 : 0)), sw: 20 });
+    chip('R$ 46,55 no Pix  ·  6x de R$ 8,17 sem juros', 540, 1430, { scale: pop(t, 19.5), size: 36, bg: '#fff' });
+    chip('+5% OFF na 1ª compra: PRIMEIRACOMPRA', 540, 1535, { scale: pop(t, 19.8), size: 32 });
+    // CTA
+    const cp = pop(t, 20.15, 0.35);
+    if (cp > 0) {
+      const pulse = 1 + 0.035 * Math.sin((t - 20.5) * 8) * clamp((t - 20.5) * 3);
+      ctx.save(); ctx.translate(540, 1665); ctx.scale(cp * pulse, cp * pulse);
+      ctx.shadowColor = 'rgba(232,71,63,0.6)'; ctx.shadowBlur = 40; ctx.fillStyle = '#E8473F';
+      ctx.beginPath(); ctx.roundRect(-430, -62, 860, 124, 62); ctx.fill();
+      ctx.shadowColor = 'transparent'; ctx.fillStyle = '#fff'; ctx.font = '900 44px Montserrat'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+      ctx.fillText('COMPRE NO SITE DA HGG', 0, 3); ctx.restore();
+      // bouncing arrow pointing to the ad's button
+      const ay = 1790 + Math.abs(Math.sin((t - 20.2) * 5)) * 22;
+      ctx.save(); ctx.globalAlpha = clamp(cp); ctx.fillStyle = '#fff'; ctx.shadowColor = 'rgba(0,0,0,0.5)'; ctx.shadowBlur = 12;
+      ctx.beginPath(); ctx.moveTo(540 - 36, ay - 26); ctx.lineTo(540 + 36, ay - 26); ctx.lineTo(540, ay + 18); ctx.closePath(); ctx.fill(); ctx.restore();
+    }
+  }
+  // flashes on the hit and on the offer
+  let f = 0;
+  [[HIT, 0.75], [18.2, 0.35], [5.4, 0.25]].forEach(([a, m]) => { const p = prog(t, a - 0.005, a + 0.2); if (p > 0 && p < 1) f = Math.max(f, m * (1 - eout(p))); });
+  if (f > 0) { ctx.fillStyle = `rgba(255,255,255,${f})`; ctx.fillRect(0, 0, W, H); }
+  // progress bar (retention cue)
+  ctx.fillStyle = 'rgba(255,255,255,0.18)'; ctx.fillRect(0, H - 10, W, 10);
+  ctx.fillStyle = '#FFD60A'; ctx.fillRect(0, H - 10, W * (t / DUR), 10);
+}
+
+let IMG_LOGO;
+window.ready = (async () => {
+  IMG_LOGO = new Image(); IMG_LOGO.src = 'build/logo_white.svg'; await IMG_LOGO.decode();
+  for (const f of ['900 40px Montserrat', '800 40px Montserrat', '700 40px Montserrat', '600 40px Montserrat']) await document.fonts.load(f);
+  await document.fonts.ready; await render(0); return true;
+})();
+window.renderAt = t => render(t);
+</script>
+</body>
+</html>

@@ -1,0 +1,297 @@
+<!doctype html>
+<html lang="pt-br">
+<head>
+<meta charset="utf-8">
+<title>HGG Djavan Conversa WA I</title>
+<link href="fonts/fontsC.css" rel="stylesheet">
+<script src="build/vn_h.js"></script>
+<style>html, body { margin: 0; background: #000; } canvas { display: block; }</style>
+</head>
+<body>
+<canvas id="c" width="1080" height="1920"></canvas>
+<script>
+// Creative I — "A conversa" with a WhatsApp-like look (light theme colours and chat conventions).
+// No WhatsApp logo or name is used. Product media is only cropped/scaled.
+const W = 1080, H = 1920, DUR = 21.0;
+const ctx = document.getElementById('c').getContext('2d');
+const F = '"Roboto", "Noto Color Emoji"';
+const COL = { wall: '#EFEAE2', head: '#008069', status: '#017561', me: '#D9FDD3', them: '#FFFFFF', text: '#111B21', meta: '#667781', blue: '#53BDEB', green: '#00A884', link: '#027EB5', icon: '#8696A0', chip: '#FFFFFF' };
+const IMG = {};
+const load = (n, s) => new Promise((ok, er) => { const i = new Image(); i.onload = () => { IMG[n] = i; ok(); }; i.onerror = er; i.src = s; });
+const clamp = (x, a = 0, b = 1) => Math.min(b, Math.max(a, x));
+const lerp = (a, b, t) => a + (b - a) * t;
+const eout = t => 1 - Math.pow(1 - t, 3);
+const eback = t => { const c1 = 1.6, c3 = c1 + 1; return 1 + c3 * Math.pow(t - 1, 3) + c1 * Math.pow(t - 1, 2); };
+const prog = (t, a, b) => clamp((t - a) / (b - a));
+
+const VN0 = 7.4, VNLEN = 5.13;
+const MSG = [
+  [-1, 'chip', 'chip', 'HOJE'],
+  [-1, 'them', 'text', 'mano 🚨'],
+  [-1, 'them', 'text', 'olha o que eu achei'],
+  [-1, 'them', 'video'],
+  [1.5, 'me', 'text', 'PERA'],
+  [2.2, 'me', 'text', 'é a camiseta do Djavan??? 😭'],
+  [3.4, 'them', 'text', 'simmm, da HGG'],
+  [4.3, 'them', 'photo'],
+  [5.4, 'me', 'text', 'que absurdo'],
+  [6.0, 'me', 'text', 'quanto??'],
+  [7.2, 'them', 'voice'],
+  [12.9, 'me', 'text', 'meu pai vai surtar kkkk'],
+  [13.6, 'me', 'text', 'vou levar uma pra mim e uma pra ele'],
+  [14.6, 'them', 'link'],
+  [15.5, 'them', 'text', 'usa o cupom PRIMEIRACOMPRA que ganha +5% off 🔥'],
+  [17.0, 'me', 'text', 'comprei ✅'],
+];
+// group tails: first bubble of a run from the same side gets the WhatsApp-style tail
+MSG.forEach((m, i) => { m.tail = m[1] !== 'chip' && (i === 0 || MSG[i - 1][1] !== m[1]); });
+const TYPING = [[2.85, 3.4], [3.85, 4.3], [14.1, 14.6], [15.05, 15.5]];
+const RECORDING = [6.35, 7.2];
+const INPUT_TYPING = [16.15, 16.95, 'comprei ✅'];
+const END = 17.8;
+
+const VIEW_TOP = 500, VIEW_BOTTOM = 1585, PAD = 26, GAP = 10, MAXW = 780;
+const TXT_FONT = `400 40px ${F}`;
+function wrap(text, maxW) {
+  ctx.font = TXT_FONT; const words = text.split(' '); const lines = []; let cur = '';
+  for (const w of words) { const test = cur ? cur + ' ' + w : w; if (ctx.measureText(test).width > maxW && cur) { lines.push(cur); cur = w; } else cur = test; }
+  if (cur) lines.push(cur); return lines;
+}
+function measure(m) {
+  const [, side, type, payload] = m;
+  if (type === 'chip') return { w: 150, h: 54 };
+  if (type === 'text') {
+    const lines = wrap(payload, MAXW - 190); ctx.font = TXT_FONT;
+    const last = ctx.measureText(lines[lines.length - 1]).width, metaW = side === 'me' ? 150 : 110;
+    const widest = Math.max(...lines.map(l => ctx.measureText(l).width));
+    const inline = last + metaW + 20 <= MAXW - 40; // timestamp fits on the last line
+    const w = Math.min(MAXW, Math.max(widest + 48, inline ? last + metaW + 48 : 0, 170));
+    return { w, h: lines.length * 50 + 30 + (inline ? 0 : 34), lines };
+  }
+  if (type === 'video') return { w: 560, h: 700 };
+  if (type === 'photo') return { w: 560, h: 710 };
+  if (type === 'voice') return { w: 740, h: 230 };
+  if (type === 'link') return { w: 760, h: 640 };
+}
+function bubble(x, y, w, h, side, tail) {
+  const c = side === 'me' ? COL.me : COL.them, r = 22;
+  ctx.save(); ctx.shadowColor = 'rgba(11,20,26,0.16)'; ctx.shadowBlur = 2; ctx.shadowOffsetY = 2;
+  ctx.fillStyle = c; ctx.beginPath();
+  ctx.roundRect(x, y, w, h, [tail && side === 'them' ? 0 : r, tail && side === 'me' ? 0 : r, r, r]); ctx.fill();
+  if (tail) {
+    ctx.beginPath();
+    if (side === 'them') { ctx.moveTo(x + 2, y); ctx.lineTo(x - 20, y); ctx.quadraticCurveTo(x - 6, y + 6, x + 2, y + 26); }
+    else { ctx.moveTo(x + w - 2, y); ctx.lineTo(x + w + 20, y); ctx.quadraticCurveTo(x + w + 6, y + 6, x + w - 2, y + 26); }
+    ctx.closePath(); ctx.fill();
+  }
+  ctx.restore();
+}
+function ticks(x, y, color = COL.blue) {
+  ctx.save(); ctx.strokeStyle = color; ctx.lineWidth = 3.2; ctx.lineCap = 'round'; ctx.lineJoin = 'round';
+  for (const o of [0, 11]) { ctx.beginPath(); ctx.moveTo(x + o, y - 7); ctx.lineTo(x + o + 6, y - 1); ctx.lineTo(x + o + 18, y - 15); ctx.stroke(); }
+  ctx.restore();
+}
+function meta(xRight, yBase, side, color = COL.meta) {
+  ctx.font = `400 24px ${F}`; ctx.textAlign = 'right'; ctx.textBaseline = 'alphabetic'; ctx.fillStyle = color;
+  if (side === 'me') { ticks(xRight - 30, yBase - 2); ctx.fillText('14:32', xRight - 40, yBase); }
+  else ctx.fillText('14:32', xRight, yBase);
+}
+const cache = new Map();
+function frameImg(n) {
+  n = clamp(n, 1, 409);
+  if (!cache.has(n)) { const im = new Image(); im.src = `ugc/frames/vd1/${String(n).padStart(4, '0')}.jpg`; cache.set(n, im.decode().then(() => im)); if (cache.size > 30) cache.delete(cache.keys().next().value); }
+  return cache.get(n);
+}
+function avatar(cx, cy, r, letter = 'P') {
+  const g = ctx.createLinearGradient(cx - r, cy - r, cx + r, cy + r); g.addColorStop(0, '#F2A65A'); g.addColorStop(1, '#E97E78');
+  ctx.fillStyle = g; ctx.beginPath(); ctx.arc(cx, cy, r, 0, Math.PI * 2); ctx.fill();
+  ctx.fillStyle = '#fff'; ctx.font = `700 ${r * 0.95}px ${F}`; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillText(letter, cx, cy + 2);
+}
+function mediaShade(x, y, w, h) { const g = ctx.createLinearGradient(0, y + h - 90, 0, y + h); g.addColorStop(0, 'rgba(0,0,0,0)'); g.addColorStop(1, 'rgba(0,0,0,0.45)'); ctx.fillStyle = g; ctx.fillRect(x, y + h - 90, w, 90); }
+
+async function drawMsg(m, x, y, t) {
+  const [, side, type, payload] = m, { w, h, lines } = m.box;
+  if (type === 'chip') {
+    ctx.save(); ctx.shadowColor = 'rgba(11,20,26,0.13)'; ctx.shadowBlur = 2; ctx.shadowOffsetY = 1;
+    ctx.fillStyle = COL.chip; ctx.beginPath(); ctx.roundRect(540 - w / 2, y, w, h, 14); ctx.fill(); ctx.restore();
+    ctx.fillStyle = '#54656F'; ctx.font = `500 26px ${F}`; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillText(payload, 540, y + h / 2 + 1);
+    return;
+  }
+  bubble(x, y, w, h, side, m.tail);
+  if (type === 'text') {
+    ctx.fillStyle = COL.text; ctx.font = TXT_FONT; ctx.textAlign = 'left'; ctx.textBaseline = 'top';
+    lines.forEach((l, i) => ctx.fillText(l, x + 24, y + 16 + i * 50));
+    meta(x + w - 18, y + h - 14, side);
+  } else if (type === 'video' || type === 'photo') {
+    const ix = x + 6, iy = y + 6, iw = w - 12, ih = h - 12;
+    ctx.save(); ctx.beginPath(); ctx.roundRect(ix, iy, iw, ih, 18); ctx.clip();
+    if (type === 'video') { const im = await frameImg(Math.floor((2.6 + (Math.max(0, t) % 3.0)) * 30) + 1); ctx.drawImage(im, 0, 150, 1080, 1330, ix, iy, iw, ih); }
+    else ctx.drawImage(IMG.foto, 300, 300, 1800, 2300, ix, iy, iw, ih);
+    mediaShade(ix, iy, iw, ih);
+    ctx.restore();
+    if (type === 'video') { ctx.fillStyle = '#fff'; ctx.font = `500 26px ${F}`; ctx.textAlign = 'left'; ctx.textBaseline = 'alphabetic'; ctx.fillText('🎥 0:13', ix + 18, iy + ih - 18); }
+    meta(x + w - 22, y + h - 22, side, '#fff');
+  } else if (type === 'voice') {
+    const p = prog(t, VN0, VN0 + VNLEN), playing = t >= VN0 && t < VN0 + VNLEN;
+    avatar(x + 72, y + 74, 46);
+    ctx.fillStyle = COL.green; ctx.beginPath(); ctx.arc(x + 108, y + 110, 18, 0, Math.PI * 2); ctx.fill();
+    ctx.fillStyle = '#fff'; ctx.beginPath(); ctx.roundRect(x + 103, y + 99, 10, 16, 5); ctx.fill(); ctx.fillRect(x + 107, y + 116, 2, 5);
+    ctx.fillStyle = '#54656F';
+    if (playing) { ctx.fillRect(x + 160, y + 56, 10, 36); ctx.fillRect(x + 180, y + 56, 10, 36); }
+    else { ctx.beginPath(); ctx.moveTo(x + 160, y + 52); ctx.lineTo(x + 196, y + 74); ctx.lineTo(x + 160, y + 96); ctx.closePath(); ctx.fill(); }
+    // waveform with playhead dot
+    const wx = x + 222, ww = w - 262, n = 38; let s = 11;
+    for (let i = 0; i < n; i++) {
+      s = (s * 9301 + 49297) % 233280; const v = 0.2 + 0.8 * Math.abs(Math.sin(i * 0.55) * 0.55 + (s / 233280) * 0.45);
+      const bh = Math.max(6, 54 * v), bx = wx + i * (ww / n);
+      ctx.fillStyle = i / n <= p ? COL.green : '#C5CDD1'; ctx.beginPath(); ctx.roundRect(bx, y + 74 - bh / 2, ww / n - 6, bh, 3); ctx.fill();
+    }
+    ctx.fillStyle = COL.green; ctx.beginPath(); ctx.arc(wx + ww * p, y + 74, 12, 0, Math.PI * 2); ctx.fill();
+    ctx.fillStyle = COL.meta; ctx.font = `400 24px ${F}`; ctx.textAlign = 'left'; ctx.textBaseline = 'alphabetic';
+    ctx.fillText(playing ? `0:0${Math.floor(t - VN0)}` : '0:05', x + 160, y + 136);
+    meta(x + w - 18, y + 136, side);
+    // transcript (as the app shows under voice messages)
+    const TOK = [['Cara,', 0], ['tá', 0.58], ['R$ 49!', 0.72], ['E no', 2.84], ['Pix', 3.09], ['sai', 3.41], ['R$ 46,55.', 3.63]];
+    const said = t >= VN0 + VNLEN ? 'Cara, tá R$ 49! E no Pix sai R$ 46,55.' : TOK.filter(([, a]) => t >= VN0 + a - 0.02).map(([w]) => w).join(' ');
+    ctx.strokeStyle = '#E9EDEF'; ctx.lineWidth = 2; ctx.beginPath(); ctx.moveTo(x + 24, y + 158); ctx.lineTo(x + w - 24, y + 158); ctx.stroke();
+    ctx.fillStyle = COL.text; ctx.font = `400 32px ${F}`; ctx.textAlign = 'left'; ctx.textBaseline = 'alphabetic'; ctx.fillText(said, x + 24, y + 202, w - 48);
+  } else if (type === 'link') {
+    const bx = x + 6, by = y + 6, bw = w - 12;
+    ctx.save(); ctx.beginPath(); ctx.roundRect(bx, by, bw, 520, 16); ctx.clip();
+    ctx.fillStyle = '#F0F2F5'; ctx.fillRect(bx, by, bw, 520);
+    ctx.fillStyle = '#F3EDE6'; ctx.fillRect(bx, by, bw, 350);
+    const s = 0.29; ctx.imageSmoothingQuality = 'high';
+    ctx.drawImage(IMG.frente, bx + bw / 2 - 583 * s, by + 178 - 760 * s, 1200 * s, 1600 * s);
+    ctx.restore();
+    ctx.textAlign = 'left'; ctx.textBaseline = 'alphabetic';
+    ctx.fillStyle = COL.text; ctx.font = `500 32px ${F}`; ctx.fillText('Camiseta Djavan Oceano MPB Oversized Preta', bx + 22, by + 400, bw - 44);
+    ctx.fillStyle = COL.meta; ctx.font = `400 26px ${F}`; ctx.fillText('100% algodão fio 30.1 · DTF alta definição · R$ 49,00', bx + 22, by + 444, bw - 44);
+    ctx.fillText('hggstyle.com.br', bx + 22, by + 490);
+    ctx.fillStyle = COL.link; ctx.font = `400 32px ${F}`; ctx.fillText('hggstyle.com.br/camiseta-streetwear-djavan…', x + 24, y + 584, w - 48);
+    meta(x + w - 18, y + h - 14, side);
+  }
+}
+function targetAt(tt) {
+  let y = 0; for (const m of MSG) if (tt >= m[0]) { if (!m.box) m.box = measure(m); y += m.box.h + GAP + (m.tail ? 8 : 0); }
+  return Math.max(0, y - GAP - (VIEW_BOTTOM - VIEW_TOP - PAD));
+}
+function wallpaper() {
+  ctx.fillStyle = COL.wall; ctx.fillRect(0, 300, W, H - 300);
+  // doodle pattern (abstract, low contrast)
+  ctx.save(); ctx.globalAlpha = 0.07; ctx.strokeStyle = '#5b5148'; ctx.lineWidth = 3; ctx.lineCap = 'round';
+  let s = 3; const r = () => (s = (s * 16807) % 2147483647) / 2147483647;
+  for (let gy = 300; gy < H; gy += 110) for (let gx = 0; gx < W; gx += 110) {
+    const x = gx + r() * 60, y = gy + r() * 60, k = Math.floor(r() * 4);
+    ctx.beginPath();
+    if (k === 0) ctx.arc(x, y, 14, 0, Math.PI * 2);
+    else if (k === 1) { ctx.moveTo(x - 14, y + 10); ctx.quadraticCurveTo(x, y - 18, x + 14, y + 10); }
+    else if (k === 2) { ctx.moveTo(x - 12, y - 12); ctx.lineTo(x + 12, y + 12); ctx.moveTo(x + 12, y - 12); ctx.lineTo(x - 12, y + 12); }
+    else { ctx.rect(x - 11, y - 11, 22, 22); }
+    ctx.stroke();
+  }
+  ctx.restore();
+}
+
+async function render(t) {
+  ctx.setTransform(1, 0, 0, 1, 0, 0);
+  ctx.fillStyle = '#0B141A'; ctx.fillRect(0, 0, W, 300);
+  wallpaper();
+  const typing = TYPING.find(([a, b]) => t >= a && t < b);
+  const visible = MSG.filter(m => t >= m[0]);
+  const scroll = [0, 1, 2, 3, 4, 5, 6, 7].map(k => targetAt(t - k * 0.04)).reduce((a, b) => a + b, 0) / 8;
+  let y = 0;
+  ctx.save(); ctx.beginPath(); ctx.rect(0, VIEW_TOP - 10, W, VIEW_BOTTOM - VIEW_TOP + 20); ctx.clip();
+  for (const m of visible) {
+    if (!m.box) m.box = measure(m);
+    if (m.tail) y += 8;
+    const { w, h } = m.box, yy = VIEW_TOP + PAD + y - scroll;
+    y += h + GAP;
+    if (yy + h < VIEW_TOP - 40 || yy > VIEW_BOTTOM + 40) continue;
+    const a = m[0] < 0 ? 1 : eback(clamp((t - m[0]) / 0.25));
+    const x = m[1] === 'me' ? W - 36 - w : 36;
+    ctx.save();
+    const ox = m[1] === 'me' ? x + w : x, oy = yy + h;
+    ctx.translate(ox, oy); ctx.scale(lerp(0.7, 1, a), lerp(0.7, 1, a)); ctx.translate(-ox, -oy);
+    ctx.globalAlpha = clamp(a * 1.6);
+    await drawMsg(m, x, yy, t);
+    ctx.restore();
+  }
+  ctx.restore();
+
+  // ----- phone status bar + green header -----
+  ctx.fillStyle = COL.status; ctx.fillRect(0, 300, W, 56);
+  ctx.fillStyle = '#fff'; ctx.font = `500 28px ${F}`; ctx.textAlign = 'left'; ctx.textBaseline = 'middle'; ctx.fillText('14:32', 36, 329);
+  ctx.textAlign = 'right'; ctx.fillText('92%', 1040, 329);
+  ctx.fillRect(920, 318, 34, 20); ctx.fillRect(954, 324, 4, 8); // battery
+  for (let i = 0; i < 4; i++) ctx.fillRect(860 + i * 11, 336 - i * 6, 7, 6 + i * 6); // signal
+  ctx.fillStyle = COL.head; ctx.fillRect(0, 356, W, 136);
+  ctx.strokeStyle = '#fff'; ctx.lineWidth = 5; ctx.lineCap = 'round'; ctx.lineJoin = 'round';
+  ctx.beginPath(); ctx.moveTo(62, 404); ctx.lineTo(40, 424); ctx.lineTo(62, 444); ctx.moveTo(40, 424); ctx.lineTo(76, 424); ctx.stroke();
+  avatar(140, 424, 40);
+  ctx.fillStyle = '#fff'; ctx.textAlign = 'left'; ctx.font = `500 38px ${F}`; ctx.fillText('Pedro', 198, 404);
+  const status = (t >= RECORDING[0] && t < RECORDING[1]) ? 'gravando áudio…' : typing ? 'digitando…' : 'online';
+  ctx.font = `400 26px ${F}`; ctx.fillStyle = 'rgba(255,255,255,0.88)'; ctx.fillText(status, 198, 448);
+  // header icons: video, phone, menu
+  ctx.strokeStyle = '#fff'; ctx.lineWidth = 4;
+  ctx.beginPath(); ctx.roundRect(802, 409, 44, 32, 6); ctx.stroke(); ctx.beginPath(); ctx.moveTo(846, 419); ctx.lineTo(864, 408); ctx.lineTo(864, 442); ctx.lineTo(846, 431); ctx.closePath(); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(906, 410); ctx.quadraticCurveTo(900, 432, 924, 444); ctx.quadraticCurveTo(936, 450, 944, 440); ctx.lineTo(936, 430); ctx.lineTo(926, 434); ctx.quadraticCurveTo(916, 428, 914, 420); ctx.lineTo(920, 412); ctx.lineTo(912, 402); ctx.closePath(); ctx.fillStyle = '#fff'; ctx.fill();
+  for (let i = 0; i < 3; i++) { ctx.beginPath(); ctx.arc(1030, 410 + i * 14, 4.5, 0, Math.PI * 2); ctx.fill(); }
+
+  // ----- input bar (on the wallpaper) -----
+  ctx.save(); ctx.shadowColor = 'rgba(11,20,26,0.12)'; ctx.shadowBlur = 3; ctx.shadowOffsetY = 1;
+  ctx.fillStyle = '#fff'; ctx.beginPath(); ctx.roundRect(24, 1610, 876, 96, 48); ctx.fill(); ctx.restore();
+  // emoji face
+  ctx.strokeStyle = COL.icon; ctx.lineWidth = 3.5; ctx.beginPath(); ctx.arc(84, 1658, 22, 0, Math.PI * 2); ctx.stroke();
+  ctx.fillStyle = COL.icon; ctx.beginPath(); ctx.arc(76, 1652, 3.5, 0, Math.PI * 2); ctx.arc(92, 1652, 3.5, 0, Math.PI * 2); ctx.fill();
+  ctx.beginPath(); ctx.arc(84, 1660, 11, 0.15 * Math.PI, 0.85 * Math.PI); ctx.stroke();
+  let typed = '';
+  if (t >= INPUT_TYPING[0] && t < 17.0) { const ch = [...INPUT_TYPING[2]]; typed = ch.slice(0, Math.floor(prog(t, INPUT_TYPING[0], INPUT_TYPING[1]) * ch.length)).join(''); }
+  ctx.font = `400 38px ${F}`; ctx.textAlign = 'left'; ctx.textBaseline = 'middle';
+  ctx.fillStyle = typed ? COL.text : COL.icon; ctx.fillText(typed || 'Mensagem', 128, 1660);
+  if (!typed) { // clip + camera
+    ctx.save(); ctx.translate(780, 1658); ctx.rotate(0.7); ctx.strokeStyle = COL.icon; ctx.lineWidth = 3.5; ctx.beginPath(); ctx.roundRect(-9, -22, 18, 44, 9); ctx.stroke(); ctx.restore();
+    ctx.strokeStyle = COL.icon; ctx.lineWidth = 3.5; ctx.beginPath(); ctx.roundRect(830, 1644, 44, 32, 6); ctx.stroke(); ctx.beginPath(); ctx.arc(852, 1660, 9, 0, Math.PI * 2); ctx.stroke();
+  } else if (Math.floor(t * 3) % 2 === 0) { ctx.fillStyle = COL.green; ctx.fillRect(132 + ctx.measureText(typed).width, 1638, 3, 44); }
+  ctx.fillStyle = COL.green; ctx.beginPath(); ctx.arc(988, 1658, 48, 0, Math.PI * 2); ctx.fill();
+  ctx.fillStyle = '#fff';
+  if (typed) { ctx.beginPath(); ctx.moveTo(968, 1636); ctx.lineTo(1012, 1658); ctx.lineTo(968, 1680); ctx.lineTo(974, 1660); ctx.closePath(); ctx.fill(); }
+  else { ctx.beginPath(); ctx.roundRect(978, 1632, 20, 36, 10); ctx.fill(); ctx.strokeStyle = '#fff'; ctx.lineWidth = 4; ctx.beginPath(); ctx.arc(988, 1660, 18, 0.1 * Math.PI, 0.9 * Math.PI); ctx.stroke(); ctx.fillRect(986, 1678, 4, 10); }
+
+  // ----- hook caption -----
+  ctx.save(); ctx.shadowColor = 'rgba(0,0,0,0.4)'; ctx.shadowBlur = 20;
+  ctx.fillStyle = '#fff'; ctx.beginPath(); ctx.roundRect(60, 105, 960, 170, 26); ctx.fill(); ctx.restore();
+  ctx.fillStyle = '#0d0b0a'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+  ctx.font = `800 46px "Montserrat", "Noto Color Emoji"`; ctx.fillText('quando seu amigo acha', 540, 160);
+  ctx.font = `900 50px "Montserrat", "Noto Color Emoji"`; ctx.fillText('a camiseta do Djavan 😭', 540, 223);
+
+  // ----- end card -----
+  if (t >= END) {
+    const p = eout(prog(t, END, END + 0.5));
+    ctx.fillStyle = `rgba(0,0,0,${0.55 * p})`; ctx.fillRect(0, 300, W, H - 300);
+    const cy = lerp(H + 50, 780, p);
+    ctx.save(); ctx.shadowColor = 'rgba(0,0,0,0.4)'; ctx.shadowBlur = 50;
+    ctx.fillStyle = '#fff'; ctx.beginPath(); ctx.roundRect(50, cy, 980, 1000, 44); ctx.fill(); ctx.restore();
+    ctx.save(); ctx.shadowColor = 'rgba(0,0,0,0.25)'; ctx.shadowBlur = 40; ctx.shadowOffsetY = 18;
+    const s = 0.36; ctx.drawImage(IMG.frente, 540 - 583 * s, cy + 250 - 760 * s, 1200 * s, 1600 * s); ctx.restore();
+    ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillStyle = '#111B21';
+    ctx.font = `800 40px "Montserrat"`; ctx.fillText('A camiseta do Djavan', 540, cy + 545);
+    ctx.font = `900 120px "Montserrat"`; ctx.fillText('R$ 49,00', 540, cy + 650);
+    ctx.fillStyle = COL.head; ctx.font = `800 36px "Montserrat"`; ctx.fillText('R$ 46,55 no Pix  ·  6x de R$ 8,17', 540, cy + 740);
+    const cb = eback(prog(t, END + 0.5, END + 0.9)), pulse = 1 + 0.03 * Math.sin((t - END - 1) * 8) * clamp((t - END - 1) * 3);
+    if (cb > 0) {
+      ctx.save(); ctx.translate(540, cy + 860); ctx.scale(cb * pulse, cb * pulse);
+      ctx.fillStyle = '#0d0b0a'; ctx.beginPath(); ctx.roundRect(-400, -60, 800, 120, 60); ctx.fill();
+      ctx.fillStyle = '#fff'; ctx.font = `900 44px "Montserrat"`; ctx.fillText('COMPRAR NA HGG  →', 0, 3); ctx.restore();
+    }
+  }
+}
+
+window.ready = (async () => {
+  await Promise.all([load('frente', 'build/frente_2x.png'), load('foto', 'build/foto_modelo_2x.png')]);
+  for (const f of ['400 40px Roboto', '500 40px Roboto', '700 40px Roboto', '800 40px Montserrat', '900 40px Montserrat', '40px "Noto Color Emoji"']) await document.fonts.load(f);
+  await document.fonts.ready; await render(0); return true;
+})();
+window.renderAt = t => render(t);
+</script>
+</body>
+</html>

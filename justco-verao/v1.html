@@ -2,7 +2,7 @@
 <html lang="pt-br">
 <head>
 <meta charset="utf-8">
-<title>Just Co V1 Helicóptero</title>
+<title>Just Co V1 T-shirt em Tricô</title>
 <link href="fonts/fonts.css" rel="stylesheet">
 <style>html, body { margin: 0; background: #000; } canvas { display: block; }</style>
 </head>
@@ -10,72 +10,76 @@
 <canvas id="c" width="1080" height="1920"></canvas>
 <script src="engine.js"></script>
 <script>
-// V1 — "NÃO É SOBRE O HELICÓPTERO." Aspirational / curiosity hook on the raw hangar footage, product facts from the
-// PDP (textura horizontal, gola careca, toque macio, caimento premium), offer end card with coupon THEFIRST.
+// V1 — "T-SHIRT EM TRICÔ PRA HOMEM QUE SE VESTE BEM." Product-first hook that qualifies the click: names the product,
+// the audience and the unit price in the first second. Price is always "por peça" and the instalments are spelled out
+// ("parcele em 3 vezes") so nobody reads "3 peças". Facts from the PDP only; no mention of the location.
 const DUR = 15.0;
 const SEGMENTS = [
-  { t0: 0.0, t1: 2.6, r0: 0.0, r1: 2.6, z0: 1.14, z1: 1.0, fx: 0.5, fy: 0.42 },
-  { t0: 2.6, t1: 4.8, r0: 2.6, r1: 4.8, z0: 1.04, z1: 1.14, fx: 0.5, fy: 0.4 },
-  { t0: 4.8, t1: 6.9, r0: 5.4, r1: 7.5, z0: 1.1, z1: 1.0, fx: 0.5, fy: 0.45 },
-  { t0: 6.9, t1: 8.8, r0: 7.6, r1: 9.5, z0: 1.06, z1: 1.0, fx: 0.5, fy: 0.45 },
-  { t0: 8.8, t1: 11.0, r0: 11.0, r1: 13.0, z0: 1.0, z1: 1.18, fx: 0.5, fy: 0.42, fy1: 0.4 },
+  { t0: 0.0, t1: 2.8, r0: 0.3, r1: 2.9, z0: 1.2, z1: 1.1, fx: 0.5, fy: 0.47 },
+  { t0: 2.8, t1: 5.0, r0: 11.0, r1: 13.0, z0: 1.0, z1: 1.16, fx: 0.5, fy: 0.42, fy1: 0.4 },
+  { t0: 5.0, t1: 7.0, r0: 5.4, r1: 7.4, z0: 1.1, z1: 1.0, fx: 0.5, fy: 0.42 },
+  { t0: 7.0, t1: 8.9, r0: 7.6, r1: 9.5, z0: 1.06, z1: 1.0, fx: 0.5, fy: 0.45 },
+  { t0: 8.9, t1: 11.0, r0: 2.6, r1: 4.7, z0: 1.04, z1: 1.14, fx: 0.5, fy: 0.4 },
   { t0: 11.0, t1: 15.0, r0: 13.0, r1: 16.2, z0: 1.08, z1: 1.0, fx: 0.5, fy: 0.45 },
 ];
+const PER_PIECE = 'R$ 139,90 · CADA PEÇA';
 
 async function renderAt(t) {
   await drawSegments(t, SEGMENTS);
 
-  // 0–2.6 · hook
-  if (t < 2.7) {
-    shade(0.55, 0.0, 0.05);
-    const out = prog(t, 2.4, 2.6);
-    txt('NÃO É SOBRE O', 80, 470, { size: 150, p: prog(t, 0.1, 0.5), out });
-    txt('HELICÓPTERO.', 76, 650, { size: 196, color: C.orange, p: prog(t, 0.5, 0.95), out, shadow: 0.25 });
+  // 0–2.8 · hook: product + who it is for + unit price
+  if (t < 2.9) {
+    lowShade(0.8, 1000, 1520);
+    const out = prog(t, 2.6, 2.8);
+    txt('MODA MASCULINA · VERÃO 26', 82, 1180, { font: F.sans, weight: 700, size: 30, ls: 7, p: 1, out });
+    txt('T-SHIRT EM TRICÔ', 76, 1345, { size: 178, p: 1, out });
+    txt('PRA HOMEM QUE SE VESTE BEM.', 80, 1435, { size: 80, color: C.orange, p: prog(t, -0.2, 0.25), out, shadow: 0.25 });
+    pill(PER_PIECE, 74, 1475, { size: 32, h: 80, bg: C.white, color: C.ink, p: prog(t, 0.3, 0.7), out });
   }
-  // 2.6–4.8 · turn
-  if (t >= 2.6 && t < 4.9) {
+  logo(W / 2 - 62, 150, 48, prog(t, 0.2, 0.6) * (1 - prog(t, 10.9, 11.2)));
+
+  // 2.8–5 · touch and fit (PDP wording)
+  if (t >= 2.8 && t < 5.1) {
     lowShade(0.72);
-    const out = prog(t, 4.6, 4.8);
-    txt('É sobre como', 80, 1290, { font: F.serif, italic: true, weight: 500, size: 104, p: prog(t, 2.65, 3.05), out });
-    txt('você chega.', 80, 1415, { font: F.serif, italic: true, weight: 500, size: 104, p: prog(t, 2.95, 3.35), out });
+    const out = prog(t, 4.8, 5.0);
+    txt('Toque macio.', 80, 1290, { font: F.serif, italic: true, weight: 500, size: 104, p: prog(t, 2.85, 3.25), out });
+    txt('Caimento premium.', 80, 1415, { font: F.serif, italic: true, weight: 500, size: 104, p: prog(t, 3.15, 3.55), out });
   }
-  // brand mark from 2.6 on (hidden on the end card, which carries its own)
-  logo(W / 2 - 62, 150, 48, prog(t, 2.6, 3.0) * (1 - prog(t, 10.9, 11.2)));
-
-  // 4.8–6.9 · product name
-  if (t >= 4.8 && t < 7.0) {
+  // 5–7 · product name
+  if (t >= 5.0 && t < 7.1) {
     lowShade(0.75);
-    const out = prog(t, 6.7, 6.9);
-    txt('JUST CO · VERÃO 26', 82, 1150, { font: F.sans, weight: 700, size: 30, ls: 7, p: prog(t, 4.85, 5.2), out });
-    txt('T-SHIRT TRICOT', 78, 1300, { size: 150, p: prog(t, 5.0, 5.4), out });
-    txt('HORIZONTAL', 78, 1430, { size: 150, color: C.orange, p: prog(t, 5.25, 5.65), out, shadow: 0.25 });
+    const out = prog(t, 6.8, 7.0);
+    txt('JUST CO · VERÃO 26', 82, 1150, { font: F.sans, weight: 700, size: 30, ls: 7, p: prog(t, 5.05, 5.4), out });
+    txt('T-SHIRT MC TRICOT', 78, 1300, { size: 150, p: prog(t, 5.2, 5.6), out });
+    txt('HORIZONTAL', 78, 1430, { size: 150, color: C.orange, p: prog(t, 5.45, 5.85), out, shadow: 0.25 });
   }
-  // 6.9–11 · product facts (only what the PDP states)
-  if (t >= 6.9 && t < 8.8) {
-    const out = prog(t, 8.6, 8.8);
-    pill('TEXTURA HORIZONTAL', 70, 1150, { check: true, p: prog(t, 7.0, 7.45), out });
-    pill('GOLA CARECA', 70, 1250, { check: true, p: prog(t, 7.5, 7.95), out });
+  // 7–11 · details
+  if (t >= 7.0 && t < 8.9) {
+    const out = prog(t, 8.7, 8.9);
+    pill('TEXTURA HORIZONTAL', 70, 1150, { check: true, p: prog(t, 7.1, 7.55), out });
+    pill('GOLA CARECA', 70, 1250, { check: true, p: prog(t, 7.6, 8.05), out });
   }
-  if (t >= 8.8 && t < 11.0) {
+  if (t >= 8.9 && t < 11.0) {
     const out = prog(t, 10.8, 11.0);
-    pill('TOQUE MACIO', 70, 1150, { check: true, p: prog(t, 8.9, 9.35), out });
-    pill('CAIMENTO PREMIUM', 70, 1250, { check: true, p: prog(t, 9.4, 9.85), out });
+    pill('ACABAMENTO PREMIUM', 70, 1150, { check: true, p: prog(t, 9.0, 9.45), out });
+    pill('DO P AO GG', 70, 1250, { check: true, p: prog(t, 9.5, 9.95), out });
   }
 
-  // 11–15 · end card
+  // 11–15 · end card: unit price spelled out
   if (t >= 11.0) {
     const p = prog(t, 11.0, 11.5);
     ctx.fillStyle = `rgba(10,10,12,${0.5 * eout(p)})`; ctx.fillRect(0, 0, W, H);
     const y0 = 690 + (1 - eout(p)) * 120;
     ctx.save(); ctx.globalAlpha = eout(p);
-    rrect(60, y0, W - 120, 820, 40); ctx.fillStyle = 'rgba(17,17,17,.92)'; ctx.fill();
+    rrect(60, y0, W - 120, 840, 40); ctx.fillStyle = 'rgba(17,17,17,.92)'; ctx.fill();
     ctx.restore();
     logo(120, y0 + 64, 52, eout(p));
     txt('T-SHIRT MC TRICOT HORIZONTAL', 120, y0 + 200, { font: F.sans, weight: 700, size: 30, ls: 5, color: '#CFCAC2', p: prog(t, 11.2, 11.6), shadow: 0 });
-    txt('R$ 139,90', 116, y0 + 340, { size: 150, p: prog(t, 11.3, 11.7), shadow: 0 });
-    txt('3x de R$ 46,63 sem juros', 120, y0 + 400, { font: F.sans, weight: 500, size: 32, color: '#B9B4AC', p: prog(t, 11.45, 11.85), shadow: 0 });
-    coupon(W / 2, y0 + 450, prog(t, 11.7, 12.1), { w: W - 240, label: '10% OFF NA 1ª COMPRA · CUPOM' });
-    button('COMPRE AGORA  →', W / 2, y0 + 650, t, { w: W - 240, p: prog(t, 12.0, 12.4) });
+    const pw = txt('R$ 139,90', 116, y0 + 340, { size: 150, p: prog(t, 11.3, 11.7), shadow: 0 }) || 0;
+    txt('CADA PEÇA', 116 + pw + 26, y0 + 330, { font: F.sans, weight: 800, size: 34, ls: 4, color: C.orange, p: prog(t, 11.45, 11.85), shadow: 0 });
+    txt('Parcele em 3 vezes de R$ 46,63 sem juros', 120, y0 + 405, { font: F.sans, weight: 500, size: 32, color: '#B9B4AC', p: prog(t, 11.55, 11.95), shadow: 0 });
+    coupon(W / 2, y0 + 460, prog(t, 11.75, 12.15), { w: W - 240, label: '10% OFF NA 1ª COMPRA · CUPOM' });
+    button('COMPRE A SUA  →', W / 2, y0 + 670, t, { w: W - 240, p: prog(t, 12.05, 12.45) });
   }
 }
 window.renderAt = renderAt;

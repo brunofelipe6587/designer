@@ -30,7 +30,7 @@ lida do site e da Biblioteca de Anúncios.
 
 | Arquivo | Formato | Ângulo / estrutura | Uso |
 |---|---|---|---|
-| `out/JustCo_Verao_9x16_V1_NaoESobreOHelicoptero.mp4` | Reels/Stories 15 s | Curiosidade + aspiracional (DSB) | Prospecção |
+| `out/JustCo_Verao_9x16_V1_TshirtEmTrico.mp4` | Reels/Stories 15 s | Gancho de produto que qualifica (produto + público + preço por peça no 1º segundo) | Prospecção |
 | `out/JustCo_Verao_9x16_V2_ReparaNaTextura.mp4` | Reels/Stories 15 s | Prova técnica (detalhe) + 3 cores + oferta | Prospecção / RMK |
 | `out/estaticos/…E1_VeraoTextoAtras.png` | Feed 4:5 | DNA do produto (efeito texto atrás) | Prospecção |
 | `out/estaticos/…E2_VeraoStories.png` | Stories 9:16 | Mesmo conceito do E1 | Prospecção |
@@ -55,10 +55,14 @@ Montserrat no lugar da Inter, Playfair Display igual). Os PNGs em `out/estaticos
 
 ## Copy para o Gerenciador de Anúncios
 
-**V1 · Não é sobre o helicóptero**
-- Texto principal: Não é sobre o helicóptero. É sobre como você chega. A T-shirt MC Tricot Horizontal tem textura
-  horizontal, gola careca, toque macio e caimento premium. R$ 139,90 em 3x sem juros.
-- Título: Tricô com caimento premium
+**V1 · T-shirt em tricô pra homem que se veste bem**
+- Gancho (frame 0, já é a miniatura): "MODA MASCULINA · VERÃO 26 / T-SHIRT EM TRICÔ / PRA HOMEM QUE SE VESTE BEM /
+  R$ 139,90 · CADA PEÇA". Produto, público e preço unitário antes do primeiro corte, para filtrar o clique e mandar
+  sessão qualificada. O preço aparece sempre como "cada peça" e o parcelamento por extenso ("parcele em 3 vezes de
+  R$ 46,63"), para ninguém entender "3 peças pelo valor". Sem menção ao local da gravação.
+- Texto principal: T-shirt masculina em tricô com textura horizontal, gola careca, toque macio e caimento premium.
+  R$ 139,90 cada peça, ou parcele em 3 vezes de R$ 46,63 sem juros. Do P ao GG.
+- Título: T-shirt em tricô · R$ 139,90 a peça
 - Descrição: 10% OFF na 1ª compra · cupom THEFIRST
 - CTA: Comprar agora
 
@@ -112,8 +116,7 @@ Montserrat no lugar da Inter, Playfair Display igual). Os PNGs em `out/estaticos
    ou todos no mesmo conjunto com orçamento igual por 7 dias. Métricas de corte: hook rate > 25% nos vídeos,
    CTR > 1% nos estáticos.
 2. **Remarketing (visitou 14 dias / adicionou ao carrinho):** E6, E5, E7 e V2.
-3. Escalar o vencedor com variações de hook (o V1 e o E3 compartilham conceito, então dá para ler qual formato
-   performa melhor para o mesmo ângulo).
+3. Escalar o vencedor com variações de hook.
 
 ## Como regenerar
 

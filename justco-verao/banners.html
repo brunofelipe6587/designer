@@ -1,0 +1,154 @@
+<!doctype html>
+<html lang="pt-br">
+<head>
+<meta charset="utf-8">
+<title>Just Co Banners Verão</title>
+<link href="fonts/fonts.css" rel="stylesheet">
+<style>
+/* Home banners for the summer collection (link: /verao/c). Built on the store's own system: Bebas Neue for display
+   (as in the home's "COLEÇÃO VERÃO JUST CO" section title) + Inter, #151515 ink, and the layout language of the
+   current home slides: model front on one side, model back on the other, centred headline, "USE O CUPOM" box,
+   three commercial-condition icons with dividers, pill CTA. A = light sand, B = dark taupe (like the Cardigan slide).
+   Desktop 1920×960 (2:1, rendered @2x = 3840×1920) · Mobile 1080×1920 (9:16, @2x = 2160×3840). */
+:root { --ink: #151515; --paper: #FBFBFB; --sand: #E6DCCB; --display: 'Bebas Neue', sans-serif; --sans: 'Inter', sans-serif; }
+html, body { margin: 0; background: #777; }
+body { display: flex; flex-wrap: wrap; gap: 40px; padding: 40px; align-items: flex-start; }
+.bn { position: relative; overflow: hidden; flex: none; font-family: var(--sans); }
+.desk { width: 1920px; height: 960px; }
+.mob { width: 1080px; height: 1920px; }
+.abs { position: absolute; }
+.model { position: absolute; bottom: 0; filter: drop-shadow(0 30px 40px rgba(0,0,0,.18)); }
+.col { position: absolute; display: flex; flex-direction: column; align-items: center; text-align: center; }
+.eyebrow { font: 600 22px/1 var(--sans); letter-spacing: .42em; text-transform: uppercase; }
+.pre { font-family: var(--display); line-height: .9; letter-spacing: .04em; }
+.hero { font-family: var(--display); line-height: .82; letter-spacing: .01em; padding-top: .15em; } /* room for the tilde of VERÃO */
+.sub { font: 500 26px/1.35 var(--sans); }
+.sub b { font-weight: 700; }
+.cupom { display: inline-flex; flex-direction: column; align-items: center; border-radius: 14px; padding: 16px 56px 10px; }
+.cupom .k { font: 600 20px/1 var(--sans); letter-spacing: .18em; text-transform: uppercase; }
+.cupom .v { font-family: var(--display); font-size: 80px; line-height: 1; letter-spacing: .04em; margin-top: 6px; }
+.conds { display: flex; align-items: stretch; }
+.cond { display: flex; flex-direction: column; align-items: center; width: 210px; padding: 0 10px; }
+.cond + .cond { border-left: 2px solid currentColor; }
+.cond .ic { width: 60px; height: 60px; border: 2px solid currentColor; border-radius: 50%; display: grid; place-items: center; margin-bottom: 14px; }
+.cond .ic svg { width: 30px; height: 30px; fill: none; stroke: currentColor; stroke-width: 1.6; stroke-linecap: round; stroke-linejoin: round; }
+.cond b { font: 800 24px/1.1 var(--sans); text-transform: uppercase; }
+.cond span { font: 500 16px/1.3 var(--sans); text-transform: uppercase; letter-spacing: .04em; margin-top: 4px; opacity: .85; }
+.cta { display: inline-flex; align-items: center; gap: 14px; height: 74px; padding: 0 48px; border-radius: 40px; font: 700 22px/1 var(--sans); letter-spacing: .12em; text-transform: uppercase; }
+.cta svg { width: 26px; height: 26px; fill: none; stroke: currentColor; stroke-width: 2.2; stroke-linecap: round; stroke-linejoin: round; }
+
+/* ---------- A · light sand ---------- */
+.A { background: radial-gradient(60% 90% at 50% 30%, #F7F2EA 0%, #EDE4D6 45%, #DCCFBB 100%); color: var(--ink); }
+.A::before { content: ''; position: absolute; inset: 0; background: radial-gradient(35% 50% at 82% 8%, rgba(255,246,225,.75), rgba(255,246,225,0) 70%); }
+.A .eyebrow { color: #6B6B6B; }
+.A .sub { color: #494E4C; }
+.A .cupom { background: var(--ink); color: #fff; }
+.A .cupom .k { color: #CFCAC2; }
+.A .conds { color: var(--ink); }
+.A .cta { background: var(--ink); color: #fff; }
+/* ---------- B · dark taupe ---------- */
+.B { background: radial-gradient(70% 100% at 50% 20%, #8A8378 0%, #615B52 48%, #34312C 100%); color: #fff; }
+.B::before { content: ''; position: absolute; inset: 0; background: linear-gradient(90deg, rgba(0,0,0,.25), rgba(0,0,0,0) 30%, rgba(0,0,0,0) 70%, rgba(0,0,0,.25)); }
+.B .eyebrow { color: #E6DCCB; }
+.B .sub { color: #EDE7DD; }
+.B .cupom { background: rgba(21,21,21,.55); border: 1.5px solid rgba(255,255,255,.18); color: #fff; }
+.B .cupom .k { color: #E6DCCB; }
+.B .conds { color: #fff; }
+.B .cta { background: var(--sand); color: var(--ink); }
+.B .model { filter: drop-shadow(0 30px 50px rgba(0,0,0,.35)); }
+</style>
+</head>
+<body>
+
+<!-- reusable icons -->
+<svg width="0" height="0" style="position:absolute">
+  <symbol id="i-tag" viewBox="0 0 24 24"><path d="M3 12V4.5A1.5 1.5 0 0 1 4.5 3H12l9 9-9 9z"/><circle cx="7.5" cy="7.5" r="1.4"/></symbol>
+  <symbol id="i-card" viewBox="0 0 24 24"><rect x="2" y="5" width="20" height="14" rx="2"/><path d="M2 10h20M6 15h4"/></symbol>
+  <symbol id="i-truck" viewBox="0 0 24 24"><rect x="1" y="6" width="13" height="10" rx="1"/><path d="M14 9h4l3 3v4h-7"/><circle cx="5.5" cy="17.5" r="2"/><circle cx="17.5" cy="17.5" r="2"/></symbol>
+  <symbol id="i-arrow" viewBox="0 0 24 24"><path d="M4 12h15M13 6l6 6-6 6"/></symbol>
+</svg>
+
+<!-- ===================== A · DESKTOP ===================== -->
+<section class="bn desk A" id="a_desk">
+  <img class="model" src="assets/p_bermuda.png" style="left:170px;height:930px">
+  <img class="model" src="assets/p_bermuda_costas.png" style="right:170px;height:930px">
+  <div class="col" style="left:560px;width:800px;top:56px">
+    <div class="eyebrow">Just Co · Nova coleção</div>
+    <div class="pre" style="font-size:84px;margin-top:22px">COLEÇÃO</div>
+    <div class="hero" style="font-size:270px">VERÃO</div>
+    <div class="sub" style="margin-top:14px">Camisetas, polos e bermudas a partir de <b>R$ 129,90</b></div>
+    <div class="cupom" style="margin-top:22px;padding:12px 52px 8px"><span class="k">Use o cupom:</span><span class="v">THEFIRST</span></div>
+    <div class="conds" style="margin-top:24px">
+      <div class="cond"><div class="ic"><svg><use href="#i-tag"/></svg></div><b>10% OFF</b><span>na primeira compra</span></div>
+      <div class="cond"><div class="ic"><svg><use href="#i-card"/></svg></div><b>Até 12x</b><span>sem juros</span></div>
+      <div class="cond"><div class="ic"><svg><use href="#i-truck"/></svg></div><b>Frete grátis</b><span>acima de R$ 350</span></div>
+    </div>
+    <div class="cta" style="margin-top:26px">Ver coleção verão <svg><use href="#i-arrow"/></svg></div>
+  </div>
+</section>
+
+<!-- ===================== B · DESKTOP ===================== -->
+<section class="bn desk B" id="b_desk">
+  <img class="model" src="assets/p_polo.png" style="left:150px;height:940px">
+  <img class="model" src="assets/p_polo_costas.png" style="right:160px;height:930px">
+  <div class="col" style="left:560px;width:800px;top:50px">
+    <div class="eyebrow">Novidades · Just Co</div>
+    <div class="hero" style="font-size:290px;margin-top:30px">VERÃO</div>
+    <div class="pre" style="font-size:56px;margin-top:-4px;letter-spacing:.32em;padding-left:.32em">CHEGOU</div>
+    <div class="sub" style="margin-top:18px">Os novos modelos da estação, a partir de <b>R$ 129,90</b></div>
+    <div class="cupom" style="margin-top:22px;padding:12px 52px 8px"><span class="k">Use o cupom:</span><span class="v">THEFIRST</span></div>
+    <div class="conds" style="margin-top:24px">
+      <div class="cond"><div class="ic"><svg><use href="#i-tag"/></svg></div><b>10% OFF</b><span>na primeira compra</span></div>
+      <div class="cond"><div class="ic"><svg><use href="#i-card"/></svg></div><b>Até 12x</b><span>sem juros</span></div>
+      <div class="cond"><div class="ic"><svg><use href="#i-truck"/></svg></div><b>Frete grátis</b><span>acima de R$ 350</span></div>
+    </div>
+    <div class="cta" style="margin-top:26px">Ver coleção verão <svg><use href="#i-arrow"/></svg></div>
+  </div>
+</section>
+
+<!-- ===================== A · MOBILE ===================== -->
+<section class="bn mob A" id="a_mob">
+  <div class="col" style="left:0;right:0;top:110px">
+    <div class="eyebrow">Just Co · Nova coleção</div>
+    <div class="pre" style="font-size:96px;margin-top:24px">COLEÇÃO</div>
+    <div class="hero" style="font-size:300px">VERÃO</div>
+    <div class="sub" style="margin-top:12px;font-size:30px">Camisetas, polos e bermudas<br>a partir de <b>R$ 129,90</b></div>
+  </div>
+  <img class="model" src="assets/p_bermuda.png" style="left:40px;height:1260px">
+  <img class="model" src="assets/p_bermuda_costas.png" style="right:30px;height:1250px">
+  <div class="abs" style="left:0;right:0;bottom:0;height:820px;background:linear-gradient(180deg, rgba(220,207,187,0) 0%, rgba(220,207,187,.92) 34%, #DCCFBB 100%)"></div>
+  <div class="col" style="left:0;right:0;bottom:90px">
+    <div class="cupom"><span class="k">Use o cupom:</span><span class="v">THEFIRST</span></div>
+    <div class="conds" style="margin-top:34px">
+      <div class="cond" style="width:270px"><div class="ic"><svg><use href="#i-tag"/></svg></div><b>10% OFF</b><span>na primeira compra</span></div>
+      <div class="cond" style="width:270px"><div class="ic"><svg><use href="#i-card"/></svg></div><b>Até 12x</b><span>sem juros</span></div>
+      <div class="cond" style="width:270px"><div class="ic"><svg><use href="#i-truck"/></svg></div><b>Frete grátis</b><span>acima de R$ 350</span></div>
+    </div>
+    <div class="cta" style="margin-top:40px;height:92px;font-size:26px;padding:0 64px">Ver coleção verão <svg><use href="#i-arrow"/></svg></div>
+  </div>
+</section>
+
+<!-- ===================== B · MOBILE ===================== -->
+<section class="bn mob B" id="b_mob">
+  <div class="col" style="left:0;right:0;top:110px">
+    <div class="eyebrow">Novidades · Just Co</div>
+    <div class="hero" style="font-size:330px;margin-top:30px">VERÃO</div>
+    <div class="pre" style="font-size:64px;margin-top:-6px;letter-spacing:.32em;padding-left:.32em">CHEGOU</div>
+    <div class="sub" style="margin-top:14px;font-size:30px">Os novos modelos da estação,<br>a partir de <b>R$ 129,90</b></div>
+  </div>
+  <img class="model" src="assets/p_polo.png" style="left:10px;height:1200px">
+  <img class="model" src="assets/p_polo_costas.png" style="right:10px;height:1190px">
+  <div class="abs" style="left:0;right:0;bottom:0;height:820px;background:linear-gradient(180deg, rgba(52,49,44,0) 0%, rgba(52,49,44,.9) 34%, #34312C 100%)"></div>
+  <div class="col" style="left:0;right:0;bottom:90px">
+    <div class="cupom"><span class="k">Use o cupom:</span><span class="v">THEFIRST</span></div>
+    <div class="conds" style="margin-top:34px">
+      <div class="cond" style="width:270px"><div class="ic"><svg><use href="#i-tag"/></svg></div><b>10% OFF</b><span>na primeira compra</span></div>
+      <div class="cond" style="width:270px"><div class="ic"><svg><use href="#i-card"/></svg></div><b>Até 12x</b><span>sem juros</span></div>
+      <div class="cond" style="width:270px"><div class="ic"><svg><use href="#i-truck"/></svg></div><b>Frete grátis</b><span>acima de R$ 350</span></div>
+    </div>
+    <div class="cta" style="margin-top:40px;height:92px;font-size:26px;padding:0 64px">Ver coleção verão <svg><use href="#i-arrow"/></svg></div>
+  </div>
+</section>
+
+</body>
+</html>

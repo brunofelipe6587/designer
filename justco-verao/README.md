@@ -116,7 +116,8 @@ com 10% OFF o mesmo carrinho cai abaixo de R$ 350 e perderia o frete grátis.
 `out/banners/` — duas versões para aprovação, cada uma em desktop 2:1 (3840×1920, mesmo formato do slider atual,
 que usa 3780×1890) e mobile 9:16 (2160×3840; o atual usa 2970×5280). Seguem a linguagem dos slides que já estão na
 home: modelo de frente de um lado e de costas do outro, headline central, caixa "USE O CUPOM: THEFIRST", três
-condições com ícones e divisórias (10% OFF na primeira compra · até 12x sem juros · frete grátis acima de R$ 350) e
+condições com ícones e divisórias (10% OFF na primeira compra · até 12x sem juros · frete grátis a partir de R$ 150
+para SP, MG, SC, RS e PR — condição informada pelo cliente para os banners) e
 CTA em pílula. Tipografia do site: Bebas Neue (como o título "COLEÇÃO VERÃO JUST CO" da home) + Inter. Fotos de
 produto do site recortadas no Adobe.
 - **A · clara:** fundo areia com luz de verão, look completo (T-shirt + Tricot Bermuda areia) de frente e de costas,

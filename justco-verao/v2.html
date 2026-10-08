@@ -1,0 +1,106 @@
+<!doctype html>
+<html lang="pt-br">
+<head>
+<meta charset="utf-8">
+<title>Just Co V2 Textura</title>
+<link href="fonts/fonts.css" rel="stylesheet">
+<style>html, body { margin: 0; background: #000; } canvas { display: block; }</style>
+</head>
+<body>
+<canvas id="c" width="1080" height="1920"></canvas>
+<script src="engine.js"></script>
+<script>
+// V2 — "REPARA NA TEXTURA." Detail hook (macro push on the knit), zoom-out reveal, fast cuts with a checklist built
+// only from PDP facts, 3-colour panel with the Adobe product cutouts, offer end card.
+const DUR = 15.0;
+const SEGMENTS = [
+  { t0: 0.0, t1: 2.5, r0: 11.2, r1: 12.6, z0: 2.9, z1: 2.5, fx: 0.5, fy: 0.47 },
+  { t0: 2.5, t1: 4.0, r0: 12.6, r1: 13.6, z0: 2.5, z1: 1.0, fx: 0.5, fy: 0.47, fy1: 0.42 },
+  { t0: 4.0, t1: 5.5, r0: 0.4, r1: 1.9, z0: 1.1, z1: 1.0, fx: 0.5, fy: 0.45 },
+  { t0: 5.5, t1: 7.0, r0: 5.6, r1: 7.1, z0: 1.1, z1: 1.0, fx: 0.5, fy: 0.42 },
+  { t0: 7.0, t1: 8.5, r0: 7.9, r1: 9.4, z0: 1.1, z1: 1.0, fx: 0.5, fy: 0.45 },
+  { t0: 8.5, t1: 10.0, r0: 9.8, r1: 11.0, z0: 1.12, z1: 1.0, fx: 0.5, fy: 0.42 },
+  { t0: 10.0, t1: 15.0, r0: 14.0, r1: 16.2, z0: 1.05, z1: 1.0, fx: 0.5, fy: 0.45 },
+];
+const CHECKS = [['TRICÔ COM TEXTURA HORIZONTAL', 4.1], ['GOLA CARECA', 5.6], ['TOQUE MACIO', 7.1], ['ACABAMENTO PREMIUM', 8.6]];
+const COLORS = [['p_off', 'OFF WHITE', '#EEEAE0'], ['p_azul', 'AZUL CLARO', '#6FB4E6'], ['p_verde', 'VERDE', '#9EA593']];
+
+async function renderAt(t) {
+  if (t < 10.6) await drawSegments(t, SEGMENTS);
+
+  // 0–2.5 · macro hook
+  if (t < 2.6) {
+    shade(0.5, 0.0, 0.0);
+    const out = prog(t, 2.35, 2.55);
+    txt('REPARA', 80, 470, { size: 210, p: prog(t, 0.08, 0.45), out });
+    txt('NA TEXTURA.', 80, 660, { size: 210, color: C.orange, p: prog(t, 0.4, 0.8), out, shadow: 0.25 });
+    // focus ring that "finds" the knit
+    const p = prog(t, 0.9, 1.5);
+    if (p > 0) {
+      ctx.save(); ctx.globalAlpha = (1 - out) * eout(p); ctx.strokeStyle = '#fff'; ctx.lineWidth = 6;
+      ctx.beginPath(); ctx.arc(W / 2 + 60, 1180, lerp(260, 190, eout(p)), 0, Math.PI * 2); ctx.stroke(); ctx.restore();
+    }
+  }
+  // 2.5–4 · reveal
+  if (t >= 2.5 && t < 4.1) {
+    lowShade(0.7);
+    const out = prog(t, 3.85, 4.05);
+    txt('T-SHIRT MC TRICOT', 78, 1330, { size: 130, p: prog(t, 2.7, 3.1), out });
+    txt('HORIZONTAL', 78, 1445, { size: 130, color: C.orange, p: prog(t, 2.9, 3.3), out, shadow: 0.25 });
+  }
+  if (t >= 2.5) logo(W / 2 - 62, 150, 48, prog(t, 2.5, 2.9) * (1 - prog(t, 9.8, 10.1)));
+
+  // 4–10 · checklist builds up across the cuts
+  if (t >= 4.0 && t < 10.1) {
+    lowShade(0.55, 1000, 1600);
+    const out = prog(t, 9.85, 10.05);
+    CHECKS.forEach(([s, t0], i) => pill(s, 70, 1040 + i * 100, { check: true, p: prog(t, t0, t0 + 0.45), out }));
+  }
+
+  // 10–12.2 · three colours on paper (wipe up)
+  if (t >= 10.0 && t < 12.4) {
+    const w = eio(prog(t, 10.0, 10.5));
+    ctx.fillStyle = C.paper; ctx.fillRect(0, H * (1 - w), W, H * w);
+    if (w >= 1) {
+      const out = prog(t, 12.1, 12.35);
+      txt('1 PEÇA.', 80, 420, { size: 170, color: C.ink, p: prog(t, 10.45, 10.8), out, shadow: 0 });
+      txt('3 CORES.', 80, 570, { size: 170, color: C.cobalt, p: prog(t, 10.6, 10.95), out, shadow: 0 });
+      COLORS.forEach(([k, name, sw], i) => {
+        const p = prog(t, 10.75 + i * 0.18, 11.25 + i * 0.18), img = IMG[k];
+        if (p <= 0) return;
+        const h = 1000, wImg = h * img.width / img.height, cx = 200 + i * 340, y = 660;
+        ctx.save(); ctx.globalAlpha = clamp(p * 2) * (1 - out);
+        ctx.beginPath(); ctx.rect(cx - 200, y, 400, 640); ctx.clip();
+        ctx.drawImage(img, cx - wImg / 2, y + (1 - eback(p)) * 160, wImg, h);
+        ctx.restore();
+        ctx.save(); ctx.globalAlpha = clamp(p * 2) * (1 - out);
+        ctx.beginPath(); ctx.arc(cx - 70, 1360, 17, 0, Math.PI * 2); ctx.fillStyle = sw; ctx.fill();
+        ctx.strokeStyle = 'rgba(0,0,0,.25)'; ctx.lineWidth = 2; ctx.stroke();
+        ctx.font = `700 24px ${F.sans}`; ctx.letterSpacing = '3px'; ctx.fillStyle = C.ink; ctx.textBaseline = 'middle';
+        ctx.fillText(name, cx - 44, 1362); ctx.restore();
+      });
+      txt('DO P AO GG · R$ 139,90', 80, 1480, { font: F.sans, weight: 700, size: 34, ls: 4, color: C.ink, p: prog(t, 11.3, 11.7), out, shadow: 0 });
+    }
+  }
+
+  // 12.2–15 · offer end card
+  if (t >= 12.2) {
+    const p = prog(t, 12.2, 12.6);
+    ctx.fillStyle = C.paper; ctx.fillRect(0, 0, W, H);
+    ctx.save(); ctx.globalAlpha = eout(p);
+    const g = ctx.createRadialGradient(W * 0.6, H * 0.42, 50, W * 0.5, H * 0.5, 1200);
+    g.addColorStop(0, '#2A52D6'); g.addColorStop(0.5, C.cobalt); g.addColorStop(1, '#142C86');
+    ctx.fillStyle = g; ctx.fillRect(0, 0, W, H); ctx.restore();
+    logo(W / 2 - 70, 200, 56, eout(p));
+    txt('Sua primeira JUST CO sai com', W / 2, 520, { font: F.serif, italic: true, weight: 500, size: 64, align: 'center', p: prog(t, 12.35, 12.75), shadow: 0 });
+    txt('10% OFF', W / 2, 820, { size: 330, align: 'center', p: prog(t, 12.5, 12.9), shadow: 0.2 });
+    coupon(W / 2, 900, prog(t, 12.75, 13.15), { w: 760 });
+    txt('T-shirt Tricot Horizontal · R$ 139,90 · 3x sem juros', W / 2, 1160, { font: F.sans, weight: 600, size: 32, align: 'center', color: '#E3E8FF', p: prog(t, 12.9, 13.3), shadow: 0 });
+    button('QUERO A MINHA  →', W / 2, 1250, t, { w: 760, p: prog(t, 13.1, 13.5) });
+  }
+}
+window.renderAt = renderAt;
+window.ready = boot({ p_off: 'assets/p_off.png', p_azul: 'assets/p_azul.png', p_verde: 'assets/p_verde.png' });
+</script>
+</body>
+</html>

@@ -1,0 +1,138 @@
+<!doctype html>
+<html lang="pt-br">
+<head>
+<meta charset="utf-8">
+<title>Just Co V3 Vitrine Verão</title>
+<link href="fonts/fonts.css" rel="stylesheet">
+<style>html, body { margin: 0; background: #000; } canvas { display: block; }</style>
+</head>
+<body>
+<canvas id="c" width="1080" height="1920"></canvas>
+<script src="engine.js"></script>
+<script src="audio/timeline_v3.js"></script>
+<script>
+// V3 — "VITRINE VERÃO" (category, not a single product). Frame 0 is the store grid: the five summer pieces with
+// their unit prices and "a partir de R$ 129,90 a peça", then the families of the collection (t-shirts, polo,
+// bermuda) with facts from each product page, a lifestyle beat from the raw footage, and a category end card.
+// Brand system from the store CSS: Bebas Neue + Inter, #151515 / #FBFBFB, price green #2CA98C, buy green #25C793.
+const DUR = window.TIMELINE ? TIMELINE.actual[TIMELINE.actual.length - 1] : 15.0;
+const B = { ink: '#151515', paper: '#FBFBFB', card: '#EDEDED', grey: '#8B8B8B', light: '#BFBFBF', text: '#494E4C', price: '#2CA98C', buy: '#25C793' };
+const PRODUCTS = [
+  { k: 'p_color', name: 'TSHIRT TRICOT COLOR', price: 'R$ 129,90' },
+  { k: 'p_off', name: 'T-SHIRT MC TRICOT HORIZONTAL', price: 'R$ 139,90' },
+  { k: 'p_polo', name: 'T-SHIRT TRICOT POLO MC', price: 'R$ 159,90' },
+  { k: 'p_bret', name: 'T-SHIRT TRICOT BRETANHA', price: 'R$ 169,90' },
+  { k: 'p_berm', name: 'TRICOT BERMUDA', price: 'R$ 189,90' },
+];
+const SEGMENTS = [{ t0: 10.4, t1: 12.2, r0: 2.6, r1: 4.6, z0: 1.12, z1: 1.0, fx: 0.5, fy: 0.45 }];
+
+// product cutout inside a rounded grey card, image anchored to the top like the store thumbnails
+function card(img, x, y, w, h, o = {}) {
+  const { a = 1, scale = 1.25, label, price, labelSize = 18, priceSize = 44, imgH = h, bottom = false } = o;
+  if (a <= 0) return;
+  ctx.save(); ctx.globalAlpha = a;
+  rrect(x, y, w, imgH, 18); ctx.fillStyle = B.card; ctx.fill();
+  ctx.save(); rrect(x, y, w, imgH, 18); ctx.clip();
+  const ih = imgH * scale, iw = ih * img.width / img.height;
+  // bermuda photos are anchored at the bottom so the shorts (the product) stay in frame
+  ctx.drawImage(img, x + w / 2 - iw / 2, bottom ? y + imgH - ih * 0.97 : y + imgH * 0.06, iw, ih); ctx.restore();
+  if (label) {
+    ctx.fillStyle = B.ink; ctx.font = `700 ${labelSize}px ${F.sans}`; ctx.letterSpacing = '1.5px'; ctx.textAlign = 'left'; ctx.textBaseline = 'alphabetic';
+    ctx.fillText(label, x + 4, y + imgH + labelSize + 14);
+    ctx.fillStyle = B.price; ctx.font = `400 ${priceSize}px ${F.display}`; ctx.letterSpacing = '0px';
+    ctx.fillText(price, x + 4, y + imgH + labelSize + 14 + priceSize + 4);
+  }
+  ctx.restore();
+}
+
+function header(eyebrow, title, p, out, o = {}) {
+  const { y = 250, size = 140, color = B.ink, sub, subColor = B.text, accent } = o;
+  txt(eyebrow, 70, y, { font: F.sans, weight: 700, size: 28, ls: 6, color: B.grey, p, out, shadow: 0 });
+  title.forEach((l, i) => txt(l, 66, y + 120 + i * size * 0.9, { size, color: i === title.length - 1 && accent ? accent : color, p: clamp(p * 1.4 - i * 0.25), out, shadow: 0 }));
+  if (sub) txt(sub, 70, y + 120 + (title.length - 1) * size * 0.9 + 70, { font: F.sans, weight: 500, size: 34, color: subColor, p: clamp(p * 1.4 - 0.4), out, shadow: 0 });
+}
+
+async function renderAt(t) {
+  ctx.fillStyle = B.paper; ctx.fillRect(0, 0, W, H);
+  if (t < 10.4 || t >= 12.25) logo(W - 70 - 115, 96, 46, 1, IMG.logoB);
+
+  // 0–2.8 · the store grid (frame 0 complete)
+  if (t < 2.85) {
+    const out = prog(t, 2.6, 2.8);
+    txt('COLEÇÃO VERÃO · JUST CO', 70, 250, { font: F.sans, weight: 700, size: 28, ls: 6, color: B.grey, p: 1, out, shadow: 0 });
+    txt('O VERÃO EM TRICÔ', 66, 385, { size: 150, color: B.ink, p: 1, out, shadow: 0 });
+    const w0 = txt('5 modelos · a partir de ', 70, 460, { font: F.sans, weight: 600, size: 36, color: B.text, p: 1, out, shadow: 0 }) || 0;
+    const w1 = txt('R$ 129,90', 70 + w0, 462, { size: 56, color: B.price, p: 1, out, shadow: 0 }) || 0;
+    txt(' a peça', 70 + w0 + w1, 460, { font: F.sans, weight: 600, size: 36, color: B.text, p: 1, out, shadow: 0 });
+    const cw = 300, gap = 20, x0 = (W - 3 * cw - 2 * gap) / 2;
+    PRODUCTS.forEach((p, i) => {
+      const row = i < 3 ? 0 : 1, col = row ? i - 3 : i;
+      const x = row ? W / 2 - cw - gap / 2 + col * (cw + gap) : x0 + col * (cw + gap);
+      const y = 540 + row * 560 + (1 - eout(clamp(t / 0.6 + 1 - i * 0.12))) * 0;
+      card(IMG[p.k], x, y, cw, 0, { a: 1 - out, imgH: 420, label: p.name, price: p.price, labelSize: 15, priceSize: 40, bottom: p.k === 'p_berm' });
+    });
+  }
+
+  // 2.8–5.6 · t-shirts
+  if (t >= 2.8 && t < 5.65) {
+    const p = prog(t, 2.8, 3.3), out = prog(t, 5.4, 5.6);
+    header('A COLEÇÃO · CAMISETAS', ['CAMISETAS', 'EM TRICÔ'], p, out, { sub: 'Gola careca · cores para todo estilo', size: 150 });
+    const tees = [PRODUCTS[0], PRODUCTS[1], PRODUCTS[3]];
+    tees.forEach((q, i) => {
+      const a = eout(prog(t, 3.0 + i * 0.25, 3.5 + i * 0.25)) * (1 - out);
+      card(IMG[q.k], 50 + i * 333, 800 + (1 - a) * 80, 313, 0, { a, imgH: 560, label: q.name.replace('T-SHIRT ', '').replace('TSHIRT ', ''), price: q.price, labelSize: 17, priceSize: 50 });
+    });
+  }
+
+  // 5.6–8.0 · polo
+  if (t >= 5.6 && t < 8.05) {
+    const p = prog(t, 5.6, 6.1), out = prog(t, 7.8, 8.0), q = PRODUCTS[2];
+    header('A COLEÇÃO · POLO', ['POLO DE', 'TRAMA VAZADA'], p, out, { sub: 'Leveza e conforto · gola polo · canelado', size: 150 });
+    const a = eout(prog(t, 5.8, 6.3)) * (1 - out);
+    card(IMG[q.k], 120, 820 + (1 - a) * 80, 840, 0, { a, imgH: 760, scale: 1.2, label: 'T-SHIRT TRICOT POLO MC MELT GREEN', price: q.price + ' a peça', labelSize: 22, priceSize: 64 });
+  }
+
+  // 8.0–10.4 · bermuda (cycles the three colours)
+  if (t >= 8.0 && t < 10.45) {
+    const p = prog(t, 8.0, 8.5), out = prog(t, 10.2, 10.4);
+    header('A COLEÇÃO · BERMUDA', ['BERMUDA', 'EM TRICÔ'], p, out, { sub: 'Cós com cordão ajustável · areia, marinho ou preto', size: 150 });
+    const keys = ['p_berm', 'p_berm_marinho', 'p_berm_preto'], idx = Math.min(2, Math.floor(prog(t, 8.3, 10.2) * 3));
+    const a = eout(prog(t, 8.2, 8.7)) * (1 - out);
+    card(IMG[keys[idx]], 120, 820 + (1 - a) * 80, 840, 0, { a, imgH: 760, scale: 1.25, bottom: true, label: 'TRICOT BERMUDA', price: PRODUCTS[4].price + ' a peça', labelSize: 22, priceSize: 64 });
+  }
+
+  // 10.4–12.2 · lifestyle beat on the raw footage
+  if (t >= 10.4 && t < 12.25) {
+    await drawSegments(t, SEGMENTS);
+    lowShade(0.78, 950, 1550);
+    logo(W / 2 - 62, 150, 48, 1);
+    const out = prog(t, 12.05, 12.2);
+    txt('TUDO EM TRICÔ', 76, 1300, { size: 150, color: B.paper, p: prog(t, 10.45, 10.85), out, shadow: 0.2 });
+    txt('DO P AO XG', 76, 1430, { size: 150, color: B.buy, p: prog(t, 10.65, 11.05), out, shadow: 0.2 });
+  }
+
+  // 12.2–15 · category end card
+  if (t >= 12.2) {
+    const p = prog(t, 12.2, 12.6);
+    txt('COLEÇÃO', W / 2, 470, { size: 190, color: B.ink, align: 'center', p, shadow: 0 });
+    txt('VERÃO', W / 2, 640, { size: 190, color: B.ink, align: 'center', p: prog(t, 12.3, 12.7), shadow: 0 });
+    const s = prog(t, 12.45, 12.85);
+    const w0 = (() => { ctx.save(); ctx.font = `600 38px ${F.sans}`; const a = ctx.measureText('em tricô, a partir de ').width; ctx.font = `400 60px ${F.display}`; const b = ctx.measureText('R$ 129,90').width; ctx.restore(); return [a, b]; })();
+    const x0 = W / 2 - (w0[0] + w0[1]) / 2;
+    txt('em tricô, a partir de ', x0, 730, { font: F.sans, weight: 600, size: 38, color: B.text, p: s, shadow: 0 });
+    txt('R$ 129,90', x0 + w0[0], 733, { size: 60, color: B.price, p: s, shadow: 0 });
+    const strip = [PRODUCTS[0], PRODUCTS[1], PRODUCTS[2], PRODUCTS[3], PRODUCTS[4]];
+    strip.forEach((q, i) => card(IMG[q.k], 60 + i * 196, 800, 176, 0, { a: eout(prog(t, 12.5 + i * 0.08, 12.9 + i * 0.08)), imgH: 300, scale: 1.25, bottom: q.k === 'p_berm' }));
+    coupon(W / 2, 1160, prog(t, 12.8, 13.2), { w: 820, h: 170, color: B.ink, label: '10% OFF NA 1ª COMPRA · CUPOM' });
+    button('VER COLEÇÃO VERÃO', W / 2, 1380, t, { bg: B.buy, w: 820, h: 112, size: 34, weight: 700, p: prog(t, 13.0, 13.4) });
+    txt('Frete grátis acima de R$ 350', W / 2, 1560, { font: F.sans, weight: 500, size: 30, color: B.text, align: 'center', p: prog(t, 13.2, 13.6), shadow: 0 });
+  }
+}
+const renderDesign = renderAt;
+window.renderAt = t => renderDesign(warp(t));
+window.ready = boot({ p_color: 'assets/p_color_preto.png', p_off: 'assets/p_off.png', p_polo: 'assets/p_polo.png',
+  p_bret: 'assets/p_bretanha_marsala.png', p_berm: 'assets/p_bermuda.png', p_berm_marinho: 'assets/p_bermuda_marinho.png',
+  p_berm_preto: 'assets/p_bermuda_preto.png' });
+</script>
+</body>
+</html>

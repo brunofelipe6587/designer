@@ -34,6 +34,10 @@ lida do site e da Biblioteca de Anúncios.
 | `out/JustCo_Verao_9x16_V1_TshirtEmTrico_musica.mp4` | Reels/Stories 15 s, só música | Mesmo roteiro, sem narração | Prospecção |
 | `out/JustCo_Verao_9x16_V2_PrimeiraCompra_narrado.mp4` | Reels/Stories ~20 s, narração + música | Oferta de 1ª compra com preço final no gancho + passo a passo até o checkout | Prospecção (novos clientes) / RMK |
 | `out/JustCo_Verao_9x16_V2_PrimeiraCompra_musica.mp4` | Reels/Stories 15 s, só música | Mesmo roteiro, sem narração | Prospecção (novos clientes) / RMK |
+| `out/JustCo_Verao_9x16_V3_Categoria_Vitrine_narrado.mp4` | Reels/Stories ~21 s, narração + música | **Categoria** · vitrine das 5 peças com preço por peça, "a partir de R$ 129,90" | Tráfego para /verao/c |
+| `out/JustCo_Verao_9x16_V3_Categoria_Vitrine_musica.mp4` | Reels/Stories 15 s, só música | Mesmo roteiro, sem narração | Tráfego para /verao/c |
+| `out/JustCo_Verao_9x16_V4_Categoria_MonteSeuLook_narrado.mp4` | Reels/Stories ~18 s, narração + música | **Categoria** · monte o look (camiseta + bermuda) e passe de R$ 350 com frete grátis | Tráfego para /verao/c |
+| `out/JustCo_Verao_9x16_V4_Categoria_MonteSeuLook_musica.mp4` | Reels/Stories 15 s, só música | Mesmo roteiro, sem narração | Tráfego para /verao/c |
 | `out/estaticos/…E1_VeraoTextoAtras.png` | Feed 4:5 | DNA do produto (efeito texto atrás) | Prospecção |
 | `out/estaticos/…E2_VeraoStories.png` | Stories 9:16 | Mesmo conceito do E1 | Prospecção |
 | `out/estaticos/…E3_NaoESobreOHelicoptero.png` | Feed 4:5 | Curiosidade / aspiracional | Prospecção |
@@ -72,6 +76,40 @@ Roteiro da narração:
 
 No Express as fontes são as equivalentes do Adobe Fonts disponíveis no plano (League Gothic no lugar da Bebas Neue,
 Montserrat no lugar da Inter, Playfair Display igual). Os PNGs em `out/estaticos` são a versão final de referência.
+
+### Criativos de categoria (V3 e V4) — destino: https://loja.justcostore.com.br/verao/c
+
+Catálogo da categoria Verão (conferido no site): Tshirt Tricot Color R$ 129,90 (preto, marinho) · T-shirt MC Tricot
+Horizontal R$ 139,90 (off white, azul claro, verde) · T-shirt Tricot Polo MC Melt Green R$ 159,90 (verde) ·
+T-shirt Tricot Bretanha R$ 169,90 (preto, marsala, jeans, aveia; até XG) · Tricot Bermuda R$ 189,90 (areia,
+marinho, preto). Recortes novos feitos no Adobe (polo, Color preta, Bretanha aveia/marsala, bermuda marinho/preta).
+
+**V3 · Vitrine Verão** — frame 0 é a vitrine da loja: as 5 peças com nome e preço e "5 modelos · a partir de
+R$ 129,90 a peça" (qualifica pelo preço sem prender num produto). Depois: camisetas → polo de trama vazada (leveza,
+do site) → bermuda com cordão ajustável (3 cores) → "tudo em tricô, do P ao XG" no vídeo → card "Coleção Verão",
+cupom THEFIRST, botão "Ver coleção Verão", frete grátis acima de R$ 350.
+- Narração: "Coleção Verão em tricô, a partir de cento e vinte e nove e noventa." · "Camisetas em tricô, em várias
+  cores." · "Polo de trama vazada, que traz leveza." · "E bermuda de tricô, com cordão ajustável." · "Tudo em
+  tricô, do P ao XG." · "Na primeira compra, use o cupom THEFIRST. Toque e veja a coleção."
+- Texto principal: Coleção Verão JUST CO: camisetas, polo e bermuda em tricô, a partir de R$ 129,90 a peça. Do P ao
+  XG. Na primeira compra, 10% OFF com o cupom THEFIRST.
+- Título: Coleção Verão em tricô
+- Descrição: A partir de R$ 129,90 a peça
+- CTA: Ver mais / Comprar agora
+
+**V4 · Monte seu look** — abre no vídeo com "MONTE SEU LOOK · TODO EM TRICÔ · CAMISETA + BERMUDA"; passo 1 troca as
+4 camisetas com preço por peça; passo 2 troca as 3 cores da bermuda; passo 3 soma explícita "T-shirt Tricot
+Bretanha R$ 169,90 + Tricot Bermuda R$ 189,90 = 2 peças: R$ 359,80 → FRETE GRÁTIS (compras acima de R$ 350)";
+fecha com 3 looks e "Montar meu look". Puxa ticket médio para 2 peças. O cupom fica fora deste vídeo de propósito:
+com 10% OFF o mesmo carrinho cai abaixo de R$ 350 e perderia o frete grátis.
+- Narração: "Monte seu look de verão, todo em tricô." · "Primeiro, escolha a camiseta." · "Depois, combine com a
+  bermuda." · "Bretanha e bermuda: trezentos e cinquenta e nove e oitenta. Acima de trezentos e cinquenta, o frete
+  é grátis." · "Monte o seu na coleção Verão."
+- Texto principal: Monte seu look de verão todo em tricô: camisetas a partir de R$ 129,90 e bermuda por R$ 189,90.
+  Camiseta + bermuda passam de R$ 350 e o frete é grátis.
+- Título: Camiseta + bermuda = frete grátis
+- Descrição: Coleção Verão JUST CO
+- CTA: Comprar agora
 
 ## Copy para o Gerenciador de Anúncios
 

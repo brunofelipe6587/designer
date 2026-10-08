@@ -32,6 +32,27 @@ SCRIPTS = {
             'Toque em comprar agora e garanta a sua.',
         ],
     },
+    'v3': {
+        'bounds': [0.0, 2.8, 5.6, 8.0, 10.4, 12.2, 15.0],
+        'lines': [
+            'Coleção Verão em tricô, a partir de cento e vinte e nove e noventa.',
+            'Camisetas em tricô, em várias cores.',
+            'Polo de trama vazada, que traz leveza.',
+            'E bermuda de tricô, com cordão ajustável.',
+            'Tudo em tricô, do pê ao xis gê.',
+            'Na primeira compra, use o cupom THEFIRST. Toque e veja a coleção.',
+        ],
+    },
+    'v4': {
+        'bounds': [0.0, 2.8, 6.0, 8.6, 12.2, 15.0],
+        'lines': [
+            'Monte seu look de verão, todo em tricô.',
+            'Primeiro, escolha a camiseta.',
+            'Depois, combine com a bermuda.',
+            'Bretanha e bermuda: trezentos e cinquenta e nove e oitenta. Acima de trezentos e cinquenta, o frete é grátis.',
+            'Monte o seu na coleção Verão.',
+        ],
+    },
 }
 
 

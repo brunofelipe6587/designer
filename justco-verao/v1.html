@@ -9,11 +9,12 @@
 <body>
 <canvas id="c" width="1080" height="1920"></canvas>
 <script src="engine.js"></script>
+<script src="audio/timeline_v1.js"></script>
 <script>
 // V1 — "T-SHIRT EM TRICÔ PRA HOMEM QUE SE VESTE BEM." Product-first hook that qualifies the click: names the product,
 // the audience and the unit price in the first second. Price is always "por peça" and the instalments are spelled out
 // ("parcele em 3 vezes") so nobody reads "3 peças". Facts from the PDP only; no mention of the location.
-const DUR = 15.0;
+const DUR = window.TIMELINE ? TIMELINE.actual[TIMELINE.actual.length - 1] : 15.0;
 const SEGMENTS = [
   { t0: 0.0, t1: 2.8, r0: 0.3, r1: 2.9, z0: 1.2, z1: 1.1, fx: 0.5, fy: 0.47 },
   { t0: 2.8, t1: 5.0, r0: 11.0, r1: 13.0, z0: 1.0, z1: 1.16, fx: 0.5, fy: 0.42, fy1: 0.4 },
@@ -33,8 +34,8 @@ async function renderAt(t) {
     const out = prog(t, 2.6, 2.8);
     txt('MODA MASCULINA · VERÃO 26', 82, 1180, { font: F.sans, weight: 700, size: 30, ls: 7, p: 1, out });
     txt('T-SHIRT EM TRICÔ', 76, 1345, { size: 178, p: 1, out });
-    txt('PRA HOMEM QUE SE VESTE BEM.', 80, 1435, { size: 80, color: C.orange, p: prog(t, -0.2, 0.25), out, shadow: 0.25 });
-    pill(PER_PIECE, 74, 1475, { size: 32, h: 80, bg: C.white, color: C.ink, p: prog(t, 0.3, 0.7), out });
+    txt('PRA HOMEM QUE SE VESTE BEM.', 80, 1435, { size: 80, color: C.orange, p: 1, out, shadow: 0.25 });
+    pill(PER_PIECE, 74, 1475, { size: 32, h: 80, bg: C.white, color: C.ink, p: 1, out });
   }
   logo(W / 2 - 62, 150, 48, prog(t, 0.2, 0.6) * (1 - prog(t, 10.9, 11.2)));
 
@@ -82,7 +83,8 @@ async function renderAt(t) {
     button('COMPRE A SUA  →', W / 2, y0 + 670, t, { w: W - 240, p: prog(t, 12.05, 12.45) });
   }
 }
-window.renderAt = renderAt;
+const renderDesign = renderAt;
+window.renderAt = t => renderDesign(warp(t));
 window.ready = boot();
 </script>
 </body>

@@ -132,3 +132,14 @@ async function boot(extra = {}) {
   IMG.logoW = await loadImg('assets/logo_white.svg'); IMG.logoB = await loadImg('assets/logo_black.svg');
   for (const [k, v] of Object.entries(extra)) IMG[k] = await loadImg(v);
 }
+
+// Narration sync: build/timeline_<v>.js maps the authored (design) block bounds to the narrated ones; output time is
+// warped piecewise-linearly back to design time, so every block stretches to fit its spoken line.
+function warp(t) {
+  const T = window.TIMELINE;
+  if (!T) return t;
+  const a = T.actual, d = T.design;
+  for (let k = 0; k < a.length - 1; k++)
+    if (t < a[k + 1] || k === a.length - 2) return d[k] + clamp((t - a[k]) / (a[k + 1] - a[k])) * (d[k + 1] - d[k]);
+  return t;
+}

@@ -9,13 +9,14 @@
 <body>
 <canvas id="c" width="1080" height="1920"></canvas>
 <script src="engine.js"></script>
+<script src="audio/timeline_v2.js"></script>
 <script>
 // V2 — "PRIMEIRA COMPRA NA JUST CO?" First-purchase offer shown as the final unit price on frame 0
 // (de R$ 139,90 por R$ 125,91 cada peça, cupom THEFIRST = 10% OFF), then a 3-step "como garantir" that walks
 // the viewer to the checkout, ending on a card that mirrors the site's product card.
 // Brand system taken from the store CSS: Bebas Neue + Inter, #151515 / #FBFBFB, price green #2CA98C,
 // buy-button green #25C793, struck price #8B8B8B. Footage sits under a solid black panel like the site's top bar.
-const DUR = 15.0;
+const DUR = window.TIMELINE ? TIMELINE.actual[TIMELINE.actual.length - 1] : 15.0;
 const B = { ink: '#151515', paper: '#FBFBFB', card: '#EDEDED', grey: '#8B8B8B', light: '#BFBFBF', price: '#2CA98C', buy: '#25C793' };
 const PANEL = 640, DY = 600;
 const SEGMENTS = [
@@ -130,7 +131,8 @@ async function renderAt(t) {
     button('COMPRAR AGORA', W / 2, 1510, t, { bg: B.buy, w: 800, h: 110, size: 34, weight: 700, p: prog(t, 12.75, 13.15) });
   }
 }
-window.renderAt = renderAt;
+const renderDesign = renderAt;
+window.renderAt = t => renderDesign(warp(t));
 window.ready = boot({ p_off: 'assets/p_off.png' });
 </script>
 </body>

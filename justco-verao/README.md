@@ -30,8 +30,10 @@ lida do site e da Biblioteca de Anúncios.
 
 | Arquivo | Formato | Ângulo / estrutura | Uso |
 |---|---|---|---|
-| `out/JustCo_Verao_9x16_V1_TshirtEmTrico.mp4` | Reels/Stories ~20 s, narrado | Gancho de produto que qualifica (produto + público + preço por peça no 1º segundo) | Prospecção |
-| `out/JustCo_Verao_9x16_V2_PrimeiraCompra.mp4` | Reels/Stories ~20 s, narrado | Oferta de 1ª compra com preço final no gancho + passo a passo até o checkout | Prospecção (novos clientes) / RMK |
+| `out/JustCo_Verao_9x16_V1_TshirtEmTrico_narrado.mp4` | Reels/Stories ~20 s, narração + música | Gancho de produto que qualifica (produto + público + preço por peça no 1º segundo) | Prospecção |
+| `out/JustCo_Verao_9x16_V1_TshirtEmTrico_musica.mp4` | Reels/Stories 15 s, só música | Mesmo roteiro, sem narração | Prospecção |
+| `out/JustCo_Verao_9x16_V2_PrimeiraCompra_narrado.mp4` | Reels/Stories ~20 s, narração + música | Oferta de 1ª compra com preço final no gancho + passo a passo até o checkout | Prospecção (novos clientes) / RMK |
+| `out/JustCo_Verao_9x16_V2_PrimeiraCompra_musica.mp4` | Reels/Stories 15 s, só música | Mesmo roteiro, sem narração | Prospecção (novos clientes) / RMK |
 | `out/estaticos/…E1_VeraoTextoAtras.png` | Feed 4:5 | DNA do produto (efeito texto atrás) | Prospecção |
 | `out/estaticos/…E2_VeraoStories.png` | Stories 9:16 | Mesmo conceito do E1 | Prospecção |
 | `out/estaticos/…E3_NaoESobreOHelicoptero.png` | Feed 4:5 | Curiosidade / aspiracional | Prospecção |
@@ -45,7 +47,14 @@ Os vídeos V1 e V2 têm **narração masculina** (pt-BR, voz Antonio com ritmo e
 grave e elegante; tratamento de voz com graves quentes, compressão leve e ambiência sutil, −16 LUFS). Cada bloco
 visual foi re-temporizado para a fala dele, então a frase troca junto com a transição da tela (`narrate.py` gera a
 voz e `audio/timeline_v*.js`). A marca não é falada (nenhuma grafia de "Just Co" soou natural na voz sintética); o
-logo aparece em tela. Trilha musical: pode somar a música da biblioteca da Meta por baixo, com volume baixo.
+logo aparece em tela.
+
+**Música:** Mizmo – "Hello, The Sun Is Up, Where Are You?" (arquivo enviado pelo cliente; `mix_music.py`, o mp3 fica
+fora do git). Nas versões só com música entra o trecho mais cheio da faixa (a partir de 63,75 s, início de seção),
+a −14 LUFS. Nas narradas entra o trecho mais leve (a partir de 0,5 s), ~14 dB abaixo da voz e com ducking automático
+(sidechain) enquanto a voz fala; mix final a −14 LUFS. Conferido por transcrição: todas as falas continuam
+inteligíveis com a música. Atenção a direitos: se a faixa não for licenciada para publicidade, a Meta pode silenciar
+ou reprovar o anúncio.
 
 Roteiro da narração:
 - **V1 (~20 s):** "Camiseta de tricô, pra homem que se veste bem." · "Toque macio, caimento premium." · "Essa é a
@@ -144,6 +153,6 @@ python3 build_express.py                       # HTML autocontido para importar 
 node render_statics.js [e1 …]                  # PNGs em out/estaticos
 python3 narrate.py v1                          # voz + timeline (pip install edge-tts)
 PAGE=v1.html node render_video.js video 30     # vídeo mudo (precisa de build/vf: ver abaixo)
-ffmpeg -i out/v1_silent.mp4 -i audio/v1_voz.wav -c:v copy -c:a aac -b:a 192k -shortest out/<nome>.mp4
+python3 mix_music.py                           # música nas 4 versões (mudas de 15 s vêm do git: ver o script)
 ffmpeg -i src/bruto.mp4 -vf "scale=1080:1920:flags=lanczos,eq=contrast=1.06:saturation=1.12:gamma=1.02,unsharp=5:5:0.6" -q:v 3 build/vf/%04d.jpg
 ```

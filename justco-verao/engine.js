@@ -28,8 +28,8 @@ async function frame(rawT) {
 // Draw raw footage at zoom z around focus (fx, fy) in 0..1 image space, never exposing the edges.
 async function drawRaw(rawT, z = 1, fx = 0.5, fy = 0.5) {
   const img = await frame(rawT);
-  fx = clamp(fx, 0.5 / z, 1 - 0.5 / z); fy = clamp(fy, 0.5 / z, 1 - 0.5 / z);
-  ctx.save(); ctx.translate(W / 2, H / 2); ctx.scale(z, z); ctx.translate(-fx * W, -fy * H);
+  fx = clamp(fx, 0.5 / z, 1 - 0.5 / z); if (!drawRaw.dy) fy = clamp(fy, 0.5 / z, 1 - 0.5 / z);
+  ctx.save(); ctx.translate(W / 2, H / 2 + (drawRaw.dy || 0)); ctx.scale(z, z); ctx.translate(-fx * W, -fy * H);
   ctx.drawImage(img, 0, 0, W, H); ctx.restore();
 }
 
@@ -77,7 +77,7 @@ function lowShade(a = 0.7, y0 = 900, y1 = 1550) {
 function rrect(x, y, w, h, r) { ctx.beginPath(); ctx.roundRect(x, y, w, h, r); }
 
 function pill(str, x, y, o = {}) {
-  const { size = 30, bg = C.white, color = C.ink, p = 1, out = 0, padX = 30, h = 72, check = false, weight = 700, ls = 2.5 } = o;
+  const { size = 30, bg = C.white, color = C.ink, p = 1, out = 0, padX = 30, h = 72, check = false, weight = 700, ls = 2.5, accent = C.orange } = o;
   if (p <= 0 || out >= 1) return;
   ctx.save();
   ctx.font = `${weight} ${size}px ${F.sans}`; ctx.letterSpacing = `${ls}px`;
@@ -88,7 +88,7 @@ function pill(str, x, y, o = {}) {
   ctx.shadowColor = 'rgba(0,0,0,.25)'; ctx.shadowBlur = 24; ctx.shadowOffsetY = 6;
   rrect(0, 0, w, h, h / 2); ctx.fillStyle = bg; ctx.fill(); ctx.shadowColor = 'transparent';
   if (check) {
-    ctx.beginPath(); ctx.arc(padX + 14, h / 2, 16, 0, Math.PI * 2); ctx.fillStyle = C.orange; ctx.fill();
+    ctx.beginPath(); ctx.arc(padX + 14, h / 2, 16, 0, Math.PI * 2); ctx.fillStyle = accent; ctx.fill();
     ctx.beginPath(); ctx.moveTo(padX + 6, h / 2); ctx.lineTo(padX + 12, h / 2 + 6); ctx.lineTo(padX + 23, h / 2 - 6);
     ctx.strokeStyle = '#fff'; ctx.lineWidth = 4; ctx.lineCap = 'round'; ctx.lineJoin = 'round'; ctx.stroke();
   }
@@ -104,7 +104,7 @@ function button(str, cx, y, t, o = {}) {
   ctx.translate(cx, y + h / 2 + (1 - eout(p)) * 40); ctx.scale(pulse, pulse);
   ctx.shadowColor = 'rgba(0,0,0,.3)'; ctx.shadowBlur = 30; ctx.shadowOffsetY = 8;
   rrect(-w / 2, -h / 2, w, h, h / 2); ctx.fillStyle = bg; ctx.fill(); ctx.shadowColor = 'transparent';
-  ctx.font = `800 36px ${F.sans}`; ctx.letterSpacing = '4px'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+  ctx.font = `${o.weight || 800} ${o.size || 36}px ${F.sans}`; ctx.letterSpacing = '4px'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
   ctx.fillStyle = color; ctx.fillText(str, 0, 3);
   ctx.restore();
 }

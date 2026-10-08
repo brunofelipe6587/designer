@@ -22,8 +22,8 @@ lida do site e da Biblioteca de Anúncios.
 ## Edição no Adobe (Photoshop API)
 
 - Recorte (remove background) do modelo em 2 frames do vídeo e das fotos de produto nas 3 cores + bermuda
-  → `adobe/cut_*.png`. É o que permite o efeito "texto atrás do modelo" (E1/E2), o carrossel de cores e o painel
-  de cores do V2.
+  → `adobe/cut_*.png`. É o que permite o efeito "texto atrás do modelo" (E1/E2), o carrossel de cores e o card
+  de produto do final do V2.
 - Teste de color grade via Adobe: achatou o branco da camiseta, então o grade final foi feito na composição.
 
 ## Entregáveis
@@ -31,7 +31,7 @@ lida do site e da Biblioteca de Anúncios.
 | Arquivo | Formato | Ângulo / estrutura | Uso |
 |---|---|---|---|
 | `out/JustCo_Verao_9x16_V1_TshirtEmTrico.mp4` | Reels/Stories 15 s | Gancho de produto que qualifica (produto + público + preço por peça no 1º segundo) | Prospecção |
-| `out/JustCo_Verao_9x16_V2_ReparaNaTextura.mp4` | Reels/Stories 15 s | Prova técnica (detalhe) + 3 cores + oferta | Prospecção / RMK |
+| `out/JustCo_Verao_9x16_V2_PrimeiraCompra.mp4` | Reels/Stories 15 s | Oferta de 1ª compra com preço final no gancho + passo a passo até o checkout | Prospecção (novos clientes) / RMK |
 | `out/estaticos/…E1_VeraoTextoAtras.png` | Feed 4:5 | DNA do produto (efeito texto atrás) | Prospecção |
 | `out/estaticos/…E2_VeraoStories.png` | Stories 9:16 | Mesmo conceito do E1 | Prospecção |
 | `out/estaticos/…E3_NaoESobreOHelicoptero.png` | Feed 4:5 | Curiosidade / aspiracional | Prospecção |
@@ -66,11 +66,19 @@ Montserrat no lugar da Inter, Playfair Display igual). Os PNGs em `out/estaticos
 - Descrição: 10% OFF na 1ª compra · cupom THEFIRST
 - CTA: Comprar agora
 
-**V2 · Repara na textura**
-- Texto principal: Repara na textura. Tricô com textura horizontal, gola careca e acabamento premium, em off white,
-  azul claro e verde. Do P ao GG.
-- Título: 1 peça. 3 cores.
-- Descrição: Primeira compra com 10% OFF · THEFIRST
+**V2 · Primeira compra (como garantir a sua)**
+- Identidade: só Bebas Neue + Inter e as cores do site (#151515, #FBFBFB, preço em verde #2CA98C, botão verde
+  #25C793 igual ao "finalizar compra" da loja). Sem efeito de lupa/zoom de tecido: o bruto não tem resolução para isso.
+- Gancho (frame 0): "PRIMEIRA COMPRA NA JUST CO? / T-SHIRT DE TRICÔ / DE R$ 139,90 POR R$ 125,91 · CADA PEÇA".
+  Filtra quem ainda não comprou e já mostra o preço final, então quem clica chega decidido. R$ 125,91 = R$ 139,90
+  com os 10% do cupom THEFIRST (válido na 1ª compra, segundo o site).
+- Passos: 1/3 escolha a cor e o tamanho (off white, azul claro ou verde · do P ao GG) → 2/3 no carrinho, use o
+  cupom THEFIRST → 3/3 pronto: R$ 125,91 a peça → o que você recebe → card final igual ao card de produto do site.
+- Texto principal: Primeira compra na JUST CO? A T-shirt MC Tricot Horizontal sai de R$ 139,90 por R$ 125,91 cada
+  peça com o cupom THEFIRST (10% OFF na primeira compra). Tricô com textura horizontal, gola careca, toque macio
+  e acabamento premium. Do P ao GG.
+- Título: R$ 125,91 a peça na 1ª compra
+- Descrição: Cupom THEFIRST · 10% OFF
 - CTA: Comprar agora
 
 **E1/E2 · Verão (texto atrás)**
@@ -115,7 +123,7 @@ Montserrat no lugar da Inter, Playfair Display igual). Os PNGs em `out/estaticos
 1. **Prospecção (ABO, público aberto, homens 25–55):** V1, V2, E1, E3, E4 e carrossel, 1 anúncio por conjunto
    ou todos no mesmo conjunto com orçamento igual por 7 dias. Métricas de corte: hook rate > 25% nos vídeos,
    CTR > 1% nos estáticos.
-2. **Remarketing (visitou 14 dias / adicionou ao carrinho):** E6, E5, E7 e V2.
+2. **Remarketing (visitou 14 dias / adicionou ao carrinho):** V2, E6, E5 e E7.
 3. Escalar o vencedor com variações de hook.
 
 ## Como regenerar

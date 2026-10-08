@@ -2,7 +2,7 @@
 <html lang="pt-br">
 <head>
 <meta charset="utf-8">
-<title>Just Co V2 Textura</title>
+<title>Just Co V2 Primeira Compra</title>
 <link href="fonts/fonts.css" rel="stylesheet">
 <style>html, body { margin: 0; background: #000; } canvas { display: block; }</style>
 </head>
@@ -10,97 +10,128 @@
 <canvas id="c" width="1080" height="1920"></canvas>
 <script src="engine.js"></script>
 <script>
-// V2 — "REPARA NA TEXTURA." Detail hook (macro push on the knit), zoom-out reveal, fast cuts with a checklist built
-// only from PDP facts, 3-colour panel with the Adobe product cutouts, offer end card.
+// V2 — "PRIMEIRA COMPRA NA JUST CO?" First-purchase offer shown as the final unit price on frame 0
+// (de R$ 139,90 por R$ 125,91 cada peça, cupom THEFIRST = 10% OFF), then a 3-step "como garantir" that walks
+// the viewer to the checkout, ending on a card that mirrors the site's product card.
+// Brand system taken from the store CSS: Bebas Neue + Inter, #151515 / #FBFBFB, price green #2CA98C,
+// buy-button green #25C793, struck price #8B8B8B. Footage sits under a solid black panel like the site's top bar.
 const DUR = 15.0;
+const B = { ink: '#151515', paper: '#FBFBFB', card: '#EDEDED', grey: '#8B8B8B', light: '#BFBFBF', price: '#2CA98C', buy: '#25C793' };
+const PANEL = 640, DY = 600;
 const SEGMENTS = [
-  { t0: 0.0, t1: 2.5, r0: 11.2, r1: 12.6, z0: 2.9, z1: 2.5, fx: 0.5, fy: 0.47 },
-  { t0: 2.5, t1: 4.0, r0: 12.6, r1: 13.6, z0: 2.5, z1: 1.0, fx: 0.5, fy: 0.47, fy1: 0.42 },
-  { t0: 4.0, t1: 5.5, r0: 0.4, r1: 1.9, z0: 1.1, z1: 1.0, fx: 0.5, fy: 0.45 },
-  { t0: 5.5, t1: 7.0, r0: 5.6, r1: 7.1, z0: 1.1, z1: 1.0, fx: 0.5, fy: 0.42 },
-  { t0: 7.0, t1: 8.5, r0: 7.9, r1: 9.4, z0: 1.1, z1: 1.0, fx: 0.5, fy: 0.45 },
-  { t0: 8.5, t1: 10.0, r0: 9.8, r1: 11.0, z0: 1.12, z1: 1.0, fx: 0.5, fy: 0.42 },
-  { t0: 10.0, t1: 15.0, r0: 14.0, r1: 16.2, z0: 1.05, z1: 1.0, fx: 0.5, fy: 0.45 },
+  { t0: 0.0, t1: 2.7, r0: 0.3, r1: 2.6, z0: 1.08, z1: 1.0, fx: 0.5, fy: 0.5 },
+  { t0: 2.7, t1: 5.2, r0: 5.4, r1: 7.4, z0: 1.06, z1: 1.0, fx: 0.5, fy: 0.62 },
+  { t0: 5.2, t1: 7.7, r0: 7.6, r1: 9.5, z0: 1.06, z1: 1.0, fx: 0.5, fy: 0.6 },
+  { t0: 7.7, t1: 10.2, r0: 2.6, r1: 4.7, z0: 1.0, z1: 1.06, fx: 0.5, fy: 0.6 },
+  { t0: 10.2, t1: 12.0, r0: 9.8, r1: 11.0, z0: 1.06, z1: 1.0, fx: 0.5, fy: 0.6 },
 ];
-const CHECKS = [['TRICÔ COM TEXTURA HORIZONTAL', 4.1], ['GOLA CARECA', 5.6], ['TOQUE MACIO', 7.1], ['ACABAMENTO PREMIUM', 8.6]];
-const COLORS = [['p_off', 'OFF WHITE', '#EEEAE0'], ['p_azul', 'AZUL CLARO', '#6FB4E6'], ['p_verde', 'VERDE', '#9EA593']];
+const STEPS = [
+  { t0: 2.7, t1: 5.2, n: '1/3', title: ['ESCOLHA A COR', 'E O TAMANHO'], sub: 'Off white, azul claro ou verde · do P ao GG' },
+  { t0: 5.2, t1: 7.7, n: '2/3', title: ['NO CARRINHO, USE O CUPOM'], small: true, coupon: true },
+  { t0: 7.7, t1: 10.2, n: '3/3', title: ['PRONTO:'], price: true, sub: '10% OFF aplicado na sua 1ª compra' },
+];
+
+function strikePrice(str, x, y, size, color, p) {
+  const w = txt(str, x, y, { size, color, p, shadow: 0 }) || 0;
+  if (p > 0.3) { ctx.save(); ctx.globalAlpha = clamp((p - 0.3) * 3); ctx.strokeStyle = color; ctx.lineWidth = size * 0.07;
+    ctx.beginPath(); ctx.moveTo(x - 4, y - size * 0.34); ctx.lineTo(x + w + 4, y - size * 0.34); ctx.stroke(); ctx.restore(); }
+  return w;
+}
+
+function panelBase() {
+  ctx.fillStyle = B.ink; ctx.fillRect(0, 0, W, PANEL);
+  const g = ctx.createLinearGradient(0, PANEL, 0, PANEL + 120);
+  g.addColorStop(0, B.ink); g.addColorStop(1, 'rgba(21,21,21,0)');
+  ctx.fillStyle = g; ctx.fillRect(0, PANEL, W, 120);
+}
 
 async function renderAt(t) {
-  if (t < 10.6) await drawSegments(t, SEGMENTS);
+  ctx.fillStyle = B.ink; ctx.fillRect(0, 0, W, H);
 
-  // 0–2.5 · macro hook
-  if (t < 2.6) {
-    shade(0.5, 0.0, 0.0);
-    const out = prog(t, 2.35, 2.55);
-    txt('REPARA', 80, 470, { size: 210, p: prog(t, 0.08, 0.45), out });
-    txt('NA TEXTURA.', 80, 660, { size: 210, color: C.orange, p: prog(t, 0.4, 0.8), out, shadow: 0.25 });
-    // focus ring that "finds" the knit
-    const p = prog(t, 0.9, 1.5);
-    if (p > 0) {
-      ctx.save(); ctx.globalAlpha = (1 - out) * eout(p); ctx.strokeStyle = '#fff'; ctx.lineWidth = 6;
-      ctx.beginPath(); ctx.arc(W / 2 + 60, 1180, lerp(260, 190, eout(p)), 0, Math.PI * 2); ctx.stroke(); ctx.restore();
-    }
-  }
-  // 2.5–4 · reveal
-  if (t >= 2.5 && t < 4.1) {
-    lowShade(0.7);
-    const out = prog(t, 3.85, 4.05);
-    txt('T-SHIRT MC TRICOT', 78, 1330, { size: 130, p: prog(t, 2.7, 3.1), out });
-    txt('HORIZONTAL', 78, 1445, { size: 130, color: C.orange, p: prog(t, 2.9, 3.3), out, shadow: 0.25 });
-  }
-  if (t >= 2.5) logo(W / 2 - 62, 150, 48, prog(t, 2.5, 2.9) * (1 - prog(t, 9.8, 10.1)));
-
-  // 4–10 · checklist builds up across the cuts
-  if (t >= 4.0 && t < 10.1) {
-    lowShade(0.55, 1000, 1600);
-    const out = prog(t, 9.85, 10.05);
-    CHECKS.forEach(([s, t0], i) => pill(s, 70, 1040 + i * 100, { check: true, p: prog(t, t0, t0 + 0.45), out }));
+  if (t < 12.0) {
+    drawRaw.dy = DY;
+    await drawSegments(t, SEGMENTS);
+    drawRaw.dy = 0;
+    panelBase();
+    logo(W - 80 - 110, 90, 44, 1);
   }
 
-  // 10–12.2 · three colours on paper (wipe up)
-  if (t >= 10.0 && t < 12.4) {
-    const w = eio(prog(t, 10.0, 10.5));
-    ctx.fillStyle = C.paper; ctx.fillRect(0, H * (1 - w), W, H * w);
-    if (w >= 1) {
-      const out = prog(t, 12.1, 12.35);
-      txt('1 PEÇA.', 80, 420, { size: 170, color: C.ink, p: prog(t, 10.45, 10.8), out, shadow: 0 });
-      txt('3 CORES.', 80, 570, { size: 170, color: C.cobalt, p: prog(t, 10.6, 10.95), out, shadow: 0 });
-      COLORS.forEach(([k, name, sw], i) => {
-        const p = prog(t, 10.75 + i * 0.18, 11.25 + i * 0.18), img = IMG[k];
-        if (p <= 0) return;
-        const h = 1000, wImg = h * img.width / img.height, cx = 200 + i * 340, y = 660;
+  // 0–2.7 · hook: who (first purchase) + what + final unit price
+  if (t < 2.75) {
+    const out = prog(t, 2.55, 2.7);
+    txt('PRIMEIRA COMPRA NA JUST CO?', 80, 300, { font: F.sans, weight: 700, size: 30, ls: 6, color: B.light, p: 1, out, shadow: 0 });
+    txt('T-SHIRT DE TRICÔ', 76, 438, { size: 150, color: B.paper, p: 1, out, shadow: 0 });
+    const ow = strikePrice('DE R$ 139,90', 80, 560, 64, B.grey, 1 - out);
+    const nw = txt('POR R$ 125,91', 80 + ow + 28, 560, { size: 104, color: B.price, p: 1, out, shadow: 0 }) || 0;
+    txt('CADA PEÇA', 80 + ow + 28 + nw + 18, 552, { font: F.sans, weight: 700, size: 26, ls: 4, color: B.paper, p: 1, out, shadow: 0 });
+  }
+
+  // 2.7–10.2 · como garantir a sua (3 steps)
+  for (const s of STEPS) {
+    if (t < s.t0 || t >= s.t1 + 0.05) continue;
+    const out = prog(t, s.t1 - 0.2, s.t1);
+    txt(`COMO GARANTIR A SUA · ${s.n}`, 80, 260, { font: F.sans, weight: 700, size: 28, ls: 6, color: B.light, p: prog(t, s.t0, s.t0 + 0.3), out, shadow: 0 });
+    s.title.forEach((line, i) => txt(line, 76, 390 + i * 118, { size: s.small ? 104 : 132, color: B.paper, p: prog(t, s.t0 + 0.05 + i * 0.15, s.t0 + 0.45 + i * 0.15), out, shadow: 0 }));
+    if (s.coupon) {
+      const p = prog(t, s.t0 + 0.45, s.t0 + 0.85);
+      if (p > 0) {
         ctx.save(); ctx.globalAlpha = clamp(p * 2) * (1 - out);
-        ctx.beginPath(); ctx.rect(cx - 200, y, 400, 640); ctx.clip();
-        ctx.drawImage(img, cx - wImg / 2, y + (1 - eback(p)) * 160, wImg, h);
+        const x = 80, y = 420, w = 560, h = 180, e = eback(p);
+        ctx.translate(x + w / 2, y + h / 2); ctx.scale(e, e);
+        ctx.fillStyle = B.paper; rrect(-w / 2, -h / 2, w, h, 18); ctx.fill();
+        ctx.setLineDash([14, 10]); ctx.lineWidth = 4; ctx.strokeStyle = B.ink; rrect(-w / 2 + 14, -h / 2 + 14, w - 28, h - 28, 12); ctx.stroke(); ctx.setLineDash([]);
+        ctx.fillStyle = B.ink; ctx.textAlign = 'center';
+        ctx.font = `700 22px ${F.sans}`; ctx.letterSpacing = '5px'; ctx.fillText('CUPOM', 0, -22);
+        ctx.font = `400 92px ${F.display}`; ctx.letterSpacing = '6px'; ctx.fillText('THEFIRST', 0, 56);
         ctx.restore();
-        ctx.save(); ctx.globalAlpha = clamp(p * 2) * (1 - out);
-        ctx.beginPath(); ctx.arc(cx - 70, 1360, 17, 0, Math.PI * 2); ctx.fillStyle = sw; ctx.fill();
-        ctx.strokeStyle = 'rgba(0,0,0,.25)'; ctx.lineWidth = 2; ctx.stroke();
-        ctx.font = `700 24px ${F.sans}`; ctx.letterSpacing = '3px'; ctx.fillStyle = C.ink; ctx.textBaseline = 'middle';
-        ctx.fillText(name, cx - 44, 1362); ctx.restore();
-      });
-      txt('DO P AO GG · R$ 139,90', 80, 1480, { font: F.sans, weight: 700, size: 34, ls: 4, color: C.ink, p: prog(t, 11.3, 11.7), out, shadow: 0 });
+      }
     }
+    if (s.price) {
+      const nw = txt('R$ 125,91', 76, 508, { size: 132, color: B.price, p: prog(t, s.t0 + 0.25, s.t0 + 0.65), out, shadow: 0 }) || 0;
+      txt('A PEÇA', 76 + nw + 22, 500, { font: F.sans, weight: 700, size: 30, ls: 4, color: B.paper, p: prog(t, s.t0 + 0.45, s.t0 + 0.8), out, shadow: 0 });
+    }
+    if (s.sub) txt(s.sub, 80, s.price ? 580 : 590, { font: F.sans, weight: 500, size: 32, color: B.light, p: prog(t, s.t0 + 0.4, s.t0 + 0.8), out, shadow: 0 });
+    // step dots
+    STEPS.forEach((d, i) => { ctx.beginPath(); ctx.arc(80 + i * 34, 196, 9, 0, Math.PI * 2); ctx.fillStyle = d === s ? B.buy : '#3A3A3A'; ctx.fill(); });
   }
 
-  // 12.2–15 · offer end card
-  if (t >= 12.2) {
-    const p = prog(t, 12.2, 12.6);
-    ctx.fillStyle = C.paper; ctx.fillRect(0, 0, W, H);
+  // 10.2–12 · what you get (PDP wording)
+  if (t >= 10.2 && t < 12.05) {
+    const out = prog(t, 11.85, 12.0);
+    txt('O QUE VOCÊ RECEBE', 80, 260, { font: F.sans, weight: 700, size: 28, ls: 6, color: B.light, p: prog(t, 10.2, 10.5), out, shadow: 0 });
+    txt('TRICÔ COM TEXTURA', 76, 390, { size: 128, color: B.paper, p: prog(t, 10.25, 10.65), out, shadow: 0 });
+    txt('HORIZONTAL', 76, 505, { size: 128, color: B.paper, p: prog(t, 10.4, 10.8), out, shadow: 0 });
+    txt('Gola careca · toque macio · acabamento premium', 80, 585, { font: F.sans, weight: 500, size: 32, color: B.light, p: prog(t, 10.6, 11.0), out, shadow: 0 });
+  }
+
+  // 12–15 · end card mirroring the site's product card
+  if (t >= 12.0) {
+    const p = prog(t, 12.0, 12.4);
+    ctx.fillStyle = B.paper; ctx.fillRect(0, 0, W, H);
     ctx.save(); ctx.globalAlpha = eout(p);
-    const g = ctx.createRadialGradient(W * 0.6, H * 0.42, 50, W * 0.5, H * 0.5, 1200);
-    g.addColorStop(0, '#2A52D6'); g.addColorStop(0.5, C.cobalt); g.addColorStop(1, '#142C86');
-    ctx.fillStyle = g; ctx.fillRect(0, 0, W, H); ctx.restore();
-    logo(W / 2 - 70, 200, 56, eout(p));
-    txt('Sua primeira JUST CO sai com', W / 2, 520, { font: F.serif, italic: true, weight: 500, size: 64, align: 'center', p: prog(t, 12.35, 12.75), shadow: 0 });
-    txt('10% OFF', W / 2, 820, { size: 330, align: 'center', p: prog(t, 12.5, 12.9), shadow: 0.2 });
-    coupon(W / 2, 900, prog(t, 12.75, 13.15), { w: 760 });
-    txt('T-shirt Tricot Horizontal · R$ 139,90 · 3x sem juros', W / 2, 1160, { font: F.sans, weight: 600, size: 32, align: 'center', color: '#E3E8FF', p: prog(t, 12.9, 13.3), shadow: 0 });
-    button('QUERO A MINHA  →', W / 2, 1250, t, { w: 760, p: prog(t, 13.1, 13.5) });
+    logo(W / 2 - 75, 170, 60, 1, IMG.logoB);
+    // product image card (same grey studio background as the store)
+    const cy = 300 + (1 - eout(p)) * 60;
+    rrect(140, cy, 800, 860, 24); ctx.fillStyle = B.card; ctx.fill();
+    ctx.save(); rrect(140, cy, 800, 860, 24); ctx.clip();
+    const img = IMG.p_off, h = 1060, w = h * img.width / img.height;
+    ctx.drawImage(img, 540 - w / 2, cy + 50, w, h); ctx.restore();
+    ctx.fillStyle = B.ink; rrect(170, cy + 30, 110, 44, 22); ctx.fill();
+    ctx.font = `700 20px ${F.sans}`; ctx.letterSpacing = '3px'; ctx.fillStyle = '#fff'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+    ctx.fillText('VERÃO', 225, cy + 53);
+    ctx.restore();
+    txt('T-SHIRT MC TRICOT HORIZONTAL', W / 2, 1250, { font: F.sans, weight: 700, size: 34, ls: 3, color: B.ink, align: 'center', p: prog(t, 12.2, 12.5), shadow: 0 });
+    const op = prog(t, 12.3, 12.6);
+    ctx.save(); ctx.font = `400 64px ${F.display}`; const ow = ctx.measureText('R$ 139,90').width; ctx.font = `400 128px ${F.display}`; const nw = ctx.measureText('R$ 125,91').width; ctx.restore();
+    const x0 = W / 2 - (ow + 30 + nw) / 2;
+    strikePrice('R$ 139,90', x0, 1395, 64, B.grey, op);
+    txt('R$ 125,91', x0 + ow + 30, 1395, { size: 128, color: B.price, p: prog(t, 12.4, 12.75), shadow: 0 });
+    txt('cada peça na 1ª compra com o cupom THEFIRST', W / 2, 1455, { font: F.sans, weight: 500, size: 30, color: '#494E4C', align: 'center', p: prog(t, 12.55, 12.9), shadow: 0 });
+    button('COMPRAR AGORA', W / 2, 1510, t, { bg: B.buy, w: 800, h: 110, size: 34, weight: 700, p: prog(t, 12.75, 13.15) });
   }
 }
 window.renderAt = renderAt;
-window.ready = boot({ p_off: 'assets/p_off.png', p_azul: 'assets/p_azul.png', p_verde: 'assets/p_verde.png' });
+window.ready = boot({ p_off: 'assets/p_off.png' });
 </script>
 </body>
 </html>

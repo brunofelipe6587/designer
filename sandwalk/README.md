@@ -49,6 +49,15 @@ Mesmo vídeo, narração e legendas do 02. Mudou só a trilha: um trap feito do 
 
 Para renderizar: `python3 trap2.py build/mix2_trap.wav` e depois o mux com `out/video2_silent.mp4`.
 
+### Criativo 02c "Treino" com "21 Questions": `out/SandWalk_02c_Treino_21Questions_9x16.mp4`
+
+Mesmo vídeo, narração e legendas do 02. A trilha é o beat de "21 Questions" (50 Cent ft. Nate Dogg, `src/audio/21_questions.mp3`), mixado por `q21_mix.py`:
+- **Só o beat, sem voz:** usei apenas o loop instrumental de 4 compassos (32,86–43,19s do áudio do clipe, antes de qualquer vocal) e repeti em loop. A transcrição em inglês do resultado não encontra letra nenhuma.
+- **Gancho (0–5s):** batida abafada por filtro passa-baixa, que abre inteira exatamente no compasso forte (38,03s da música) quando o Kit VOID aparece em 5,0s. O grave sobe 8 dB nesse ponto.
+- **Preço:** efeito de fita parando em 10,1s, silêncio, e o loop recomeça do primeiro compasso em 10,5s.
+- A trilha abaixa 11 dB e abre espaço nos médios enquanto a narração fala. O volume final fica em -14,7 LUFS.
+- **Direitos:** é uma faixa de gravadora. Em anúncio pago, o Meta pode silenciar ou reprovar o vídeo sem licença.
+
 ## Como renderizar (criativo 01)
 
 ```

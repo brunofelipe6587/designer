@@ -39,6 +39,16 @@ Ajustes pedidos: menos pele e sunga, foco nos kits do site, trilha mais leve e n
 
 Para renderizar: `python3 music2.py build/mix2.wav`, depois `PAGE=video2.html DUR=24 node render.js video 30` e, por fim, o mux com ffmpeg. A narração é gerada com `VOICE=pt-BR-ThalitaMultilingualNeural python3 tts.py "<frase>" build/vo/lN.mp3 "+8%"`. O silêncio das pontas é cortado com `silenceremove` a -60 dB, deixando uma folga de 60 ms. Depois disso, rode o script que gera `vo2.js` com os tempos de cada palavra.
 
+### Criativo 02b "Treino" com trilha trap: `out/SandWalk_02b_Treino_Trap_9x16.mp4`
+
+Mesmo vídeo, narração e legendas do 02. Mudou só a trilha: um trap feito do zero (`trap2.py`, 131 BPM em half-time, Fá menor), com kick e 808 com glide, clap no tempo 3, hi-hats com rolls de 1/32, sino FM e pad escuro. A batida segue os cortes do vídeo:
+- **Drop na revelação do Kit VOID (5,0s):** riser e prato reverso antes, impacto no corte.
+- **A batida para 0,4s antes do preço** e volta com impacto exatamente em 10,5s.
+- **Viradas no cupom (16,2s) e no CTA (20,7s)**, com sweeps curtos nos cortes menores e um 808 final em 23,3s.
+- A trilha abaixa 10 dB e abre espaço nos médios enquanto a narração fala. O volume final fica em -14,7 LUFS.
+
+Para renderizar: `python3 trap2.py build/mix2_trap.wav` e depois o mux com `out/video2_silent.mp4`.
+
 ## Como renderizar (criativo 01)
 
 ```

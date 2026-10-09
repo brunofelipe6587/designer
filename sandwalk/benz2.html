@@ -1,0 +1,256 @@
+<!doctype html>
+<html lang="pt-br">
+<head>
+<meta charset="utf-8">
+<title>Sand Walk Benz 04</title>
+<link href="fonts/fonts.css" rel="stylesheet">
+<style>html, body { margin: 0; background: #000; } canvas { display: block; }</style>
+</head>
+<body>
+<canvas id="c" width="1080" height="1920"></canvas>
+<script>
+// Creative 04 "Tropa do Bença": fast commercial cut of Benz's unboxing footage on his own track
+// ("a tropa do Bença tá em outro patamar"), music from 18.20 s of the song, cuts on the beat grid (0.428 s), drop at 2.56.
+// hook (kit + lyric karaoke) → drop: Kit VOID reveal → Benz/delivery/kit flashes → price → coupon + CTA.
+const W = 1080, H = 1920, DUR = 15.9;
+const Y = '#FFCC29', INK = '#0B0B0B', EMO = '"Noto Color Emoji"';
+const ctx = document.getElementById('c').getContext('2d');
+const clamp = (x, a = 0, b = 1) => Math.min(b, Math.max(a, x));
+const lerp = (a, b, t) => a + (b - a) * t;
+const eio = t => t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
+const eout = t => 1 - Math.pow(1 - t, 3);
+const eback = t => { const c1 = 1.7, c3 = c1 + 1; return 1 + c3 * Math.pow(t - 1, 3) + c1 * Math.pow(t - 1, 2); };
+const prog = (t, a, b) => clamp((t - a) / (b - a));
+const pop = (t, a, d = 0.24) => t < a ? 0 : eback(prog(t, a, a + d));
+
+// beat grid of the song, shifted so the clip starts at 18.20 s
+const BEATS = [18.2, 18.62, 19.04, 19.48, 19.9, 20.32, 20.76, 21.18, 21.62, 22.04, 22.48, 22.92, 23.34, 23.75, 24.2, 24.61, 25.05, 25.47,
+  25.91, 26.33, 26.75, 27.17, 27.61, 28.05, 28.47, 28.91, 29.33, 29.77, 30.19, 30.6, 31.05, 31.49, 31.9, 32.32, 32.76, 33.2, 33.62, 34.04].map(b => +(b - 18.2).toFixed(2));
+const B = k => BEATS[k];
+const DROP = B(6); // 2.56
+// lyric "a tropa do Bença tá em outro patamar" (word offsets inside the 8-beat phrase that starts at 0.18)
+const LYRIC = [['A', 0.0], ['TROPA', 0.1], ['DO', 0.5], ['BENÇA', 0.68], ['TÁ', 1.06], ['EM', 1.4], ['OUTRO', 1.58], ['PATAMAR', 1.9]].map(([w, o]) => [w, 0.18 + o]);
+
+// shots: [t0, t1, kind, a, b, c]  kind 'v' = Benz footage [startSec, speed, zoom]; 'kit' = product reveal; 'flash' = kit flashes
+const SHOTS = [
+  [0, B(3), 'v', 6.6, 1.0, 1.06],            // opens the jacket, shows the kit
+  [B(3), DROP, 'v', 12.7, 1.0, 1.12],        // close on the SW chest logo
+  [DROP, B(8), 'kit'],                        // DROP: Kit VOID reveal
+  [B(8), B(10), 'v', 17.0, 1.0, 1.08],       // thumbs up
+  [B(10), B(12), 'v', 31.0, 1.0, 1.06],      // bag on his head, teammate in the PHOENIX shirt
+  [B(12), B(14), 'v', 8.3, 1.0, 1.1],        // sleeve detail
+  [B(14), B(16), 'flash'],                    // 4 kits, one per half beat
+  [B(16), B(18), 'v', 21.0, 1.0, 1.06],      // pointing at the camera
+  [B(18), B(20), 'v', 30.0, 1.0, 1.04],      // the delivery bags arriving
+  [B(20), B(28), 'v', 22.1, 0.9, 1.1],       // price section over Benz, darkened
+  [B(28), DUR, 'v', 16.7, 0.95, 1.04],       // CTA: thumbs up, smiling
+];
+const KITS = [['kit_void', 'VOID'], ['kit_phoenix', 'PHOENIX'], ['kit_everflame', 'EVER FLAME'], ['kit_shadow', 'SHADOW'], ['kit_pureblood', 'PURE BLOOD']];
+
+const cache = new Map();
+function load(src) {
+  if (!cache.has(src)) {
+    const im = new Image(); im.src = src;
+    cache.set(src, im.decode().then(() => im).catch(() => null));
+    if (cache.size > 60) cache.delete(cache.keys().next().value);
+  }
+  return cache.get(src);
+}
+const IMG = {};
+const beatIdx = t => { let k = 0; for (let i = 0; i < BEATS.length; i++) if (t >= BEATS[i]) k = i; return k; };
+// zoom pulse on every beat (stronger after the drop)
+const pulse = t => { const k = beatIdx(t); return 1 + (t >= DROP ? 0.035 : 0.015) * (1 - eout(prog(t, BEATS[k], BEATS[k] + 0.25))); };
+const shake = (t, a) => [a * Math.sin(t * 47), a * Math.sin(t * 39 + 1)];
+
+async function benz(t, t0, s0, sp, z, o = {}) {
+  const n = Math.round((s0 + (t - t0) * sp) * 30);
+  const img = await load(`frames_benz/${String(n).padStart(5, '0')}.jpg`);
+  if (!img) return;
+  let zz = z * pulse(t) * (1 + 0.07 * (1 - eout(prog(t, t0, t0 + 0.2))));
+  const imp = t >= DROP && t < DROP + 0.4 ? 1 - prog(t, DROP, DROP + 0.4) : 0;
+  const [sx, sy] = shake(t, 16 * imp);
+  ctx.save();
+  ctx.filter = (o.blur ? `blur(${o.blur}px) ` : '') + `contrast(1.08) saturate(1.15) brightness(${o.bright || 1})`;
+  ctx.translate(540 + sx, 960 + sy); ctx.scale(zz, zz); ctx.translate(-540, -960);
+  ctx.drawImage(img, 0, 0, W, H); ctx.restore();
+}
+
+// ---------- type ----------
+function fitFont(str, weight, size, fam, maxW) { ctx.font = `${weight} ${size}px ${fam}`; const w = ctx.measureText(str).width; return w > maxW ? size * maxW / w : size; }
+function title(str, x, y, o = {}) {
+  const { size = 120, color = '#fff', scale = 1, alpha = 1, maxW = 980, fam = 'Syne', weight = 800, shadow = 0.5, ls = 0, rot = 0 } = o;
+  if (alpha <= 0 || scale <= 0) return;
+  ctx.save(); ctx.globalAlpha = clamp(alpha); ctx.translate(x, y); ctx.rotate(rot); ctx.scale(scale, scale);
+  const s = fitFont(str, weight, size, fam, maxW); ctx.font = `${weight} ${s}px ${fam}`; ctx.letterSpacing = ls + 'px';
+  ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+  if (shadow) { ctx.shadowColor = `rgba(0,0,0,${shadow})`; ctx.shadowBlur = 30; ctx.shadowOffsetY = 8; }
+  ctx.fillStyle = color; ctx.fillText(str, 0, 0); ctx.restore();
+}
+function chip(str, x, y, o = {}) {
+  const { size = 40, bg = Y, color = INK, scale = 1, fam = 'Inter', weight = 800, rot = 0, alpha = 1 } = o;
+  if (scale <= 0 || alpha <= 0) return;
+  ctx.save(); ctx.globalAlpha = clamp(alpha); ctx.translate(x, y); ctx.rotate(rot); ctx.scale(scale, scale);
+  ctx.font = `${weight} ${size}px ${fam}, ${EMO}`; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+  const w = ctx.measureText(str).width + size * 0.75, h = size * 1.45;
+  ctx.shadowColor = 'rgba(0,0,0,0.35)'; ctx.shadowBlur = 22; ctx.shadowOffsetY = 8;
+  ctx.fillStyle = bg; ctx.beginPath(); ctx.roundRect(-w / 2, -h / 2, w, h, size * 0.3); ctx.fill();
+  ctx.shadowColor = 'transparent'; ctx.fillStyle = color; ctx.fillText(str, 0, size * 0.05); ctx.restore();
+}
+function card(key, cx, cy, w, h, o = {}) {
+  const { scale = 1, alpha = 1, label, badge, rot = 0 } = o;
+  if (scale <= 0 || alpha <= 0) return;
+  const im = IMG[key];
+  ctx.save(); ctx.globalAlpha = clamp(alpha); ctx.translate(cx, cy); ctx.rotate(rot); ctx.scale(scale, scale);
+  ctx.shadowColor = 'rgba(0,0,0,0.5)'; ctx.shadowBlur = 50; ctx.shadowOffsetY = 20;
+  ctx.fillStyle = '#fff'; ctx.beginPath(); ctx.roundRect(-w / 2, -h / 2, w, h, 34); ctx.fill(); ctx.shadowColor = 'transparent';
+  const ih = label ? h - 110 : h - 50, iw = w - 50, k = Math.min(iw / im.width, ih / im.height);
+  ctx.drawImage(im, -im.width * k / 2, -h / 2 + 25 + (ih - im.height * k) / 2, im.width * k, im.height * k);
+  if (badge) { ctx.font = '800 28px Syne'; const bw = ctx.measureText(badge).width + 30; ctx.fillStyle = INK; ctx.beginPath(); ctx.roundRect(-w / 2 + 24, -h / 2 + 24, bw, 48, 10); ctx.fill(); ctx.fillStyle = '#fff'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillText(badge, -w / 2 + 24 + bw / 2, -h / 2 + 49); }
+  if (label) { ctx.fillStyle = INK; ctx.font = '800 44px Syne'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillText(label, 0, h / 2 - 54); }
+  ctx.restore();
+}
+function lyric(t) {
+  // karaoke line of the song in the hook
+  if (t > DROP + 0.1) return;
+  const words = LYRIC.filter(([, a]) => t >= a - 0.05);
+  if (!words.length) return;
+  const l1 = LYRIC.slice(0, 4), l2 = LYRIC.slice(4);
+  [[l1, 1500], [l2, 1590]].forEach(([line, y]) => {
+    const shown = line.filter(([, a]) => t >= a - 0.05); if (!shown.length) return;
+    ctx.save(); ctx.font = '800 66px Inter'; ctx.textBaseline = 'middle'; ctx.textAlign = 'left';
+    const full = line.map(([w]) => w).join(' '), total = ctx.measureText(full).width;
+    let x = 540 - total / 2;
+    line.forEach(([w, a]) => {
+      const ww = ctx.measureText(w + ' ').width;
+      if (t >= a - 0.05) {
+        const p = pop(t, a - 0.05, 0.18);
+        ctx.save(); ctx.translate(x + ww / 2, y); ctx.scale(p, p);
+        ctx.lineJoin = 'round'; ctx.lineWidth = 12; ctx.strokeStyle = 'rgba(0,0,0,0.85)'; ctx.textAlign = 'center';
+        ctx.strokeText(w, -ctx.measureText(' ').width / 2, 0);
+        ctx.fillStyle = (w === 'BENÇA' || w === 'PATAMAR') ? Y : '#fff'; ctx.fillText(w, -ctx.measureText(' ').width / 2, 0);
+        ctx.restore();
+      }
+      x += ww;
+    });
+    ctx.restore();
+  });
+}
+function grain(t, a = 0.05) {
+  ctx.save(); ctx.globalAlpha = a; ctx.globalCompositeOperation = 'overlay';
+  const ox = Math.floor((Math.sin(t * 91) * 0.5 + 0.5) * 256), oy = Math.floor((Math.cos(t * 77) * 0.5 + 0.5) * 256);
+  ctx.translate(-ox, -oy); ctx.fillStyle = ctx.createPattern(NOISE, 'repeat'); ctx.fillRect(0, 0, W + 512, H + 512); ctx.restore();
+}
+function shade(y0, y1, a) { const g = ctx.createLinearGradient(0, y0, 0, y1); g.addColorStop(0, 'rgba(0,0,0,0)'); g.addColorStop(1, `rgba(0,0,0,${a})`); ctx.fillStyle = g; ctx.fillRect(0, y0, W, y1 - y0); ctx.fillStyle = `rgba(0,0,0,${a})`; ctx.fillRect(0, y1, W, H - y1); }
+function topShade(a) { const g = ctx.createLinearGradient(0, 180, 0, 760); g.addColorStop(0, `rgba(0,0,0,${a})`); g.addColorStop(1, 'rgba(0,0,0,0)'); ctx.fillStyle = g; ctx.fillRect(0, 180, W, 580); }
+function logo(x, y, w, alpha = 1) { if (w <= 0 || alpha <= 0) return; const h = w * LOGO.height / LOGO.width; ctx.save(); ctx.globalAlpha = clamp(alpha); ctx.shadowColor = 'rgba(0,0,0,0.5)'; ctx.shadowBlur = 20; ctx.drawImage(LOGO, x - w / 2, y - h / 2, w, h); ctx.restore(); }
+function brandPanel(t) {
+  ctx.fillStyle = INK; ctx.fillRect(0, 0, W, H);
+  const rg = ctx.createRadialGradient(540, 900, 60, 540, 900, 900); rg.addColorStop(0, 'rgba(255,204,41,0.35)'); rg.addColorStop(1, 'rgba(255,204,41,0)');
+  ctx.fillStyle = rg; ctx.fillRect(0, 0, W, H);
+  // moving diagonal stripes
+  ctx.save(); ctx.globalAlpha = 0.06; ctx.fillStyle = Y; ctx.translate(((t * 160) % 160) - 160, 0); ctx.rotate(-0.35);
+  for (let x = -1200; x < 2400; x += 160) ctx.fillRect(x, -600, 60, 3600);
+  ctx.restore();
+}
+const brl = v => 'R$ ' + v.toFixed(2).replace('.', ',');
+
+async function render(t) {
+  ctx.setTransform(1, 0, 0, 1, 0, 0); ctx.globalAlpha = 1; ctx.filter = 'none';
+  ctx.fillStyle = '#000'; ctx.fillRect(0, 0, W, H);
+  let si = 0; for (let i = 0; i < SHOTS.length; i++) if (t >= SHOTS[i][0]) si = i;
+  const [t0, t1, kind, a, b, c] = SHOTS[si];
+
+  if (kind === 'v') await benz(t, t0, a, b, c, si === 9 ? { bright: 0.85 } : {});
+  else if (kind === 'kit') {
+    brandPanel(t);
+    const p = pop(t, DROP, 0.3), k = (1 + 0.03 * (1 - eout(prog(t, B(7), B(7) + 0.25))) * (t > B(7) ? 1 : 0));
+    card('kit_void', 540, 980, 820, 860, { scale: p * k * pulse(t), label: 'KIT VOID', badge: '34% OFF', rot: -0.02 });
+    title('LANÇAMENTO', 540, 430, { size: 150, color: Y, scale: pop(t, DROP, 0.22) });
+    chip('3 PEÇAS: MANGA LONGA + CURTA + SHORTS', 540, 1520, { size: 36, bg: '#fff', scale: pop(t, B(7), 0.25) });
+  } else if (kind === 'flash') {
+    brandPanel(t);
+    const half = (B(16) - B(14)) / 4, i = 1 + clamp(Math.floor((t - t0) / half), 0, 3);
+    const lt = t - (t0 + (i - 1) * half);
+    card(KITS[i][0], 540, 960, 760, 820, { scale: lerp(1.12, 1, eout(clamp(lt / 0.12))), label: KITS[i][1], badge: '34% OFF', rot: (i % 2 ? 0.03 : -0.03) });
+    title('ESCOLHA SUA ESTAMPA', 540, 380, { size: 70, maxW: 980 });
+  }
+
+  // ----- overlays per section -----
+  if (t < DROP) {
+    topShade(0.5); shade(1250, 1750, 0.55);
+    const h = t < 0.03 ? 1 : 1;
+    chip('O KIT DO BENÇA 🔥', 540, 330, { size: 58, bg: '#fff', scale: h * (1 + 0.04 * Math.sin(t * 5)) });
+    chip('KITS DE FUTEVÔLEI SAND WALK', 540, 440, { size: 46, scale: h });
+    lyric(t);
+  } else if (si >= 3 && si <= 8 && kind === 'v') {
+    topShade(0.4);
+    if (si === 3) title('O KIT DO BENÇA', 540, 400, { size: 96, scale: pop(t, t0) });
+    if (si === 4) chip('🛍 Kit PHOENIX  R$ 189,70', 540, 1180, { size: 44, bg: 'rgba(20,20,20,0.85)', color: '#fff', scale: pop(t, t0 + 0.05) });
+    if (si === 5) chip('ESTAMPA VOID', 540, 400, { size: 54, scale: pop(t, t0) });
+    if (si === 7) title('TÁ EM OUTRO PATAMAR', 540, 400, { size: 84, color: Y, scale: pop(t, t0) });
+    if (si === 8) chip('CHEGOU O PEDIDO 📦', 540, 400, { size: 54, bg: '#fff', scale: pop(t, t0) });
+    logo(540, 1640, 170, 0.9);
+  } else if (si === 9) {
+    shade(700, 1500, 0.82); topShade(0.35);
+    card('kit_void', 800, 560, 400, 440, { scale: pop(t, t0, 0.3) * pulse(t), rot: 0.06, badge: '34% OFF' });
+    title('KIT COMPLETO', 330, 470, { size: 70, scale: pop(t, t0 + 0.05), maxW: 520 });
+    title('3 PEÇAS', 330, 560, { size: 56, color: Y, scale: pop(t, t0 + 0.15), maxW: 520 });
+    // price: strike on beat 21, count down on 22, installments on 24
+    const s1 = pop(t, B(21));
+    if (s1 > 0) {
+      title('de R$ 287,70', 540, 1080, { size: 52, fam: 'Inter', weight: 600, color: 'rgba(255,255,255,0.85)', scale: s1, shadow: 0 });
+      ctx.save(); ctx.font = '600 52px Inter'; const w = ctx.measureText('de R$ 287,70').width, sp = eout(prog(t, B(21) + 0.1, B(22)));
+      ctx.strokeStyle = '#E53935'; ctx.lineWidth = 7; ctx.lineCap = 'round'; ctx.beginPath(); ctx.moveTo(540 - w / 2 - 6, 1082); ctx.lineTo(540 - w / 2 - 6 + (w + 12) * sp, 1082); ctx.stroke(); ctx.restore();
+    }
+    const val = lerp(287.7, 189.7, eout(prog(t, B(22), B(23) + 0.2)));
+    title(brl(val), 540, 1220, { size: 170, color: Y, scale: pop(t, B(22), 0.25) * (t > B(24) ? pulse(t) : 1) });
+    chip('ou 3x de R$ 63,23 sem juros', 540, 1370, { size: 42, bg: '#fff', scale: pop(t, B(24)) });
+    chip('ENVIO PRA TODO O BRASIL 📦', 540, 1480, { size: 36, bg: INK, color: '#fff', scale: pop(t, B(26)) });
+  } else if (si === 10) {
+    shade(760, 1500, 0.88); topShade(0.4);
+    logo(540, 360, 280 * pop(t, t0, 0.3), 1);
+    title('+10% OFF NA 1ª COMPRA', 540, 1000, { size: 78, scale: pop(t, B(29)), maxW: 980 });
+    const kp = pop(t, B(30));
+    if (kp > 0) {
+      ctx.save(); ctx.translate(540, 1120); ctx.scale(kp, kp); ctx.setLineDash([16, 12]); ctx.strokeStyle = Y; ctx.lineWidth = 5; ctx.fillStyle = 'rgba(255,204,41,0.14)';
+      ctx.beginPath(); ctx.roundRect(-340, -54, 680, 108, 18); ctx.fill(); ctx.stroke(); ctx.restore();
+      title('CUPOM: BEMVINDO10', 540, 1121, { size: 50, fam: 'Inter', weight: 800, scale: kp, shadow: 0 });
+    }
+    const bp = pop(t, B(31), 0.3);
+    if (bp > 0) {
+      const pl = pulse(t);
+      ctx.save(); ctx.translate(540, 1300); ctx.scale(bp * pl, bp * pl);
+      ctx.shadowColor = 'rgba(255,204,41,0.55)'; ctx.shadowBlur = 50; ctx.fillStyle = Y; ctx.beginPath(); ctx.roundRect(-420, -70, 840, 140, 70); ctx.fill();
+      ctx.shadowColor = 'transparent'; ctx.fillStyle = INK; ctx.font = '800 50px Syne'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillText('COMPRE NO SITE  →', 0, 3); ctx.restore();
+    }
+    title('lojasandwalk.com.br', 540, 1440, { size: 42, fam: 'Inter', weight: 700, scale: pop(t, B(32)), shadow: 0.4 });
+    const ap = pop(t, B(33), 0.3);
+    if (ap > 0) { const ay = 1550 + Math.abs(Math.sin((t - B(33)) * 7.3)) * 18; ctx.save(); ctx.globalAlpha = clamp(ap); ctx.fillStyle = '#fff'; ctx.beginPath(); ctx.moveTo(510, ay - 20); ctx.lineTo(570, ay - 20); ctx.lineTo(540, ay + 14); ctx.closePath(); ctx.fill(); ctx.restore(); }
+  }
+
+  // flashes: big on the drop, small on cuts
+  let fl = 0;
+  const cuts = SHOTS.map(s => s[0]).filter(x => x > 0);
+  cuts.forEach(cx => { const m = cx === DROP ? 0.9 : 0.28; const p = prog(t, cx - 0.005, cx + (cx === DROP ? 0.3 : 0.14)); if (p > 0 && p < 1) fl = Math.max(fl, m * (1 - eout(p))); });
+  if (fl > 0) { ctx.fillStyle = `rgba(255,250,235,${fl})`; ctx.fillRect(0, 0, W, H); }
+  grain(t);
+  ctx.fillStyle = 'rgba(255,255,255,0.16)'; ctx.fillRect(0, H - 10, W, 10);
+  ctx.fillStyle = Y; ctx.fillRect(0, H - 10, W * (t / DUR), 10);
+}
+
+let LOGO, NOISE;
+window.ready = (async () => {
+  LOGO = await load('build/logo_white.svg');
+  for (const [k] of KITS) IMG[k] = await load(`prod/${k}.jpg`);
+  NOISE = document.createElement('canvas'); NOISE.width = NOISE.height = 256;
+  const nx = NOISE.getContext('2d'), id = nx.createImageData(256, 256);
+  for (let i = 0; i < id.data.length; i += 4) { const v = Math.random() * 255; id.data[i] = id.data[i + 1] = id.data[i + 2] = v; id.data[i + 3] = 255; }
+  nx.putImageData(id, 0, 0);
+  for (const f of ['800 40px Syne', '600 40px Inter', '700 40px Inter', '800 40px Inter']) await document.fonts.load(f);
+  await document.fonts.load(`40px ${EMO}`, '🔥📦🛍');
+  await document.fonts.ready; await render(0); return true;
+})();
+window.renderAt = t => render(t);
+</script>
+</body>
+</html>

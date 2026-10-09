@@ -66,3 +66,19 @@ O vídeo orgânico do Benz que já converteu. Ficou intacto, sem cortes, com as 
 | 42,6s–fim | final | garanta o seu no site 👇 / +10% OFF na 1ª compra: BEMVINDO10 + link sticker LOJASANDWALK.COM.BR |
 
 Para renderizar: `PAGE=benz.html SRC=src/benz.mp4 OUT=out/SandWalk_03_Benz_ChegouOPedido_9x16.mp4 node render_overlay.js video`. O script desenha a camada transparente e a aplica sobre o vídeo original, mantendo o áudio.
+
+## Criativo 04 "Tropa do Bença" (9:16, 16s, música): `out/SandWalk_04_TropaDoBenca_9x16.mp4`
+
+Corte rápido e comercial com as cenas do Benz e a música "Tropa do Bença" (MC Pânico, DJs Marlon Mattos e DJ Martinello). Usa o trecho a partir de 18,2s da faixa: "a tropa do Bença tá em outro patamar" e depois o drop. Os cortes caem na batida (0,428s) e cada batida tem um leve pulso de zoom.
+
+| Tempo | Cena | Na tela |
+|---|---|---|
+| 0–2,6s | Benz abrindo a jaqueta e close do logo SW | O KIT DO BENÇA 🔥 / KITS DE FUTEVÔLEI SAND WALK + letra em karaokê |
+| 2,6s (drop) | Kit VOID em destaque com flash | LANÇAMENTO · KIT VOID · 34% OFF · 3 peças |
+| 3,4–8,6s | Benz, pedido chegando, detalhe da manga, 4 kits piscando, colega de camiseta Phoenix | O KIT DO BENÇA · tag Kit PHOENIX R$ 189,70 · ESTAMPA VOID · ESCOLHA SUA ESTAMPA · TÁ EM OUTRO PATAMAR · CHEGOU O PEDIDO 📦 |
+| 8,6–12s | Benz com o Kit VOID no canto | KIT COMPLETO 3 PEÇAS · ~~R$ 287,70~~ **R$ 189,70** · 3x sem juros · envio pra todo o Brasil |
+| 12–16s | Benz com os dois polegares | +10% OFF NA 1ª COMPRA · CUPOM: BEMVINDO10 · COMPRE NO SITE → · lojasandwalk.com.br |
+
+Para renderizar:
+1. Trilha: `ffmpeg -ss 18.2 -t 15.9 -i src/audio/tropa_do_ben.mp3 -af "afade=t=in:d=0.02,afade=t=out:st=15.3:d=0.6,loudnorm=I=-14:TP=-1.5" build/music4.wav`
+2. Vídeo: `PAGE=benz2.html DUR=15.9 node render.js video 30`, depois o mux com ffmpeg. Os quadros de `src/benz.mp4` ficam em `frames_benz/` (não versionados).

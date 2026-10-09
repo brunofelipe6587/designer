@@ -1,0 +1,338 @@
+<!doctype html>
+<html lang="pt-br">
+<head>
+<meta charset="utf-8">
+<title>Sand Walk Brisa 02</title>
+<link href="fonts/fonts.css" rel="stylesheet">
+<style>html, body { margin: 0; background: #000; } canvas { display: block; }</style>
+</head>
+<body>
+<canvas id="c" width="1080" height="1920"></canvas>
+<script src="vo2.js"></script>
+<script>
+// Creative 02 "Treino" (V2 of 01): the athlete only appears dressed in SW shirts (gym footage; the shirt is the VOID print),
+// the beach shows up once in a distant wide shot. Narration (pt-BR) drives the edit; graphics land on the spoken words:
+// hook question → Brisa veste SW → Kit VOID with 3 piece callouts → 5 kits + price → coupon → CTA.
+// Key copy stays inside the 4:5 feed crop (y 285–1635).
+const W = 1080, H = 1920, DUR = 24.0;
+const Y = '#FFCC29', INK = '#0B0B0B';
+const ctx = document.getElementById('c').getContext('2d');
+const clamp = (x, a = 0, b = 1) => Math.min(b, Math.max(a, x));
+const lerp = (a, b, t) => a + (b - a) * t;
+const eio = t => t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
+const eout = t => 1 - Math.pow(1 - t, 3);
+const eback = t => { const c1 = 1.7, c3 = c1 + 1; return 1 + c3 * Math.pow(t - 1, 3) + c1 * Math.pow(t - 1, 2); };
+const prog = (t, a, b) => clamp((t - a) / (b - a));
+const pop = (t, a, d = 0.28) => t < a ? 0 : eback(prog(t, a, a + d));
+const wordAt = (line, w, k = 0) => VO[line].words.filter(x => x.w.toLowerCase() === w.toLowerCase())[k].t;
+
+// cues taken from the narration word timings
+const C = {
+  manga1: wordAt(2, 'manga', 0), manga2: wordAt(2, 'manga', 1), shorts: wordAt(2, 'shorts'), tecido: wordAt(2, 'tecido'),
+  de: wordAt(3, 'De'), por: wordAt(3, 'por'), tres: wordAt(3, 'três'),
+  primeira: wordAt(4, 'primeira'), dez: wordAt(4, 'dez'), cupom: wordAt(4, 'cupom'),
+};
+
+// shots: [t0, t1, startFrame (30 fps source), frames/sec of output, z0, z1]
+const SHOTS = [
+  [0.0, 1.25, 108, 19, 1.0, 1.06],   // wide bicycle kick on the beach (distant)
+  [1.25, 2.45, 696, 30, 1.06, 1.12],  // hang loose to camera, VOID shirt
+  [2.45, 3.6, 282, 28, 1.12, 1.04],   // profile, SW logo on the chest
+  [3.6, 5.0, 876, 22, 1.04, 1.14],    // looking down, SW chest logo
+  [5.0, 10.5, 1149, 6, 1.3, 1.36],    // (blurred background) kit hero
+  [10.5, 16.2, 1425, 9, 1.3, 1.36],   // (blurred background) kit carousel + price
+  [16.2, 18.0, 1425, 30, 1.06, 1.14], // plank
+  [18.0, 19.3, 1149, 26, 1.10, 1.02], // profile, VOID shirt
+  [19.3, 20.7, 980, 30, 1.04, 1.12],  // running drill, black SW shirt
+  [20.7, 24.0, 1644, 30, 1.04, 1.10], // end card: hang loose + smile
+];
+
+const cache = new Map();
+function load(src) {
+  if (!cache.has(src)) {
+    const im = new Image(); im.src = src;
+    cache.set(src, im.decode().then(() => im).catch(() => null));
+    if (cache.size > 80) cache.delete(cache.keys().next().value);
+  }
+  return cache.get(src);
+}
+const handheld = t => [4 * Math.sin(1.3 * t) + 2 * Math.sin(3.1 * t + 1), 4 * Math.sin(1.1 * t + 2) + 2 * Math.sin(2.7 * t)];
+
+async function footage(t, o = {}) {
+  let si = 0; for (let i = 0; i < SHOTS.length; i++) if (t >= SHOTS[i][0]) si = i;
+  const [t0, t1, s0, rate, z0, z1] = SHOTS[si];
+  const n = Math.floor(s0 + (t - t0) * rate);
+  const img = await load(`frames/${String(n).padStart(5, '0')}.jpg`);
+  let z = lerp(z0, z1, eio(prog(t, t0, t1)));
+  z *= 1 + 0.06 * (1 - eout(prog(t, t0, t0 + 0.25))) * (si > 0 ? 1 : 0);  // soft punch-in on each cut
+  const [hx, hy] = handheld(t);
+  ctx.save();
+  ctx.filter = (o.blur ? `blur(${o.blur}px) ` : '') + 'contrast(1.06) saturate(1.1) brightness(' + (o.bright || 1) + ')';
+  ctx.translate(540 + hx, 960 + hy); ctx.scale(z, z); ctx.translate(-540, -960);
+  if (img) ctx.drawImage(img, 0, 0, W, H);
+  ctx.restore();
+}
+
+// ---------- typography ----------
+function fitFont(str, weight, size, fam, maxW) {
+  ctx.font = `${weight} ${size}px ${fam}`; const w = ctx.measureText(str).width;
+  return w > maxW ? size * maxW / w : size;
+}
+function title(str, x, y, o = {}) {
+  const { size = 120, color = '#fff', scale = 1, alpha = 1, maxW = 980, fam = 'Syne', weight = 800, align = 'center', shadow = 0.45, ls = 0 } = o;
+  if (alpha <= 0 || scale <= 0) return;
+  ctx.save(); ctx.globalAlpha = alpha; ctx.translate(x, y); ctx.scale(scale, scale);
+  const s = fitFont(str, weight, size, fam, maxW);
+  ctx.font = `${weight} ${s}px ${fam}`; ctx.letterSpacing = ls + 'px';
+  ctx.textAlign = align; ctx.textBaseline = 'middle';
+  if (shadow) { ctx.shadowColor = `rgba(0,0,0,${shadow})`; ctx.shadowBlur = 30; ctx.shadowOffsetY = 8; }
+  ctx.fillStyle = color; ctx.fillText(str, 0, 0);
+  ctx.restore();
+}
+function chip(str, x, y, o = {}) {
+  const { size = 40, alpha = 1, bg = Y, color = INK, scale = 1, fam = 'Inter', weight = 800, r = 14, padX = 28, padY = 18 } = o;
+  if (alpha <= 0 || scale <= 0) return;
+  ctx.save(); ctx.globalAlpha = clamp(alpha); ctx.translate(x, y); ctx.scale(scale, scale);
+  ctx.font = `${weight} ${size}px ${fam}`; ctx.textBaseline = 'middle'; ctx.textAlign = 'center';
+  const w = ctx.measureText(str).width + padX * 2, h = size + padY * 2;
+  ctx.shadowColor = 'rgba(0,0,0,0.35)'; ctx.shadowBlur = 24; ctx.shadowOffsetY = 8;
+  ctx.fillStyle = bg; ctx.beginPath(); ctx.roundRect(-w / 2, -h / 2, w, h, r); ctx.fill();
+  ctx.shadowColor = 'transparent'; ctx.fillStyle = color; ctx.fillText(str, 0, size * 0.04);
+  ctx.restore();
+}
+// narration captions: chunks of up to 3 words, the spoken word turns yellow
+function captions(t, lines, y = 1560) {
+  for (const li of lines) {
+    const ws = VO[li].words;
+    const chunks = []; for (let i = 0; i < ws.length; i += 3) chunks.push(ws.slice(i, i + 3));
+    for (let c = 0; c < chunks.length; c++) {
+      const a = chunks[c][0].t, b = c + 1 < chunks.length ? chunks[c + 1][0].t : (ws[ws.length - 1].t + ws[ws.length - 1].d + 0.35);
+      if (t < a - 0.02 || t >= b) continue;
+      const shown = chunks[c].map(x => x.w.replace('fute-vôlei', 'futevôlei').toUpperCase());
+      ctx.save(); ctx.font = '800 64px Inter'; ctx.textBaseline = 'middle'; ctx.textAlign = 'left';
+      const sp = 18, widths = shown.map(s => ctx.measureText(s).width), total = widths.reduce((p, q) => p + q, 0) + sp * (shown.length - 1);
+      const sc = Math.min(1, 960 / total) * lerp(0.92, 1, eout(prog(t, a, a + 0.12)));
+      ctx.translate(540, y); ctx.scale(sc, sc);
+      let x = -total / 2;
+      shown.forEach((s, k) => {
+        const on = t >= chunks[c][k].t;
+        ctx.lineJoin = 'round'; ctx.lineWidth = 12; ctx.strokeStyle = 'rgba(0,0,0,0.85)'; ctx.strokeText(s, x, 0);
+        ctx.fillStyle = on ? Y : '#fff'; ctx.fillText(s, x, 0);
+        x += widths[k] + sp;
+      });
+      ctx.restore();
+    }
+  }
+}
+
+// ---------- product cards ----------
+const KITS = [['kit_void', 'VOID'], ['kit_everflame', 'EVER FLAME'], ['kit_phoenix', 'PHOENIX'], ['kit_shadow', 'SHADOW'], ['kit_pureblood', 'PURE BLOOD']];
+const IMG = {};
+function card(key, cx, cy, w, h, o = {}) {
+  const { alpha = 1, scale = 1, label, badge, rot = 0 } = o;
+  if (alpha <= 0 || scale <= 0) return null;
+  const im = IMG[key];
+  ctx.save(); ctx.globalAlpha = clamp(alpha); ctx.translate(cx, cy); ctx.rotate(rot); ctx.scale(scale, scale);
+  ctx.shadowColor = 'rgba(0,0,0,0.5)'; ctx.shadowBlur = 50; ctx.shadowOffsetY = 20;
+  ctx.fillStyle = '#fff'; ctx.beginPath(); ctx.roundRect(-w / 2, -h / 2, w, h, 34); ctx.fill();
+  ctx.shadowColor = 'transparent';
+  const ih = label ? h - 110 : h - 60, iw = w - 60;
+  const k = Math.min(iw / im.width, ih / im.height);
+  const ix = -im.width * k / 2, iy = -h / 2 + 30 + (ih - im.height * k) / 2;
+  ctx.drawImage(im, ix, iy, im.width * k, im.height * k);
+  if (badge) {
+    ctx.font = '800 26px Syne'; const bw = ctx.measureText(badge).width + 30;
+    ctx.fillStyle = INK; ctx.beginPath(); ctx.roundRect(-w / 2 + 24, -h / 2 + 24, bw, 46, 10); ctx.fill();
+    ctx.fillStyle = '#fff'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillText(badge, -w / 2 + 24 + bw / 2, -h / 2 + 48);
+  }
+  if (label) { ctx.fillStyle = INK; ctx.font = '800 40px Syne'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillText(label, 0, h / 2 - 52); }
+  ctx.restore();
+  // map product-image pixel coords to canvas coords (no rotation used where this is needed)
+  return (px, py) => [cx + (ix + px * k) * scale, cy + (iy + py * k) * scale];
+}
+function callout(str, ax, ay, lx, ly, t, a) {
+  const p = pop(t, a, 0.32); if (p <= 0) return;
+  const lp = eout(prog(t, a, a + 0.25));
+  // pulsing dot on the piece
+  ctx.save(); ctx.fillStyle = Y; ctx.strokeStyle = INK; ctx.lineWidth = 5;
+  const r = 16 * clamp(p) + 6 * Math.abs(Math.sin((t - a) * 5)) * clamp((t - a) * 3);
+  ctx.beginPath(); ctx.arc(ax, ay, r, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
+  ctx.strokeStyle = INK; ctx.lineWidth = 5; ctx.beginPath(); ctx.moveTo(ax, ay); ctx.lineTo(lerp(ax, lx, lp), lerp(ay, ly, lp)); ctx.stroke();
+  ctx.restore();
+  chip(str, lx, ly, { size: 34, bg: INK, color: '#fff', scale: p, fam: 'Syne', r: 12 });
+}
+function strikePrice(str, x, y, t, a, size = 46) {
+  const p = pop(t, a); if (p <= 0) return;
+  title(str, x, y, { size, fam: 'Inter', weight: 600, color: 'rgba(255,255,255,0.8)', scale: p, shadow: 0 });
+  ctx.save(); ctx.font = `600 ${size}px Inter`; const w = ctx.measureText(str).width; ctx.restore();
+  const sp = eout(prog(t, a + 0.35, a + 0.7));
+  ctx.save(); ctx.strokeStyle = '#E53935'; ctx.lineWidth = 6; ctx.lineCap = 'round';
+  ctx.beginPath(); ctx.moveTo(x - w / 2 - 6, y + 2); ctx.lineTo(x - w / 2 - 6 + (w + 12) * sp, y + 2); ctx.stroke(); ctx.restore();
+}
+const brl = v => 'R$ ' + v.toFixed(2).replace('.', ',');
+
+function grain(t, a = 0.05) {
+  ctx.save(); ctx.globalAlpha = a; ctx.globalCompositeOperation = 'overlay';
+  const ox = Math.floor((Math.sin(t * 91) * 0.5 + 0.5) * 256), oy = Math.floor((Math.cos(t * 77) * 0.5 + 0.5) * 256);
+  ctx.translate(-ox, -oy); ctx.fillStyle = ctx.createPattern(NOISE, 'repeat'); ctx.fillRect(0, 0, W + 512, H + 512);
+  ctx.restore();
+}
+function vignette(a = 0.5) {
+  const g = ctx.createRadialGradient(540, 960, 500, 540, 960, 1250);
+  g.addColorStop(0, 'rgba(0,0,0,0)'); g.addColorStop(1, `rgba(0,0,0,${a})`);
+  ctx.fillStyle = g; ctx.fillRect(0, 0, W, H);
+}
+function shade(y0, y1, a) { const g = ctx.createLinearGradient(0, y0, 0, y1); g.addColorStop(0, 'rgba(0,0,0,0)'); g.addColorStop(1, `rgba(0,0,0,${a})`); ctx.fillStyle = g; ctx.fillRect(0, y0, W, y1 - y0); ctx.fillStyle = `rgba(0,0,0,${a})`; ctx.fillRect(0, y1, W, H - y1); }
+function logo(x, y, w, alpha = 1) {
+  if (alpha <= 0 || w <= 0) return;
+  const h = w * LOGO.height / LOGO.width;
+  ctx.save(); ctx.globalAlpha = clamp(alpha); ctx.shadowColor = 'rgba(0,0,0,0.5)'; ctx.shadowBlur = 20;
+  ctx.drawImage(LOGO, x - w / 2, y - h / 2, w, h); ctx.restore();
+}
+function panelBg() {
+  ctx.fillStyle = 'rgba(11,11,11,0.45)'; ctx.fillRect(0, 0, W, H);
+  const rg = ctx.createRadialGradient(540, 920, 60, 540, 920, 800); rg.addColorStop(0, 'rgba(255,204,41,0.24)'); rg.addColorStop(1, 'rgba(255,204,41,0)');
+  ctx.fillStyle = rg; ctx.fillRect(0, 0, W, H);
+}
+
+async function render(t) {
+  ctx.setTransform(1, 0, 0, 1, 0, 0); ctx.globalAlpha = 1; ctx.filter = 'none';
+  ctx.fillStyle = '#000'; ctx.fillRect(0, 0, W, H);
+
+  // ===================== HOOK + ATHLETE 0–5.0 =====================
+  if (t < 5.0) {
+    await footage(t);
+    vignette(0.45);
+    shade(1150, 1700, 0.55);
+    const out = eio(prog(t, 2.25, 2.5));
+    if (out < 1) {
+      const tg = ctx.createLinearGradient(0, 300, 0, 1100); tg.addColorStop(0, 'rgba(0,0,0,0)'); tg.addColorStop(0.45, `rgba(0,0,0,${0.38 * (1 - out)})`); tg.addColorStop(1, 'rgba(0,0,0,0)');
+      ctx.fillStyle = tg; ctx.fillRect(0, 300, W, 800);
+      title('ROUPAS DE', 540, 610 - 200 * out, { size: 104, scale: t < 0.03 ? 1 : lerp(1.06, 1, eout(prog(t, 0, 0.5))), alpha: 1 - out, ls: 2 });
+      title('FUTEVÔLEI', 540, 790 - 200 * out, { size: 230, color: Y, scale: (t < 0.03 ? 1 : lerp(1.08, 1, eout(prog(t, 0, 0.6)))) * (1 + 0.06 * (1 - eout(prog(t, 1.45, 1.8))) * (t > 1.45 ? 1 : 0)), alpha: 1 - out, maxW: 1010, shadow: 0.35 });
+      chip('KITS COM ATÉ 34% OFF', 540, 950 - 200 * out, { size: 40, scale: pop(t, 0.3, 0.3), alpha: 1 - out, fam: 'Syne' });
+    }
+    if (t >= 2.45) {
+      chip('ATLETA SAND WALK', 540, 420, { size: 34, bg: '#fff', scale: pop(t, 2.5), weight: 800 });
+      title('BRISA', 540, 530, { size: 130, scale: pop(t, 2.62, 0.3), ls: 6 });
+    }
+    captions(t, [0, 1]);
+  }
+  // ===================== KIT HERO 5.0–10.5 =====================
+  else if (t < 10.5) {
+    await footage(t, { blur: 24, bright: 0.45 });
+    panelBg();
+    const exitP = eio(prog(t, 10.25, 10.5));
+    ctx.save(); ctx.translate(-1100 * exitP, 0);
+    chip('3 PEÇAS', 540, 320, { size: 34, scale: pop(t, 5.05), fam: 'Syne' });
+    title('KIT COMPLETO', 540, 420, { size: 104, scale: pop(t, 5.15, 0.32) });
+    const ep = eout(prog(t, 5.0, 5.45));
+    const map = card('kit_void', 540, 960, 900, 860, { scale: lerp(0.8, 1, ep), alpha: ep });
+    if (map && ep >= 1) {
+      let [ax, ay] = map(190, 270); callout('MANGA LONGA', ax, ay, 245, 545, t, C.manga1);
+      [ax, ay] = map(700, 200); callout('MANGA CURTA', ax, ay, 835, 545, t, C.manga2);
+      [ax, ay] = map(430, 700); callout('SHORTS', ax, ay, 290, 1320, t, C.shorts);
+    }
+    chip('ESTAMPA VOID', 800, 1320, { size: 30, bg: '#fff', scale: pop(t, 5.5), fam: 'Syne' });
+    chip('TECIDO TÉCNICO RESPIRÁVEL', 540, 1500, { size: 40, scale: pop(t, C.tecido), fam: 'Inter', weight: 800 });
+    ctx.restore();
+  }
+  // ===================== 5 KITS + PRICE 10.5–16.2 =====================
+  else if (t < 16.2) {
+    await footage(t, { blur: 24, bright: 0.42 });
+    panelBg();
+    const inP = eout(prog(t, 10.5, 10.8)), exitP = eio(prog(t, 15.95, 16.2));
+    ctx.save(); ctx.translate(1100 * (1 - inP) - 1100 * exitP, 0);
+    chip('ESCOLHA SUA ESTAMPA', 540, 345, { size: 34, scale: pop(t, 10.55), fam: 'Syne' });
+    let idx = 0; [11.4, 12.6, 13.8, 15.0].forEach(s => idx += eio(prog(t, s - 0.3, s + 0.05)));
+    const order = KITS.map((k, i) => [i, i - idx]).sort((a, b) => Math.abs(b[1]) - Math.abs(a[1]));
+    for (const [i, d] of order) {
+      if (Math.abs(d) > 1.6) continue;
+      const ad = clamp(Math.abs(d));
+      card(KITS[i][0], 540 + d * 470, 790, 600, 640, { scale: lerp(1, 0.66, ad), alpha: lerp(1, 0.55, ad), label: KITS[i][1], badge: '34% OFF', rot: d * 0.05 });
+    }
+    strikePrice('de R$ 287,70', 540, 1200, t, C.de);
+    // price counts down from 287,70 to 189,70 on "por cento e oitenta e nove e setenta"
+    const pv = pop(t, C.por, 0.3);
+    const val = lerp(287.7, 189.7, eout(prog(t, C.por, C.por + 0.9)));
+    title(brl(val), 540, 1330, { size: 160, color: Y, scale: pv * (1 + 0.05 * (1 - prog(t, C.por + 0.9, C.por + 1.15)) * (t > C.por + 0.9 ? 1 : 0)) });
+    chip('ou 3x de R$ 63,23 sem juros', 540, 1480, { size: 40, bg: '#fff', scale: pop(t, C.tres), weight: 700 });
+    ctx.restore();
+  }
+  // ===================== COUPON 16.2–20.7 =====================
+  else if (t < 20.7) {
+    await footage(t);
+    vignette(0.4);
+    shade(800, 1750, 0.75);
+    const cp = pop(t, C.primeira, 0.32);
+    if (cp > 0) {
+      ctx.save(); ctx.translate(540, 1240); ctx.scale(cp, cp);
+      ctx.shadowColor = 'rgba(0,0,0,0.45)'; ctx.shadowBlur = 40; ctx.shadowOffsetY = 14;
+      ctx.fillStyle = 'rgba(11,11,11,0.86)'; ctx.beginPath(); ctx.roundRect(-450, -250, 900, 500, 40); ctx.fill();
+      ctx.shadowColor = 'transparent'; ctx.strokeStyle = 'rgba(255,204,41,0.5)'; ctx.lineWidth = 3; ctx.stroke();
+      ctx.restore();
+      title('NA 1ª COMPRA', 540, 1080, { size: 48, fam: 'Inter', weight: 800, scale: cp, shadow: 0, ls: 2 });
+      title('+10% OFF', 540, 1205, { size: 150, color: Y, scale: pop(t, C.dez, 0.3), shadow: 0 });
+      const kp = pop(t, C.cupom, 0.3);
+      if (kp > 0) {
+        ctx.save(); ctx.translate(540, 1370); ctx.scale(kp, kp);
+        ctx.setLineDash([16, 12]); ctx.strokeStyle = Y; ctx.lineWidth = 5; ctx.fillStyle = 'rgba(255,204,41,0.14)';
+        ctx.beginPath(); ctx.roundRect(-360, -58, 720, 116, 20); ctx.fill(); ctx.stroke(); ctx.setLineDash([]);
+        ctx.restore();
+        title('CUPOM: BEMVINDO10', 540, 1371, { size: 52, fam: 'Inter', weight: 800, scale: kp, color: '#fff', shadow: 0, ls: 1 });
+      }
+    }
+    logo(540, 380, 170, 0.95);
+  }
+  // ===================== CTA 20.7–24.0 =====================
+  else {
+    await footage(t);
+    shade(760, H, 0.9);
+    const tg = ctx.createLinearGradient(0, 200, 0, 560); tg.addColorStop(0, 'rgba(0,0,0,0.45)'); tg.addColorStop(1, 'rgba(0,0,0,0)');
+    ctx.fillStyle = tg; ctx.fillRect(0, 200, W, 360);
+    logo(540, 360, 300 * pop(t, 20.75, 0.35), 1);
+    title('KIT COMPLETO DE FUTEVÔLEI', 540, 1010, { size: 58, scale: pop(t, 20.85), maxW: 960 });
+    title('R$ 189,70', 540, 1120, { size: 120, color: Y, scale: pop(t, 21.0) });
+    title('3x sem juros  •  +10% OFF com BEMVINDO10', 540, 1230, { size: 34, fam: 'Inter', weight: 600, scale: pop(t, 21.2), shadow: 0.3, maxW: 960 });
+    const bp = pop(t, 21.4, 0.35);
+    if (bp > 0) {
+      const pulse = 1 + 0.035 * Math.sin((t - 21.75) * 7) * clamp((t - 21.75) * 3);
+      ctx.save(); ctx.translate(540, 1385); ctx.scale(bp * pulse, bp * pulse);
+      ctx.shadowColor = 'rgba(255,204,41,0.55)'; ctx.shadowBlur = 50; ctx.fillStyle = Y;
+      ctx.beginPath(); ctx.roundRect(-430, -70, 860, 140, 70); ctx.fill();
+      ctx.shadowColor = 'transparent'; ctx.fillStyle = INK; ctx.font = '800 48px Syne'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+      ctx.fillText('GARANTA O SEU  →', 0, 3); ctx.restore();
+    }
+    title('lojasandwalk.com.br', 540, 1520, { size: 40, fam: 'Inter', weight: 700, scale: pop(t, 21.6), shadow: 0.3 });
+    const ap = pop(t, 21.9, 0.3);
+    if (ap > 0) {
+      const ay = 1615 + Math.abs(Math.sin((t - 21.9) * 5)) * 18;
+      ctx.save(); ctx.globalAlpha = clamp(ap); ctx.fillStyle = '#fff'; ctx.shadowColor = 'rgba(0,0,0,0.5)'; ctx.shadowBlur = 12;
+      ctx.beginPath(); ctx.moveTo(540 - 30, ay - 20); ctx.lineTo(540 + 30, ay - 20); ctx.lineTo(540, ay + 14); ctx.closePath(); ctx.fill(); ctx.restore();
+    }
+  }
+
+  // soft light flashes on section changes
+  let fl = 0;
+  [[5.0, 0.3], [10.5, 0.2], [16.2, 0.25], [20.7, 0.25]].forEach(([a, m]) => { const p = prog(t, a - 0.005, a + 0.25); if (p > 0 && p < 1) fl = Math.max(fl, m * (1 - eout(p))); });
+  if (fl > 0) { ctx.fillStyle = `rgba(255,248,225,${fl})`; ctx.fillRect(0, 0, W, H); }
+  grain(t);
+  ctx.fillStyle = 'rgba(255,255,255,0.16)'; ctx.fillRect(0, H - 10, W, 10);
+  ctx.fillStyle = Y; ctx.fillRect(0, H - 10, W * (t / DUR), 10);
+}
+
+let LOGO, NOISE;
+window.ready = (async () => {
+  LOGO = await load('build/logo_white.svg');
+  for (const [k] of KITS) IMG[k] = await load(`prod/${k}.jpg`);
+  NOISE = document.createElement('canvas'); NOISE.width = NOISE.height = 256;
+  const nx = NOISE.getContext('2d'), id = nx.createImageData(256, 256);
+  for (let i = 0; i < id.data.length; i += 4) { const v = Math.random() * 255; id.data[i] = id.data[i + 1] = id.data[i + 2] = v; id.data[i + 3] = 255; }
+  nx.putImageData(id, 0, 0);
+  for (const f of ['800 40px Syne', '700 40px Syne', '600 40px Inter', '700 40px Inter', '800 40px Inter']) await document.fonts.load(f);
+  await document.fonts.ready; await render(0); return true;
+})();
+window.renderAt = t => render(t);
+</script>
+</body>
+</html>

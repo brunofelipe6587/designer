@@ -19,7 +19,27 @@ Objetivo: gerar sessão qualificada para a home. Quem clica já sabe que vai ver
 - Trilha original sintetizada do zero (`music.py`): sem direitos autorais, segura para anúncio. 120 BPM, com impacto no toque da bola e drop no início da montagem.
 - Preços e cupom foram tirados da home em 09/10/2026. Confirmar antes de subir.
 
-## Como renderizar
+## Criativo 02 "Treino" (V2 do 01, 9:16, 24s, com narração): `out/SandWalk_02_Treino_Narrado_9x16.mp4`
+
+Ajustes pedidos: menos pele e sunga, foco nos kits do site, trilha mais leve e narração.
+
+- **Atleta sempre vestido:** usei só as cenas do treino, com o Brisa de camiseta SW. A estampa da camiseta é a do **Kit VOID**, por isso o Void é o kit principal. A praia aparece uma vez, num plano aberto e distante da bicicleta, só para mostrar que é futevôlei.
+- **Narração** (voz neural pt-BR Thalita): "Procurando roupa pra jogar futevôlei? O Brisa treina e joga de Sand Walk. O kit completo tem manga longa, manga curta e shorts, em tecido técnico respirável. De 287 por 189,70, em até 3x sem juros. E na primeira compra, ainda tem 10% OFF com o cupom BEMVINDO10. Garanta o seu no site da Sand Walk." Conferi com transcrição automática se "futevôlei", "Sand Walk" e o cupom são falados direito.
+- **Trilha leve:** groove tropical e acústico a 102 BPM, com marimba, shaker e baixo redondo (`music2.py`), sintetizado do zero. Ela abaixa automaticamente quando a narração entra.
+- **Grafismos sincronizados com a fala:** as legendas destacam a palavra que está sendo dita; as etiquetas MANGA LONGA, MANGA CURTA e SHORTS aparecem quando são citadas; o preço desce de 287,70 para 189,70 no "por"; o cupom aparece no "cupom".
+
+| Tempo | Cena | Na tela |
+|---|---|---|
+| 0–2,5s | Bicicleta em plano aberto, depois hang loose de camiseta VOID | ROUPAS DE **FUTEVÔLEI** · KITS COM ATÉ 34% OFF · legenda |
+| 2,5–5s | Closes do Brisa com o logo SW no peito | ATLETA SAND WALK · BRISA · legenda |
+| 5–10,5s | Kit VOID em destaque | KIT COMPLETO · 3 PEÇAS · etiquetas das peças · TECIDO TÉCNICO RESPIRÁVEL |
+| 10,5–16,2s | Carrossel com os 5 kits | ~~R$ 287,70~~ **R$ 189,70** · 3x de R$ 63,23 sem juros |
+| 16,2–20,7s | Prancha, perfil e corrida no treino | NA 1ª COMPRA **+10% OFF** · CUPOM: BEMVINDO10 |
+| 20,7–24s | Hang loose sorrindo | logo · KIT COMPLETO DE FUTEVÔLEI R$ 189,70 · GARANTA O SEU → · lojasandwalk.com.br |
+
+Para renderizar: `python3 music2.py build/mix2.wav`, depois `PAGE=video2.html DUR=24 node render.js video 30` e, por fim, o mux com ffmpeg. A narração é gerada com `VOICE=pt-BR-ThalitaMultilingualNeural python3 tts.py "<frase>" build/vo/lN.mp3 "+8%"`. O silêncio das pontas é cortado com `silenceremove` a -60 dB, deixando uma folga de 60 ms. Depois disso, rode o script que gera `vo2.js` com os tempos de cada palavra.
+
+## Como renderizar (criativo 01)
 
 ```
 python3 music.py build/music.wav 20          # trilha

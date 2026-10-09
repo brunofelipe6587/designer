@@ -1,0 +1,145 @@
+<!doctype html>
+<html lang="pt-br">
+<head>
+<meta charset="utf-8">
+<title>Sand Walk Benz 03</title>
+<link href="fonts/fonts.css" rel="stylesheet">
+<style>html, body { margin: 0; background: transparent; } canvas { display: block; }</style>
+</head>
+<body>
+<canvas id="c" width="1080" height="1920"></canvas>
+<script>
+// Creative 03 "Benz: chegou o pedido". Overlay-only layer: the original video and its audio play untouched underneath
+// (composited in render_overlay.js). Stickers imitate Instagram's own text/tag/link stickers so the ad keeps
+// the organic feel; commercial beats land on what Benz says (timestamps from the transcript, build/benz_words.json).
+const W = 1080, H = 1920, DUR = 48.4;
+const Y = '#FFCC29', INK = '#0B0B0B';
+const EMO = '"Noto Color Emoji"';
+const ctx = document.getElementById('c').getContext('2d');
+const clamp = (x, a = 0, b = 1) => Math.min(b, Math.max(a, x));
+const lerp = (a, b, t) => a + (b - a) * t;
+const eout = t => 1 - Math.pow(1 - t, 3);
+const eio = t => t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
+const eback = t => { const c1 = 1.7, c3 = c1 + 1; return 1 + c3 * Math.pow(t - 1, 3) + c1 * Math.pow(t - 1, 2); };
+const prog = (t, a, b) => clamp((t - a) / (b - a));
+// visibility with a bouncy in and a quick shrink out; `instant` shows it fully on frame 0 (thumbnail)
+function vis(t, a, b, instant = false) {
+  if (t < a || t > b) return 0;
+  const i = instant && a === 0 ? 1 : eback(prog(t, a, a + 0.3));
+  return i * (1 - eio(prog(t, b - 0.18, b)));
+}
+
+// Instagram-like text: each line on its own rounded box
+function igText(lines, x, y, s, o = {}) {
+  if (s <= 0) return;
+  const { size = 54, rot = 0 } = o;
+  ctx.save(); ctx.translate(x, y); ctx.rotate(rot); ctx.scale(s, s);
+  ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+  const lh = size * 1.42;
+  lines.forEach(([str, bg = '#fff', fg = INK], i) => {
+    ctx.font = `800 ${size}px Inter, ${EMO}`;
+    const w = ctx.measureText(str).width + size * 0.7, h = lh, ly = (i - (lines.length - 1) / 2) * (lh - 4);
+    ctx.fillStyle = bg; ctx.beginPath(); ctx.roundRect(-w / 2, ly - h / 2, w, h, size * 0.28); ctx.fill();
+    ctx.fillStyle = fg; ctx.fillText(str, 0, ly + size * 0.05);
+  });
+  ctx.restore();
+}
+// Instagram shopping-tag look: dark pill with a pointer
+function productTag(name, price, x, y, s, up = true) {
+  if (s <= 0) return;
+  ctx.save(); ctx.translate(x, y); ctx.scale(s, s);
+  ctx.font = '700 40px Inter'; const w1 = ctx.measureText(name).width;
+  ctx.font = '800 40px Inter'; const w2 = ctx.measureText(price).width;
+  const w = w1 + w2 + 130, h = 84;
+  ctx.fillStyle = 'rgba(20,20,20,0.82)';
+  ctx.beginPath(); ctx.roundRect(-w / 2, -h / 2, w, h, 18); ctx.fill();
+  ctx.beginPath();
+  if (up) { ctx.moveTo(-16, -h / 2); ctx.lineTo(0, -h / 2 - 16); ctx.lineTo(16, -h / 2); }
+  else { ctx.moveTo(-16, h / 2); ctx.lineTo(0, h / 2 + 16); ctx.lineTo(16, h / 2); }
+  ctx.fill();
+  // bag icon
+  const bx = -w / 2 + 40;
+  ctx.strokeStyle = '#fff'; ctx.lineWidth = 4; ctx.lineJoin = 'round';
+  ctx.beginPath(); ctx.roundRect(bx - 15, -10, 30, 28, 5); ctx.stroke();
+  ctx.beginPath(); ctx.arc(bx, -10, 9, Math.PI, 0); ctx.stroke();
+  ctx.textAlign = 'left'; ctx.textBaseline = 'middle';
+  ctx.fillStyle = '#fff'; ctx.font = '700 40px Inter'; ctx.fillText(name, bx + 32, 2);
+  ctx.fillStyle = Y; ctx.font = '800 40px Inter'; ctx.fillText(price, bx + 32 + w1 + 22, 2);
+  ctx.restore();
+}
+// small product card, like a pasted screenshot from the site
+function productCard(key, label, x, y, s, rot = 0.05) {
+  if (s <= 0) return;
+  const im = IMG[key], w = 330, h = 400;
+  ctx.save(); ctx.translate(x, y); ctx.rotate(rot); ctx.scale(s, s);
+  ctx.shadowColor = 'rgba(0,0,0,0.35)'; ctx.shadowBlur = 30; ctx.shadowOffsetY = 10;
+  ctx.fillStyle = '#fff'; ctx.beginPath(); ctx.roundRect(-w / 2, -h / 2, w, h, 26); ctx.fill();
+  ctx.shadowColor = 'transparent';
+  const k = Math.min((w - 40) / im.width, (h - 120) / im.height);
+  ctx.drawImage(im, -im.width * k / 2, -h / 2 + 20 + ((h - 120) - im.height * k) / 2, im.width * k, im.height * k);
+  ctx.fillStyle = INK; ctx.font = '800 30px Syne'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+  ctx.fillText(label, 0, h / 2 - 72);
+  ctx.font = '800 30px Inter'; const pw = ctx.measureText('R$ 189,70').width + 28;
+  ctx.fillStyle = Y; ctx.beginPath(); ctx.roundRect(-pw / 2, h / 2 - 52, pw, 40, 10); ctx.fill();
+  ctx.fillStyle = INK; ctx.fillText('R$ 189,70', 0, h / 2 - 31);
+  ctx.restore();
+}
+// Instagram link sticker
+function linkSticker(str, x, y, s) {
+  if (s <= 0) return;
+  ctx.save(); ctx.translate(x, y); ctx.scale(s, s);
+  ctx.font = '800 44px Inter'; const w = ctx.measureText(str).width + 130, h = 100;
+  ctx.shadowColor = 'rgba(0,0,0,0.25)'; ctx.shadowBlur = 18; ctx.shadowOffsetY = 4;
+  ctx.fillStyle = '#fff'; ctx.beginPath(); ctx.roundRect(-w / 2, -h / 2, w, h, 26); ctx.fill();
+  ctx.shadowColor = 'transparent';
+  const ix = -w / 2 + 52;
+  ctx.strokeStyle = '#2F80ED'; ctx.lineWidth = 7; ctx.lineCap = 'round';
+  ctx.save(); ctx.translate(ix, 0); ctx.rotate(-Math.PI / 4);
+  ctx.beginPath(); ctx.roundRect(-22, -11, 26, 22, 11); ctx.stroke(); ctx.beginPath(); ctx.roundRect(-4, -11, 26, 22, 11); ctx.stroke();
+  ctx.restore();
+  ctx.fillStyle = '#2F80ED'; ctx.textAlign = 'left'; ctx.textBaseline = 'middle'; ctx.fillText(str, ix + 44, 3);
+  ctx.restore();
+}
+
+const IMG = {};
+function render(t) {
+  ctx.setTransform(1, 0, 0, 1, 0, 0);
+  ctx.clearRect(0, 0, W, H);
+
+  // 0–3.4 hook (fully visible on frame 0 for the thumbnail)
+  igText([['CHEGOU O PEDIDO 📦'], ['KITS DE FUTEVÔLEI SAND WALK', Y]], 540, 360, vis(t, 0, 3.4, true), { size: 60 });
+
+  // 6.4 "esse kit aqui" → shopping tag on the kit he is wearing
+  productTag('Kit VOID', 'R$ 189,70', 540, 1240, vis(t, 6.4, 12.2));
+  // 9.06 "lançamento" → sticker + product card from the site
+  igText([['LANÇAMENTO 🔥', Y]], 320, 800, vis(t, 9.0, 12.2), { size: 50, rot: -0.06 });
+  productCard('kit_void', 'KIT VOID', 860, 980, vis(t, 9.25, 12.2), 0.06);
+
+  // funny beats stay organic: plain captions
+  igText([['eufórico 😅']], 540, 1480, vis(t, 22.0, 23.8), { size: 50 });
+  igText([['ansioso mesmo 😂']], 540, 1480, vis(t, 24.0, 26.2), { size: 50 });
+
+  // 27.6–34.6 bags arriving
+  igText([['O PEDIDO TÁ CHEGANDO... 📦']], 540, 360, vis(t, 27.7, 31.5), { size: 50 });
+  igText([['ENVIO PRA TODO O BRASIL 🇧🇷', Y]], 540, 360, vis(t, 31.6, 34.8), { size: 50 });
+
+  // 36.8 "esse também é lançamento" / 38.3 "esse aqui é o lançamento" → offer
+  igText([['LANÇAMENTO 🔥', Y]], 540, 420, vis(t, 37.1, 41.6), { size: 50, rot: -0.04 });
+  igText([['kit com 3 peças'], ['de R$ 287,70 por R$ 189,70', Y]], 540, 1380, vis(t, 38.3, 42.4), { size: 46 });
+
+  // 42.6–end CTA
+  const cta = vis(t, 42.6, 48.6);
+  igText([['garanta o seu no site 👇'], ['+10% OFF na 1ª compra: BEMVINDO10', Y]], 540, 1300, cta, { size: 44 });
+  linkSticker('LOJASANDWALK.COM.BR', 540, 1500, vis(t, 42.9, 48.6) * (1 + 0.03 * Math.sin(Math.max(0, t - 43.3) * 6)));
+}
+
+window.ready = (async () => {
+  const im = new Image(); im.src = 'prod/kit_void.jpg'; await im.decode(); IMG.kit_void = im;
+  for (const f of ['800 40px Syne', '700 40px Inter', '800 40px Inter']) await document.fonts.load(f);
+  await document.fonts.load(`40px ${EMO}`, '📦🔥😅😂🇧🇷👇');
+  await document.fonts.ready; render(0); return true;
+})();
+window.renderAt = t => render(t);
+</script>
+</body>
+</html>

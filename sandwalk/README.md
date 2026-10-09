@@ -51,3 +51,18 @@ Quadros e máscaras (não versionados) são gerados assim:
 - quadros: `ffmpeg -ss <s> -t <d> -i src/brisa.mp4 -vf scale=1080:1920 -start_number <s*30> frames/%05d.jpg`
 - slow-mo: `minterpolate=fps=90` a partir de 86,80s, gerando `slow/`
 - máscaras: rembg `birefnet-general-lite`, convertidas com `alpha.py`
+
+## Criativo 03 "Benz: chegou o pedido" (9:16, 48s, áudio original): `out/SandWalk_03_Benz_ChegouOPedido_9x16.mp4`
+
+O vídeo orgânico do Benz que já converteu. Ficou intacto, sem cortes, com as cenas e o áudio originais. Por cima entra só uma camada de stickers no estilo dos stickers nativos do Instagram (texto em caixinhas, tag de produto, link), cada um aparecendo na fala certa (`build/benz_words.json`, transcrição com tempo de cada palavra):
+
+| Tempo | Fala / cena | Sticker |
+|---|---|---|
+| 0–3,4s | "acabou de chegar material novo aqui, os kits da Sand Walk" | CHEGOU O PEDIDO 📦 / KITS DE FUTEVÔLEI SAND WALK (visível já no primeiro quadro) |
+| 6,4–12,2s | "esse kit aqui… lançamento" | tag de produto "Kit VOID R$ 189,70" + LANÇAMENTO 🔥 + card do Kit VOID do site |
+| 22–26s | "eufórico… ansioso mesmo" | legendas simples (eufórico 😅 / ansioso mesmo 😂) |
+| 27,7–34,8s | sacos do pedido chegando | O PEDIDO TÁ CHEGANDO… 📦 → ENVIO PRA TODO O BRASIL 🇧🇷 |
+| 37,1–42,4s | "esse também é lançamento" | LANÇAMENTO 🔥 + kit com 3 peças / de R$ 287,70 por R$ 189,70 |
+| 42,6s–fim | final | garanta o seu no site 👇 / +10% OFF na 1ª compra: BEMVINDO10 + link sticker LOJASANDWALK.COM.BR |
+
+Para renderizar: `PAGE=benz.html SRC=src/benz.mp4 OUT=out/SandWalk_03_Benz_ChegouOPedido_9x16.mp4 node render_overlay.js video`. O script desenha a camada transparente e a aplica sobre o vídeo original, mantendo o áudio.

@@ -7,6 +7,7 @@
 - **Frete grátis e entrega em até 1 dia útil** em Fortaleza.
 - **NÃO trabalhar a frente de atacado** — sem criativos, copies ou campanhas para lojista/revendedor, e sem mencionar o preço de 10+ peças.
 - **Pagamento: Pix ou cartão em até 3x.**
+- **Kit 3 calças jeans = R$ 165 (R$ 55 cada).** Nos criativos, mostrar sempre o kit com o **valor total** além do preço unitário.
 - **Nome da modelagem: em aberto** — não citar skinny/slim/reta nos criativos; falar de caimento/ajuste de forma genérica.
 > Fontes: informações da agência, feed do Instagram (@ironshorts_), catálogo "Calças — Edição 2026" e histórico da conta de anúncios CA01 - IRON SHORTS.
 
@@ -77,7 +78,7 @@ Aprendizados: **preço/oferta explícita** e **dor local** (calor) performam; â
 ## 8. Direção estratégica para jeans (varejo Fortaleza)
 1. **Público:** consumidor final de Fortaleza. Sem frente de atacado.
 2. **Objetivo:** Mensagens no WhatsApp; qualidade medida no CRM.
-3. **Oferta:** calça jeans de fábrica por **R$ 60**; levando **3 ou mais, R$ 55 cada**; **frete grátis** e **entrega em até 1 dia útil** em Fortaleza; pagamento no **Pix ou cartão em até 3x**.
+3. **Oferta:** calça jeans de fábrica por **R$ 60**; levando **3 ou mais, R$ 55 cada** — apresentar como **KIT 3 CALÇAS por R$ 165** (total); **frete grátis** e **entrega em até 1 dia útil** em Fortaleza; pagamento no **Pix ou cartão em até 3x**.
 4. **Ângulos:** preço de fábrica / produção própria, banca física no Buraco da Gia (confiança e opção de ir à loja), entrega rápida e grátis, 5 lavagens com grade do 38 ao 46, combo de 3+, prova social (envios, feedbacks, produção), dor local (calor, jeans que não veste bem).
 5. Copies no tom já validado: diretas, regionais ("FORTALEZA..."), com preço explícito e urgência; CTA para o WhatsApp.
 

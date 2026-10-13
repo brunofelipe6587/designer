@@ -27,3 +27,4 @@ iron-shorts/audio/
 iron-shorts/build/still_*.png
 iron-shorts/build/*.wav
 iron-shorts/out/*_silent.mp4
+iron-shorts/build/*.log

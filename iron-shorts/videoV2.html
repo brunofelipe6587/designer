@@ -1,0 +1,315 @@
+<!doctype html>
+<html lang="pt-br">
+<head>
+<meta charset="utf-8">
+<title>Iron Shorts V2 Monte seu Kit</title>
+<link href="fonts/fonts.css" rel="stylesheet">
+<style>html, body { margin: 0; background: #000; } canvas { display: block; }</style>
+</head>
+<body>
+<canvas id="c" width="1080" height="1920"></canvas>
+<script src="build/v2_shots.js"></script>
+<script>
+// Creative V2 — "Monte seu kit": metallic Iron identity (chrome type, brushed black/silver plates, Anton).
+// Segmented hook in frame 1 (moda masculina · Fortaleza · 3 calças jeans por R$ 165) over the client's
+// stacking clips (1 → 2 → 3 on the beat), try-on montage cut every 2 beats, offer card, benefits, end card.
+// Cut grid = Power Beat 2 (Adobe Stock) at ~95 bpm: beat 0.63125 s, bar 2.525 s.
+// Critical content kept inside y 285–1250 (Reels UI + 4:5 feed crop).
+const W = 1080, H = 1920, BEAT = 0.63125, BAR = BEAT * 4, DUR = 22.135;
+const BLK = '#08090A', WA = '#25D366';
+const ctx = document.getElementById('c').getContext('2d');
+const clamp = (x, a = 0, b = 1) => Math.min(b, Math.max(a, x));
+const lerp = (a, b, t) => a + (b - a) * t;
+const eio = t => t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
+const eout = t => 1 - Math.pow(1 - t, 3);
+const eback = t => { const c1 = 1.8, c3 = c1 + 1; return 1 + c3 * Math.pow(t - 1, 3) + c1 * Math.pow(t - 1, 2); };
+const prog = (t, a, b) => clamp((t - a) / (b - a));
+const env = (t, a, b, fin = 0.12, fout = 0.12) => (t < a || t > b) ? 0 : Math.min(eout(prog(t, a, a + fin)), 1 - eio(prog(t, b - fout, b)));
+const pop = (t, a, d = 0.28) => t < a ? 0 : eback(prog(t, a, a + d));
+const T = (bar, beat = 0) => bar * BAR + beat * BEAT; // music time helper
+
+// ---------- footage ----------
+const cache = new Map();
+function frameImg(s, n) {
+  const key = s * 10000 + n;
+  if (!cache.has(key)) {
+    const im = new Image(); im.src = `ugc/frames/v2/s${String(s).padStart(2, '0')}/${String(n).padStart(4, '0')}.jpg`;
+    cache.set(key, im.decode().then(() => im));
+    if (cache.size > 40) cache.delete(cache.keys().next().value);
+  }
+  return cache.get(key);
+}
+const HITS = [0, T(0, 3), T(1, 1), T(1, 2), T(5, 2), T(7)]; // jeans 2 and 3 land, kit fechado, price, end card
+const shake = (t, a) => [a * (Math.sin(t * 37) * 0.6 + Math.sin(t * 23 + 1) * 0.4), a * (Math.sin(t * 31 + 2) * 0.6 + Math.sin(t * 19) * 0.4)];
+async function drawFootage(t, blurPx = 0) {
+  let si = 0; for (let i = 0; i < SHOTS.length; i++) if (t >= SHOTS[i][0]) si = i;
+  const [t0, t1, s, sp, n] = SHOTS[si];
+  const f = (t - t0) * sp * 30 + 1, ia = Math.floor(f), fr = f - ia;
+  const a = await frameImg(s, clamp(ia, 1, n)), b = sp < 0.9 ? await frameImg(s, clamp(ia + 1, 1, n)) : null;
+  let z = lerp(1.03, 1.1, eio(prog(t, t0, t1)));
+  if (si > 0) z *= 1 + 0.08 * (1 - eout(prog(t, t0, t0 + 0.22)));
+  let imp = 0; HITS.forEach(h => { if (t >= h) imp = Math.max(imp, 1 - prog(t, h, h + 0.35)); });
+  const [sx, sy] = shake(t, 14 * imp);
+  ctx.save();
+  ctx.translate(540 + sx, 960 + sy); ctx.scale(z, z); ctx.translate(-540, -960);
+  // cooler, contrasty "steel" grade
+  ctx.filter = `contrast(1.12) saturate(0.82) brightness(0.97)${blurPx ? ` blur(${blurPx}px)` : ''}`;
+  ctx.drawImage(a, 0, 0, W, H);
+  if (b) { ctx.globalAlpha = fr; ctx.drawImage(b, 0, 0, W, H); ctx.globalAlpha = 1; }
+  ctx.restore(); ctx.filter = 'none';
+  return si;
+}
+
+// ---------- metal materials ----------
+let BRUSH_D, BRUSH_L;
+function makeBrushed(base, lines, alphaR) {
+  const c = document.createElement('canvas'); c.width = 1080; c.height = 1920; const g = c.getContext('2d');
+  g.fillStyle = base; g.fillRect(0, 0, 1080, 1920);
+  let seed = 7; const rnd = () => (seed = (seed * 16807) % 2147483647) / 2147483647;
+  for (let i = 0; i < 9000; i++) {
+    const y = rnd() * 1920, x = rnd() * 1080 - 300, w = 200 + rnd() * 900;
+    g.strokeStyle = lines[Math.floor(rnd() * lines.length)]; g.globalAlpha = alphaR[0] + rnd() * alphaR[1];
+    g.lineWidth = rnd() < 0.85 ? 1 : 2; g.beginPath(); g.moveTo(x, y); g.lineTo(x + w, y + (rnd() - 0.5) * 2); g.stroke();
+  }
+  return c;
+}
+function chromeGrad(y0, y1, dark = false) {
+  const g = ctx.createLinearGradient(0, y0, 0, y1);
+  if (dark) { [[0, '#5A6068'], [0.45, '#1E2226'], [0.5, '#0B0D0F'], [1, '#3A3F45']].forEach(s => g.addColorStop(...s)); return g; }
+  [[0, '#FFFFFF'], [0.36, '#DADDE1'], [0.5, '#858B92'], [0.57, '#646A71'], [0.74, '#C9CDD2'], [1, '#F6F7F8']].forEach(s => g.addColorStop(...s));
+  return g;
+}
+function plate(x, y, w, h, r = 26, kind = 'dark', alpha = 0.94) {
+  ctx.save(); ctx.globalAlpha *= alpha;
+  ctx.shadowColor = 'rgba(0,0,0,0.55)'; ctx.shadowBlur = 34; ctx.shadowOffsetY = 12;
+  ctx.beginPath(); ctx.roundRect(x, y, w, h, r); ctx.fillStyle = kind === 'dark' ? '#0B0C0E' : '#C9CDD1'; ctx.fill();
+  ctx.shadowColor = 'transparent'; ctx.clip();
+  ctx.drawImage(kind === 'dark' ? BRUSH_D : BRUSH_L, 0, 0, Math.min(w, 1080), Math.min(h, 1920), x, y, w, h); // sample from texture origin (plates use local coords)
+  // soft top sheen
+  const g = ctx.createLinearGradient(0, y, 0, y + h); g.addColorStop(0, kind === 'dark' ? 'rgba(255,255,255,0.10)' : 'rgba(255,255,255,0.45)'); g.addColorStop(0.5, 'rgba(255,255,255,0)'); g.addColorStop(1, kind === 'dark' ? 'rgba(255,255,255,0.04)' : 'rgba(0,0,0,0.12)');
+  ctx.fillStyle = g; ctx.fillRect(x, y, w, h);
+  ctx.restore();
+  // chrome bevel border
+  ctx.save(); ctx.globalAlpha *= alpha; ctx.lineWidth = 4; ctx.strokeStyle = chromeGrad(y, y + h, kind !== 'dark');
+  ctx.beginPath(); ctx.roundRect(x + 2, y + 2, w - 4, h - 4, r - 2); ctx.stroke(); ctx.restore();
+}
+const OFF = document.createElement('canvas'); OFF.width = 1100; OFF.height = 420; const octx = OFF.getContext('2d');
+// chrome text with black outline, drop shadow and optional moving glint (g in 0..1)
+function chrome(str, x, y, size, o = {}) {
+  const { font = 'Anton', weight = 400, align = 'center', maxW = 980, glint = -1, dark = false, ls = 0 } = o;
+  ctx.save(); ctx.font = `${weight} ${size}px ${font}`; ctx.letterSpacing = `${ls}px`; ctx.textAlign = align; ctx.textBaseline = 'middle';
+  let w = ctx.measureText(str).width; const k = w > maxW ? maxW / w : 1;
+  ctx.translate(x, y); ctx.scale(k, k);
+  ctx.lineJoin = 'round';
+  ctx.shadowColor = 'rgba(0,0,0,0.6)'; ctx.shadowBlur = 22; ctx.shadowOffsetY = 8;
+  ctx.lineWidth = Math.max(6, size * 0.09); ctx.strokeStyle = dark ? 'rgba(255,255,255,0.9)' : '#050506'; ctx.strokeText(str, 0, 0);
+  ctx.shadowColor = 'transparent';
+  ctx.fillStyle = chromeGrad(-size * 0.42, size * 0.42, dark); ctx.fillText(str, 0, 0);
+  if (glint > 0 && glint < 1) {
+    const ow = Math.min(1100, w + 40), oh = Math.min(420, size * 1.3);
+    octx.setTransform(1, 0, 0, 1, 0, 0); octx.clearRect(0, 0, 1100, 420); octx.globalCompositeOperation = 'source-over';
+    octx.font = ctx.font; octx.letterSpacing = `${ls}px`; octx.textAlign = 'center'; octx.textBaseline = 'middle'; octx.fillStyle = '#fff';
+    octx.fillText(str, ow / 2, oh / 2);
+    octx.globalCompositeOperation = 'source-in';
+    const gx = lerp(-ow * 0.3, ow * 1.3, glint), gg = octx.createLinearGradient(gx - 120, 0, gx + 120, oh * 0.6);
+    gg.addColorStop(0, 'rgba(255,255,255,0)'); gg.addColorStop(0.5, dark ? 'rgba(255,255,255,0.45)' : 'rgba(255,255,255,0.95)'); gg.addColorStop(1, 'rgba(255,255,255,0)');
+    octx.fillStyle = gg; octx.fillRect(0, 0, ow, oh);
+    const ox = align === 'center' ? -ow / 2 : (align === 'left' ? -20 : -ow + 20);
+    ctx.drawImage(OFF, 0, 0, ow, oh, ox, -oh / 2, ow, oh);
+  }
+  ctx.restore();
+}
+function txt(str, x, y, o = {}) {
+  const { size = 40, weight = 800, color = '#fff', align = 'center', maxW = 980, ls = 0 } = o;
+  ctx.save(); ctx.font = `${weight} ${size}px Montserrat`; ctx.letterSpacing = `${ls}px`; ctx.textAlign = align; ctx.textBaseline = 'middle';
+  const w = ctx.measureText(str).width; ctx.translate(x, y); if (w > maxW) ctx.scale(maxW / w, maxW / w);
+  ctx.fillStyle = color; ctx.fillText(str, 0, 0); ctx.restore();
+}
+const tw = (str, size, font = 'Montserrat', weight = 800, ls = 0) => { ctx.save(); ctx.font = `${weight} ${size}px ${font}`; ctx.letterSpacing = `${ls}px`; const w = ctx.measureText(str).width; ctx.restore(); return w; };
+function scaled(x, y, s, fn, alpha = 1, rot = 0) { if (s <= 0 || alpha <= 0) return; ctx.save(); ctx.globalAlpha *= alpha; ctx.translate(x, y); ctx.rotate(rot); ctx.scale(s, s); fn(); ctx.restore(); }
+const glintAt = (t, a, d = 0.7) => (t - a) / d;
+
+// ---------- icons ----------
+function iPin(s, c) { ctx.save(); ctx.scale(s / 100, s / 100); ctx.fillStyle = c; ctx.beginPath(); ctx.moveTo(0, 50); ctx.bezierCurveTo(-10, 30, -36, 6, -36, -16); ctx.arc(0, -16, 36, Math.PI, 0); ctx.bezierCurveTo(36, 6, 10, 30, 0, 50); ctx.fill(); ctx.globalCompositeOperation = 'destination-out'; ctx.beginPath(); ctx.arc(0, -16, 14, 0, Math.PI * 2); ctx.fill(); ctx.restore(); }
+function iTruck(s, c) {
+  ctx.save(); ctx.scale(s / 100, s / 100); ctx.fillStyle = c;
+  ctx.beginPath(); ctx.roundRect(-50, -30, 58, 46, 6); ctx.fill();
+  ctx.beginPath(); ctx.moveTo(12, -16); ctx.lineTo(34, -16); ctx.lineTo(50, 2); ctx.lineTo(50, 16); ctx.lineTo(12, 16); ctx.closePath(); ctx.fill();
+  [-30, 30].forEach(x => { ctx.beginPath(); ctx.arc(x, 22, 12, 0, Math.PI * 2); ctx.fill(); });
+  ctx.globalCompositeOperation = 'destination-out'; [-30, 30].forEach(x => { ctx.beginPath(); ctx.arc(x, 22, 5, 0, Math.PI * 2); ctx.fill(); });
+  ctx.beginPath(); ctx.roundRect(20, -9, 14, 11, 2); ctx.fill(); ctx.restore();
+}
+function iBolt(s, c) { ctx.save(); ctx.scale(s / 100, s / 100); ctx.fillStyle = c; ctx.beginPath(); ctx.moveTo(10, -50); ctx.lineTo(-30, 8); ctx.lineTo(-2, 8); ctx.lineTo(-12, 50); ctx.lineTo(30, -10); ctx.lineTo(2, -10); ctx.closePath(); ctx.fill(); ctx.restore(); }
+function iCard(s, c) { ctx.save(); ctx.scale(s / 100, s / 100); ctx.fillStyle = c; ctx.beginPath(); ctx.roundRect(-48, -32, 96, 64, 10); ctx.fill(); ctx.globalCompositeOperation = 'destination-out'; ctx.fillRect(-48, -18, 96, 12); ctx.beginPath(); ctx.roundRect(-36, 10, 30, 10, 3); ctx.fill(); ctx.restore(); }
+function iCheck(s, c) { ctx.save(); ctx.scale(s / 100, s / 100); ctx.strokeStyle = c; ctx.lineWidth = 16; ctx.lineCap = 'round'; ctx.lineJoin = 'round'; ctx.beginPath(); ctx.moveTo(-26, 2); ctx.lineTo(-8, 20); ctx.lineTo(28, -18); ctx.stroke(); ctx.restore(); }
+function iWA(s) {
+  ctx.save(); ctx.scale(s / 100, s / 100);
+  ctx.fillStyle = WA; ctx.beginPath(); ctx.arc(0, -2, 44, 0, Math.PI * 2); ctx.fill();
+  ctx.beginPath(); ctx.moveTo(-30, 26); ctx.lineTo(-46, 46); ctx.lineTo(-10, 38); ctx.closePath(); ctx.fill();
+  ctx.fillStyle = '#fff'; ctx.save(); ctx.rotate(-0.5);
+  ctx.beginPath(); ctx.roundRect(-9, -22, 18, 44, 7); ctx.fill();
+  ctx.beginPath(); ctx.roundRect(-15, -26, 30, 14, 6); ctx.fill(); ctx.beginPath(); ctx.roundRect(-15, 12, 30, 14, 6); ctx.fill();
+  ctx.restore(); ctx.restore();
+}
+// chrome medallion with a dark icon
+function medal(x, y, r, icon, sc = 1) {
+  scaled(x, y, sc, () => {
+    ctx.shadowColor = 'rgba(0,0,0,0.5)'; ctx.shadowBlur = 16;
+    ctx.fillStyle = chromeGrad(-r, r); ctx.beginPath(); ctx.arc(0, 0, r, 0, Math.PI * 2); ctx.fill(); ctx.shadowColor = 'transparent';
+    ctx.strokeStyle = '#050506'; ctx.lineWidth = 3; ctx.stroke();
+    icon();
+  });
+}
+function pill(str, x, y, sc = 1, size = 32) {
+  scaled(x, y, sc, () => {
+    const w = tw(str, size, 'Montserrat', 800, 3) + 80;
+    plate(-w / 2, -38, w, 76, 38);
+    ctx.save(); ctx.font = `800 ${size}px Montserrat`; ctx.letterSpacing = '3px'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+    ctx.fillStyle = chromeGrad(-size * 0.5, size * 0.5); ctx.fillText(str, 0, 3); ctx.restore();
+  });
+}
+
+// ---------- scenes ----------
+function hook(t) { // 0 – T(1.5)
+  const a = 1 - eio(prog(t, T(1, 2) - 0.12, T(1, 2))); if (a <= 0) return;
+  const first = t < 0.03 ? 1 : 0;
+  ctx.save(); ctx.globalAlpha = a;
+  pill('MODA MASCULINA · FORTALEZA', 540, 318, first || pop(t, 0, 0.3), 30);
+  const pb = first || eout(prog(t, 0, 0.2));
+  plate(540 - 480 * pb, 390, 960 * pb, 330, 30, 'dark', 0.9);
+  scaled(540, 488, first || pop(t, 0.04, 0.3), () => chrome('3 CALÇAS JEANS', 0, 0, 132, { glint: glintAt(t, 0.45) }));
+  scaled(540, 628, first || pop(t, 0.16, 0.3), () => chrome('POR R$ 165', 0, 0, 150, { glint: glintAt(t, 0.75) }));
+  ctx.restore();
+}
+function counter(t) { // jeans land: 1 @0.15, 2 @T(0,3), 3 @T(1,1)
+  const a = env(t, 0.0, T(2), 0.01, 0.15); if (a <= 0) return;
+  const lands = [0.0, T(0, 3), T(1, 1)];
+  ctx.save(); ctx.globalAlpha = a;
+  const y = t < T(1, 2) ? 815 : 1010;
+  lands.forEach((L, i) => {
+    const x = 540 + (i - 1) * 150, on = t >= L, p = on ? (t < 0.03 && i === 0 ? 1 : pop(t, L, 0.3)) : 0;
+    ctx.save(); ctx.translate(x, y);
+    ctx.fillStyle = 'rgba(8,9,10,0.82)'; ctx.beginPath(); ctx.arc(0, 0, 58, 0, Math.PI * 2); ctx.fill();
+    ctx.lineWidth = 5; ctx.strokeStyle = chromeGrad(-58, 58); ctx.stroke();
+    if (p > 0) { ctx.scale(p, p); chrome(String(i + 1), 0, 4, 78); }
+    ctx.restore();
+  });
+  ctx.restore();
+}
+function kitFechado(t) { // T(1,2) – T(2)
+  const a = env(t, T(1, 2), T(2), 0.01, 0.12); if (a <= 0) return;
+  const s = t < T(1, 2) + 0.2 ? lerp(2.0, 1, eout(prog(t, T(1, 2), T(1, 2) + 0.2))) : 1;
+  scaled(540, 600, s, () => {
+    plate(-430, -170, 860, 340, 30, 'dark', 0.92);
+    chrome('KIT FECHADO', 0, -70, 120, { glint: glintAt(t, T(1, 2) + 0.25) });
+    txt('SAI R$ 55 CADA CALÇA', 0, 62, { size: 46, weight: 900, color: '#E9ECEF', ls: 1 });
+    ctx.save(); ctx.translate(0, 125); ctx.fillStyle = chromeGrad(-20, 20); ctx.fillRect(-160, -2, 320, 4); ctx.restore();
+  }, a * clamp(prog(t, T(1, 2), T(1, 2) + 0.06)), -0.04);
+}
+function montage(t, si) { // T(2) – T(5)
+  const a = env(t, T(2), T(5), 0.05, 0.12); if (a <= 0) return;
+  pill('5 LAVAGENS · DO 38 AO 46', 540, 318, pop(t, T(2), 0.3), 32);
+  const [t0, , , , , lab] = SHOTS[si]; if (!lab) return;
+  const p = eout(prog(t, t0, t0 + 0.22)), out = 1 - eio(prog(t, t0 + BAR / 2 - 0.1, t0 + BAR / 2));
+  const size = 84, w = tw(lab, size, 'Anton', 400, 1) + 90;
+  ctx.save(); ctx.globalAlpha *= a * out; ctx.translate(lerp(-w, 0, p), 0);
+  plate(40, 1050, w, 140, 22, 'dark', 0.9);
+  chrome(lab, 40 + w / 2, 1122, size, { ls: 1, glint: glintAt(t, t0 + 0.2, 0.6) });
+  ctx.restore();
+}
+function offer(t) { // T(5) – T(6)
+  const a = env(t, T(5), T(6), 0.01, 0.12); if (a <= 0) return;
+  scaled(540, 760, 0.8 + 0.2 * pop(t, T(5), 0.32), () => {
+    plate(-470, -360, 940, 720, 40, 'light', 0.97);
+    chrome('KIT 3 CALÇAS JEANS', 0, -292, 80, { dark: true });
+    const CUTS = [[IMG.azul, -250, -0.06], [IMG.preta, 0, 0], [IMG.marmo, 250, 0.06]];
+    CUTS.forEach(([im, x, r], i) => {
+      const ta = T(5, 0.5 + i * 0.5), q = t < ta ? 0 : eback(prog(t, ta, ta + 0.3)); if (q <= 0) return;
+      const h = 340, w = h * im.width / im.height;
+      ctx.save(); ctx.translate(x, -40 - (1 - q) * 140); ctx.rotate(r); ctx.globalAlpha *= clamp(q * 2);
+      ctx.shadowColor = 'rgba(0,0,0,0.35)'; ctx.shadowBlur = 18; ctx.shadowOffsetY = 10; ctx.drawImage(im, -w / 2, -h / 2, w, h); ctx.restore();
+    });
+    const pp = t < T(5, 2) ? 0 : (t < T(5, 2) + 0.22 ? lerp(1.8, 1, eout(prog(t, T(5, 2), T(5, 2) + 0.22))) : 1);
+    if (pp > 0) scaled(0, 222, pp, () => chrome('R$ 165', 0, 0, 150, { dark: true, glint: glintAt(t, T(5, 2) + 0.2) }));
+    scaled(0, 318, pop(t, T(5, 3), 0.3), () => txt('1 CALÇA: R$ 60  ·  NO KIT: R$ 55 CADA', 0, 0, { size: 34, weight: 900, color: '#0B0C0E', maxW: 860 }));
+  }, a);
+}
+function benefits(t) { // T(6) – T(7)
+  const a = env(t, T(6), T(7), 0.01, 0.12); if (a <= 0) return;
+  const rows = [[c => iTruck(64, c), 'FRETE GRÁTIS', 'EM TODA FORTALEZA'], [c => iBolt(70, c), 'ENTREGA EM ATÉ', '1 DIA ÚTIL'], [c => iCard(60, c), 'PIX OU 3X', 'NO CARTÃO'], [c => iPin(64, c), 'LOJA FÍSICA', 'BURACO DA GIA · CENTRO']];
+  ctx.save(); ctx.globalAlpha = a;
+  rows.forEach(([ic, l1, l2], i) => {
+    const ta = T(6, i), p = eout(prog(t, ta, ta + 0.25)); if (p <= 0) return;
+    const y = 420 + i * 178;
+    ctx.save(); ctx.translate(lerp(1100, 0, p), 0);
+    plate(60, y - 72, 960, 144, 24, 'dark', 0.92);
+    medal(150, y, 52, () => ic('#0B0C0E'));
+    chrome(l1, 230, y - 22, 64, { align: 'left', maxW: 740 });
+    txt(l2, 232, y + 38, { size: 32, weight: 800, color: '#C9CDD2', align: 'left', ls: 2, maxW: 740 });
+    ctx.restore();
+  });
+  ctx.restore();
+}
+function endCard(t) { // T(7) – end
+  const b = eout(prog(t, T(7), T(7) + 0.35)); if (b <= 0) return;
+  ctx.save(); ctx.globalAlpha = 0.86 * b; ctx.drawImage(BRUSH_D, 0, 0); ctx.restore();
+  const g = ctx.createRadialGradient(540, 700, 50, 540, 700, 900); g.addColorStop(0, `rgba(255,255,255,${0.07 * b})`); g.addColorStop(1, 'rgba(0,0,0,0)'); ctx.fillStyle = g; ctx.fillRect(0, 0, W, H);
+  const e = T(7);
+  scaled(540, 362, pop(t, e + 0.05, 0.35), () => { const h = 130, w = h * IMG.logo.width / IMG.logo.height; ctx.drawImage(IMG.logo, -w / 2, -h / 2, w, h); });
+  scaled(540, 520, pop(t, e + 0.25), () => chrome('3 CALÇAS JEANS', 0, 0, 96));
+  scaled(540, 680, pop(t, e + BEAT, 0.3), () => chrome('R$ 165', 0, 0, 220, { glint: glintAt(t, e + BEAT + 0.3, 0.8) }));
+  scaled(540, 815, pop(t, e + BEAT * 1.5), () => txt('SAI R$ 55 CADA  ·  OU 1 POR R$ 60', 0, 0, { size: 38, weight: 800, color: '#E3E6EA', ls: 1 }));
+  const rows = [[c => iTruck(38, c), 'FRETE GRÁTIS + ENTREGA EM 1 DIA ÚTIL'], [c => iCard(36, c), 'PIX OU 3X NO CARTÃO'], [c => iPin(40, c), 'LOJA FÍSICA: BURACO DA GIA · FORTALEZA']];
+  rows.forEach(([ic, s], i) => {
+    const q = pop(t, e + BEAT * (2 + i * 0.5), 0.28), y = 900 + i * 70;
+    medal(118, y, 27, () => ic('#0B0C0E'), q);
+    scaled(165, y, q, () => txt(s, 0, 2, { size: 32, weight: 800, color: '#fff', align: 'left', maxW: 840 }));
+  });
+  const cp = pop(t, e + BEAT * 4, 0.35);
+  if (cp > 0) {
+    const pulse = 1 + 0.03 * Math.sin((t - e - BEAT * 4) * 2 * Math.PI / BEAT) * clamp((t - e - BEAT * 4 - 0.3) * 3);
+    scaled(540, 1150, cp * pulse, () => {
+      ctx.shadowColor = 'rgba(255,255,255,0.35)'; ctx.shadowBlur = 40;
+      ctx.fillStyle = chromeGrad(-64, 64); ctx.beginPath(); ctx.roundRect(-450, -64, 900, 128, 64); ctx.fill(); ctx.shadowColor = 'transparent';
+      ctx.lineWidth = 4; ctx.strokeStyle = '#050506'; ctx.stroke();
+      ctx.save(); ctx.translate(-340, 0); iWA(80); ctx.restore();
+      txt('CHAMA NO WHATSAPP', 45, 3, { size: 50, weight: 900, color: '#08090A', maxW: 640 });
+    });
+    const ay = 1272 + Math.abs(Math.sin((t - e) * Math.PI / BEAT)) * 18;
+    ctx.save(); ctx.globalAlpha = clamp(cp); ctx.fillStyle = chromeGrad(ay - 22, ay + 18); ctx.beginPath(); ctx.moveTo(504, ay - 22); ctx.lineTo(576, ay - 22); ctx.lineTo(540, ay + 18); ctx.closePath(); ctx.fill(); ctx.restore();
+  }
+}
+
+async function render(t) {
+  ctx.setTransform(1, 0, 0, 1, 0, 0); ctx.globalAlpha = 1; ctx.filter = 'none';
+  ctx.fillStyle = '#000'; ctx.fillRect(0, 0, W, H);
+  const endB = prog(t, T(7), T(7) + 0.4);
+  const si = await drawFootage(t, endB > 0 ? 12 * endB : (t >= T(5) && t < T(6) ? 6 : 0));
+  // vignette + darkening for legibility (steel mood)
+  let g = ctx.createLinearGradient(0, 0, 0, 520); g.addColorStop(0, 'rgba(0,0,0,0.5)'); g.addColorStop(1, 'rgba(0,0,0,0)'); ctx.fillStyle = g; ctx.fillRect(0, 0, W, 520);
+  g = ctx.createRadialGradient(540, 960, 500, 540, 960, 1200); g.addColorStop(0, 'rgba(0,0,0,0)'); g.addColorStop(1, 'rgba(0,0,0,0.45)'); ctx.fillStyle = g; ctx.fillRect(0, 0, W, H);
+  if (t >= T(5) && t < T(7)) { ctx.fillStyle = `rgba(0,0,0,${0.35 * env(t, T(5), T(7), 0.15, 0.1)})`; ctx.fillRect(0, 0, W, H); }
+
+  hook(t); counter(t); kitFechado(t); montage(t, si); offer(t); benefits(t); endCard(t);
+  // chrome flash on beat cuts
+  let f = 0; [[T(1, 2), 0.35], [T(5), 0.25], [T(7), 0.3]].forEach(([a, m]) => { const p = prog(t, a - 0.005, a + 0.16); if (p > 0 && p < 1) f = Math.max(f, m * (1 - eout(p))); });
+  SHOTS.forEach(([a], i) => { if (i >= 4 && i <= 9) { const p = prog(t, a - 0.005, a + 0.1); if (p > 0 && p < 1) f = Math.max(f, 0.14 * (1 - eout(p))); } });
+  if (f > 0) { ctx.fillStyle = `rgba(235,238,242,${f})`; ctx.fillRect(0, 0, W, H); }
+  // progress bar (chrome)
+  ctx.fillStyle = 'rgba(255,255,255,0.15)'; ctx.fillRect(0, H - 10, W, 10); ctx.fillStyle = chromeGrad(H - 10, H); ctx.fillRect(0, H - 10, W * (t / DUR), 10);
+}
+
+const IMG = {};
+window.ready = (async () => {
+  for (const [k, src] of [['logo', 'build/logo_iron.png'], ['azul', 'build/cut_azul.png'], ['preta', 'build/cut_preta.png'], ['marmo', 'build/cut_marmo.png']]) {
+    IMG[k] = new Image(); IMG[k].src = src; await IMG[k].decode();
+  }
+  BRUSH_D = makeBrushed('#0C0D0F', ['#ffffff', '#9aa0a6', '#000000'], [0.02, 0.07]);
+  BRUSH_L = makeBrushed('#C3C7CC', ['#ffffff', '#7d838a', '#e9ecef'], [0.08, 0.25]);
+  for (const f of ['400 40px Anton', '900 40px Montserrat', '800 40px Montserrat']) await document.fonts.load(f);
+  await document.fonts.ready; await render(0); return true;
+})();
+window.renderAt = t => render(t);
+</script>
+</body>
+</html>

@@ -1,6 +1,12 @@
 # Iron Shorts — Briefing do cliente
 
-> Base para criação de criativos de tráfego pago. Foco atual: **calça jeans**.
+> Base para criação de criativos de tráfego pago. Foco atual: **calça jeans — varejo em Fortaleza**.
+
+## ⚠️ Decisões confirmadas (13/10/2026)
+- **Prioridade: varejo em Fortaleza.**
+- **Frete grátis e entrega em até 1 dia útil** em Fortaleza.
+- **NÃO trabalhar a frente de atacado** — sem criativos, copies ou campanhas para lojista/revendedor, e sem mencionar o preço de 10+ peças.
+- **Nome da modelagem: em aberto** — não citar skinny/slim/reta nos criativos; falar de caimento/ajuste de forma genérica.
 > Fontes: informações da agência, feed do Instagram (@ironshorts_), catálogo "Calças — Edição 2026" e histórico da conta de anúncios CA01 - IRON SHORTS.
 
 ## 1. Quem é
@@ -24,7 +30,7 @@
 | Preta Amaciada | preto liso |
 
 - Tamanhos: **38 · 40 · 42 · 44 · 46** (todas as lavagens).
-- Modelagem aparente nas fotos: ajustada (slim/skinny), com elastano visível no caimento.
+- Modelagem: **nome em aberto (não citar)**. Nas fotos o caimento é ajustado.
 
 **Tabela de preço por quantidade (por calça):**
 
@@ -34,7 +40,7 @@
 | 3 a 9 peças | **R$ 55,00** |
 | 10+ peças | **R$ 50,00** |
 
-> A mesma tabela serve aos dois públicos: 1–2 peças = varejo; 3–9 = combo/kit; 10+ = revenda/atacado.
+> Para os criativos (varejo): usar **R$ 60** (1–2 peças) e o combo **3+ peças por R$ 55 cada**. A faixa de 10+ é atacado e **não entra** na comunicação.
 
 ## 3. Produto complementar — Calça Sarja
 - 6 cores: Marrom, Azul, Preta, Bege, Caqui, Verde. Tamanhos 38 ao 46.
@@ -67,18 +73,14 @@ Objetivo: **Mensagens (WhatsApp)**. Copies diretas, regionais ("FORTALEZA, aprov
 
 Aprendizados: **preço/oferta explícita** e **dor local** (calor) performam; ângulo aspiracional ficou mais caro. Nenhum criativo de jeans rodou ainda.
 
-## 8. Direção estratégica para jeans
-1. **Dois públicos, campanhas separadas:**
-   - **Varejo** (consumidor final): Fortaleza (loja + frete) e Brasil (envio). Mensagem: calça de fábrica a R$ 60, combo 3+ por R$ 55.
-   - **Atacado** (lojista/revendedor): Brasil. Mensagem: R$ 50 a partir de 10 peças, fabricação própria, margem de revenda.
-2. Objetivo: **Mensagens no WhatsApp**; qualidade medida no CRM.
-3. Ângulos fortes: **preço de fábrica / produção própria**, **banca física no Buraco da Gia** (confiança), **envio para todo o Brasil**, **5 lavagens / grade 38–46**, **kits/combos**, **prova social** (envios, feedbacks, produção).
-4. Campanha local Fortaleza (ida à loja) separada da nacional (envio).
+## 8. Direção estratégica para jeans (varejo Fortaleza)
+1. **Público:** consumidor final de Fortaleza. Sem frente de atacado.
+2. **Objetivo:** Mensagens no WhatsApp; qualidade medida no CRM.
+3. **Oferta:** calça jeans de fábrica por **R$ 60**; levando **3 ou mais, R$ 55 cada**; **frete grátis** e **entrega em até 1 dia útil** em Fortaleza.
+4. **Ângulos:** preço de fábrica / produção própria, banca física no Buraco da Gia (confiança e opção de ir à loja), entrega rápida e grátis, 5 lavagens com grade do 38 ao 46, combo de 3+, prova social (envios, feedbacks, produção), dor local (calor, jeans que não veste bem).
+5. Copies no tom já validado: diretas, regionais ("FORTALEZA..."), com preço explícito e urgência; CTA para o WhatsApp.
 
-## 9. Pontos a confirmar com o cliente
-- Nome da modelagem (skinny/slim?) e se tem elastano.
-- Frete grátis em Fortaleza vale para o jeans? Como é o frete para o resto do Brasil e o prazo?
+## 9. Pontos ainda em aberto
 - Formas de pagamento (Pix, cartão, parcelamento?).
-- No atacado, as 10 peças podem misturar lavagens/tamanhos? Mistura jeans + sarja conta para a faixa?
-- Prioridade inicial e verba: varejo Fortaleza, varejo Brasil ou atacado?
 - Material bruto disponível (vídeos de produção, banca, envios, feedbacks) para usar nos criativos.
+- Nome da modelagem (por ora, não citar).

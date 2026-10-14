@@ -1,6 +1,7 @@
 # Narration for the Cardigan Pietro edits (P1/P2): one TTS line per visual block, each block re-timed to its line so the voice changes exactly
 # on the cut. Usage: python3 narrate.py p1|p2  -> audio/timeline_<v>.js (window.TIMELINE) + audio/<v>_voz.wav
 # The brand name is never spoken (no TTS spelling of "Just Co" sounded right); the logo carries it on screen.
+# "pix" is written in lowercase on purpose: in capitals the voice spells it out (P-I-X).
 import json, subprocess, sys
 from pathlib import Path
 
@@ -19,7 +20,7 @@ SCRIPTS = {
             'Punhos e barra canelados.',
             'Toque macio e excelente respirabilidade.',
             'Perfeito pros dias amenos.',
-            'Duzentos e oitenta e quatro e noventa no PIX. Garanta o seu.',
+            'Duzentos e oitenta e quatro e noventa no pix. Garanta o seu.',
         ],
     },
     'p2': {
@@ -30,7 +31,7 @@ SCRIPTS = {
             'Gola de camisa e modelagem regular fit.',
             'Em jeans, preto e azul marinho.',
             'Toque macio e excelente respirabilidade.',
-            'Duzentos e oitenta e quatro e noventa no PIX. Garanta o seu.',
+            'Duzentos e oitenta e quatro e noventa no pix. Garanta o seu.',
         ],
     },
 }

@@ -16,13 +16,16 @@ const prog = (t, a, b) => clamp((t - a) / (b - a));
 const loadImg = src => new Promise((ok, er) => { const i = new Image(); i.onload = () => ok(i); i.onerror = er; i.src = src; });
 const IMG = {};
 const frameCache = new Map();
+// window.HI = { dir, t0, t1, fps }: a motion-interpolated copy of part of the footage (smooth slow motion).
 async function frame(rawT) {
-  const n = clamp(Math.round(rawT * FPS_RAW) + 1, 1, N_RAW);
-  if (!frameCache.has(n)) {
-    frameCache.set(n, await loadImg(`build/vf/${String(n).padStart(4, '0')}.jpg`));
+  const H_ = window.HI, hi = H_ && rawT >= H_.t0 && rawT <= H_.t1;
+  const src = hi ? `${H_.dir}/${String(Math.round((rawT - H_.t0) * H_.fps) + 1).padStart(4, '0')}.jpg`
+    : `build/vf/${String(clamp(Math.round(rawT * FPS_RAW) + 1, 1, N_RAW)).padStart(4, '0')}.jpg`;
+  if (!frameCache.has(src)) {
+    frameCache.set(src, await loadImg(src));
     if (frameCache.size > 24) frameCache.delete(frameCache.keys().next().value);
   }
-  return frameCache.get(n);
+  return frameCache.get(src);
 }
 
 // Draw raw footage at zoom z around focus (fx, fy) in 0..1 image space, never exposing the edges.
@@ -33,13 +36,18 @@ async function drawRaw(rawT, z = 1, fx = 0.5, fy = 0.5) {
   ctx.drawImage(img, 0, 0, W, H); ctx.restore();
 }
 
-// Segment-driven background: { t0, t1, r0, r1, z0, z1, fx, fy, fx1, fy1 }; a short punch-in on every cut.
+// Segment-driven background: { t0, t1, r0, r1, z0, z1, fx, fy, fx1, fy1 }; a short punch-in on every cut, or with
+// xf: s a soft cross-dissolve from the previous segment (its last frame held) and no punch-in.
 async function drawSegments(t, segs) {
-  const s = segs.find(s => t >= s.t0 && t < s.t1) || segs[segs.length - 1];
-  const p = prog(t, s.t0, s.t1);
-  const punch = 1 + 0.05 * (1 - eout(prog(t, s.t0, s.t0 + 0.35)));
-  const z = lerp(s.z0, s.z1, eio(p)) * punch;
-  await drawRaw(lerp(s.r0, s.r1, p), z, lerp(s.fx, s.fx1 ?? s.fx, eio(p)), lerp(s.fy, s.fy1 ?? s.fy, eio(p)));
+  const found = segs.findIndex(s => t >= s.t0 && t < s.t1), k = found < 0 ? segs.length - 1 : found;
+  const s = segs[k], prev = segs[k - 1];
+  const at = (s, t) => {
+    const p = prog(t, s.t0, s.t1), punch = s.xf ? 1 : 1 + 0.05 * (1 - eout(prog(t, s.t0, s.t0 + 0.35)));
+    return drawRaw(lerp(s.r0, s.r1, p), lerp(s.z0, s.z1, eio(p)) * punch, lerp(s.fx, s.fx1 ?? s.fx, eio(p)), lerp(s.fy, s.fy1 ?? s.fy, eio(p)));
+  };
+  const a = s.xf && prev ? eio(prog(t, s.t0, s.t0 + s.xf)) : 1;
+  if (a < 1) { await at(prev, prev.t1); ctx.save(); ctx.globalAlpha = a; await at(s, t); ctx.restore(); }
+  else await at(s, t);
 }
 
 function shade(top = 0.45, bottom = 0.0, mid = 0.0) {

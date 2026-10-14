@@ -18,18 +18,20 @@
 // Every claim comes from the PDP "especificações": gola camisa, botões, bolsos com lapela, punhos e barra canelados,
 // toque macio, excelente respirabilidade, perfeito para dias amenos.
 const DUR = window.TIMELINE ? TIMELINE.actual[TIMELINE.actual.length - 1] : 15.0;
+// 2.8–12.4: one steady close-up per spec, played as smooth slow motion (build/vi, motion-interpolated 4x) and joined by
+// soft dissolves, so the details read at the same calm pace as the final walking shots.
+window.HI = { dir: 'build/vi', t0: 64 / 23.976, t1: 64 / 23.976 + 536 / 95.904, fps: 95.904 };
 const SEGMENTS = [
   { t0: 0.0, t1: 1.6, r0: 0.5, r1: 2.1, z0: 1.1, z1: 1.02, fx: 0.5, fy: 0.42 },
   { t0: 1.6, t1: 2.8, r0: 8.6, r1: 9.8, z0: 1.04, z1: 1.0, fx: 0.5, fy: 0.45 },
-  { t0: 2.8, t1: 3.7, r0: 5.0, r1: 5.5, z0: 1.0, z1: 1.06, fx: 0.5, fy: 0.42 },
-  { t0: 3.7, t1: 4.6, r0: 3.7, r1: 4.2, z0: 1.06, z1: 1.0, fx: 0.5, fy: 0.45 },
-  { t0: 4.6, t1: 5.5, r0: 4.25, r1: 4.85, z0: 1.0, z1: 1.06, fx: 0.5, fy: 0.4 },
-  { t0: 5.5, t1: 6.4, r0: 14.9, r1: 15.5, z0: 1.1, z1: 1.04, fx: 0.5, fy: 0.45 },
-  { t0: 6.4, t1: 7.3, r0: 2.65, r1: 3.15, z0: 1.0, z1: 1.05, fx: 0.5, fy: 0.4 },
-  { t0: 7.3, t1: 8.2, r0: 6.75, r1: 7.5, z0: 1.05, z1: 1.0, fx: 0.5, fy: 0.45 },
-  { t0: 8.2, t1: 9.2, r0: 5.75, r1: 6.5, z0: 1.0, z1: 1.05, fx: 0.5, fy: 0.42 },
-  { t0: 9.2, t1: 10.6, r0: 15.6, r1: 17.2, z0: 1.08, z1: 1.0, fx: 0.5, fy: 0.42 },
-  { t0: 10.6, t1: 12.4, r0: 18.0, r1: 19.8, z0: 1.0, z1: 1.08, fx: 0.5, fy: 0.42 },
+  { t0: 2.8, t1: 3.6, r0: 5.13, r1: 5.62, z0: 1.0, z1: 1.05, fx: 0.5, fy: 0.45, xf: 0.3 },     // gola de camisa
+  { t0: 3.6, t1: 4.6, r0: 5.72, r1: 6.70, z0: 1.0, z1: 1.05, fx: 0.5, fy: 0.42, xf: 0.35 },    // botões
+  { t0: 4.6, t1: 6.4, r0: 4.30, r1: 5.05, z0: 1.0, z1: 1.07, fx: 0.5, fy: 0.42, xf: 0.35 },    // bolso com lapela
+  { t0: 6.4, t1: 7.2, r0: 2.80, r1: 3.13, z0: 1.0, z1: 1.05, fx: 0.5, fy: 0.42, xf: 0.35 },    // punho canelado
+  { t0: 7.2, t1: 8.2, r0: 3.22, r1: 3.66, z0: 1.0, z1: 1.05, fx: 0.5, fy: 0.45, xf: 0.35 },    // punho e barra
+  { t0: 8.2, t1: 9.3, r0: 6.81, r1: 7.58, z0: 1.0, z1: 1.05, fx: 0.5, fy: 0.45, xf: 0.35 },    // toque
+  { t0: 9.3, t1: 10.6, r0: 15.6, r1: 16.8, z0: 1.06, z1: 1.0, fx: 0.5, fy: 0.42, xf: 0.35 },
+  { t0: 10.6, t1: 12.4, r0: 18.0, r1: 19.8, z0: 1.0, z1: 1.08, fx: 0.5, fy: 0.42, xf: 0.35 },
   { t0: 12.4, t1: 15.0, r0: 20.9, r1: 21.8, z0: 1.06, z1: 1.0, fx: 0.5, fy: 0.45 },
 ];
 const SPECS = [

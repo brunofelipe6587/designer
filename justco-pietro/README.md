@@ -7,7 +7,7 @@ R$ 299,90 · **R$ 284,90 no PIX** · 3x de R$ 99,97 sem juros · jeans, preto, a
 
 | Arquivo | Formato | Ângulo | Destino sugerido |
 |---|---|---|---|
-| `JustCo_Pietro_9x16_P1_OMaisVendido_narrado.mp4` | 9:16 · 19 s | UGC do criador: "Nº 1 em vendas" + 4 detalhes da PDP + dias amenos | Reels/Stories, público frio e morno |
+| `JustCo_Pietro_9x16_P1_OMaisVendido_narrado.mp4` | 9:16 · 19 s | UGC do criador: "Nº 1 em vendas" + 4 detalhes da PDP em câmera lenta + dias amenos | Reels/Stories, público frio e morno |
 | `JustCo_Pietro_9x16_P1_OMaisVendido_musica.mp4` | 9:16 · 15 s | mesmo corte, só música (assiste sem som) | Reels/Stories |
 | `JustCo_Pietro_9x16_P2_DiasAmenos_narrado.mp4` | 9:16 · 19 s | lookbook de estúdio: estação, como usar, caimento, 3 cores, benefícios | Reels/Stories, remarketing |
 | `JustCo_Pietro_9x16_P2_DiasAmenos_musica.mp4` | 9:16 · 15 s | mesmo corte, só música | Reels/Stories |
@@ -41,5 +41,8 @@ NOTL=1 PAGE=p1.html node render_video.js video 30               # build/p1_mudo_
 python3 mix_music.py                                            # out/*.mp4 (música em audio/, fora do git)
 node render_statics.js                                          # out/estaticos/*.jpg
 ```
+Câmera lenta dos detalhes (P1, 2.7–8.2 s do vídeo do criador, interpolada 4x):
+`ffmpeg -framerate 23.976 -start_number 65 -i build/vf/%04d.jpg -vf "trim=end_frame=136,minterpolate=fps=95.904:mi_mode=mci:mc_mode=aobmc:me_mode=bidir:vsbmc=1:scd=fdiff:scd_threshold=8" -q:v 2 build/vi/%04d.jpg`.
+Na narração, "pix" fica em minúsculas: em maiúsculas a voz soletra "P-I-X".
 Frames do vídeo do criador: `ffmpeg -i src/insta.mp4 -vf "scale=1080:1920:flags=lanczos,eq=contrast=1.04:saturation=1.06,unsharp" -q:v 2 build/vf/%04d.jpg`.
 Recortes (`adobe/` → `assets/`) feitos com Adobe Photoshop API (remove background).

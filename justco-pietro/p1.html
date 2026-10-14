@@ -1,0 +1,105 @@
+<!doctype html>
+<html lang="pt-br">
+<head>
+<meta charset="utf-8">
+<title>Just Co P1 O Mais Vendido</title>
+<link href="fonts/fonts.css" rel="stylesheet">
+<style>html, body { margin: 0; background: #000; } canvas { display: block; }</style>
+</head>
+<body>
+<canvas id="c" width="1080" height="1920"></canvas>
+<script src="common.js"></script>
+<script src="engine.js"></script>
+<script src="audio/timeline_p1.js"></script>
+<script>
+// P1 — "O MAIS VENDIDO DA JUST CO". UGC edit of the creator's video: frame 0 already says what it is (Cardigan Pietro),
+// why it matters (Nº 1 em vendas) and the price, so the click is qualified. Then four PDP specs over matching close-ups,
+// the season cue ("dias amenos") and an end card mirroring the store's product card.
+// Every claim comes from the PDP "especificações": gola camisa, botões, bolsos com lapela, punhos e barra canelados,
+// toque macio, excelente respirabilidade, perfeito para dias amenos.
+const DUR = window.TIMELINE ? TIMELINE.actual[TIMELINE.actual.length - 1] : 15.0;
+const SEGMENTS = [
+  { t0: 0.0, t1: 1.6, r0: 0.5, r1: 2.1, z0: 1.1, z1: 1.02, fx: 0.5, fy: 0.42 },
+  { t0: 1.6, t1: 2.8, r0: 8.6, r1: 9.8, z0: 1.04, z1: 1.0, fx: 0.5, fy: 0.45 },
+  { t0: 2.8, t1: 3.7, r0: 5.0, r1: 5.5, z0: 1.0, z1: 1.06, fx: 0.5, fy: 0.42 },
+  { t0: 3.7, t1: 4.6, r0: 3.7, r1: 4.2, z0: 1.06, z1: 1.0, fx: 0.5, fy: 0.45 },
+  { t0: 4.6, t1: 5.5, r0: 4.25, r1: 4.85, z0: 1.0, z1: 1.06, fx: 0.5, fy: 0.4 },
+  { t0: 5.5, t1: 6.4, r0: 14.9, r1: 15.5, z0: 1.1, z1: 1.04, fx: 0.5, fy: 0.45 },
+  { t0: 6.4, t1: 7.3, r0: 2.65, r1: 3.15, z0: 1.0, z1: 1.05, fx: 0.5, fy: 0.4 },
+  { t0: 7.3, t1: 8.2, r0: 6.75, r1: 7.5, z0: 1.05, z1: 1.0, fx: 0.5, fy: 0.45 },
+  { t0: 8.2, t1: 9.2, r0: 5.75, r1: 6.5, z0: 1.0, z1: 1.05, fx: 0.5, fy: 0.42 },
+  { t0: 9.2, t1: 10.6, r0: 15.6, r1: 17.2, z0: 1.08, z1: 1.0, fx: 0.5, fy: 0.42 },
+  { t0: 10.6, t1: 12.4, r0: 18.0, r1: 19.8, z0: 1.0, z1: 1.08, fx: 0.5, fy: 0.42 },
+  { t0: 12.4, t1: 15.0, r0: 20.9, r1: 21.8, z0: 1.06, z1: 1.0, fx: 0.5, fy: 0.45 },
+];
+const SPECS = [
+  { t0: 2.8, t1: 4.6, n: '1/4', lines: ['GOLA DE CAMISA', 'E BOTÕES FRONTAIS'] },
+  { t0: 4.6, t1: 6.4, n: '2/4', lines: ['BOLSOS FRONTAIS', 'COM LAPELA'] },
+  { t0: 6.4, t1: 8.2, n: '3/4', lines: ['PUNHOS E BARRA', 'CANELADOS'] },
+  { t0: 8.2, t1: 10.6, n: '4/4', lines: ['TOQUE MACIO', 'E EXCELENTE', 'RESPIRABILIDADE'] },
+];
+
+// Bebas line that shrinks to fit maxW
+function fitTxt(str, x, y, size, maxW, o) {
+  ctx.save(); ctx.font = `400 ${size}px ${F.display}`; ctx.letterSpacing = '0px'; const w = ctx.measureText(str).width; ctx.restore();
+  return txt(str, x, y, { ...o, size: w > maxW ? size * maxW / w : size });
+}
+
+// persistent product chip: keeps the name + price on screen while the specs play
+function chip(t, a) {
+  if (a <= 0) return;
+  ctx.save(); ctx.globalAlpha = a;
+  ctx.font = `700 24px ${F.sans}`; ctx.letterSpacing = '3px';
+  const s1 = 'CARDIGAN PIETRO', s2 = 'R$ 284,90 NO PIX', w1 = ctx.measureText(s1).width, w2 = ctx.measureText(s2).width;
+  const h = 64, pad = 26, w = w1 + w2 + pad * 3 + 2, x = 70, y = 120;
+  ctx.shadowColor = 'rgba(0,0,0,.3)'; ctx.shadowBlur = 20; ctx.shadowOffsetY = 4;
+  rrect(x, y, w, h, h / 2); ctx.fillStyle = 'rgba(21,21,21,.82)'; ctx.fill(); ctx.shadowColor = 'transparent';
+  ctx.textBaseline = 'middle'; ctx.fillStyle = B.paper; ctx.fillText(s1, x + pad, y + h / 2 + 1);
+  ctx.fillStyle = 'rgba(255,255,255,.3)'; ctx.fillRect(x + pad * 1.5 + w1, y + 18, 2, h - 36);
+  ctx.fillStyle = B.buy; ctx.fillText(s2, x + pad * 2 + w1 + 2, y + h / 2 + 1);
+  ctx.restore();
+}
+
+async function renderAt(t) {
+  await drawSegments(t, SEGMENTS);
+  shade(0.35, 0, 0);
+
+  // 0–2.8 · hook (complete on frame 0): who says it's good (Nº 1), what it is, price
+  if (t < 2.9) {
+    lowShade(0.85, 980, 1560);
+    const out = prog(t, 2.6, 2.8);
+    pill('Nº 1 EM VENDAS', 74, 1120, { size: 28, h: 68, bg: B.buy, color: '#fff', p: 1, out, ls: 4 });
+    fitTxt('CARDIGAN PIETRO', 72, 1360, 200, 936, { p: 1, out, color: B.paper });
+    txt('O mais vendido da Just Co.', 80, 1432, { font: F.sans, weight: 600, size: 40, color: B.paper, p: 1, out, shadow: 0.3 });
+    pill('R$ 284,90 NO PIX  ·  3X SEM JUROS', 74, 1475, { size: 28, h: 74, bg: B.paper, color: B.ink, p: 1, out, ls: 2.5 });
+  }
+  logo(W - 70 - 95, 128, 40, (t < 2.9 ? 1 : 0.85) * (1 - prog(t, 12.2, 12.4)));
+
+  // 2.8–10.6 · four PDP specs over the matching close-ups
+  chip(t, prog(t, 2.8, 3.1) * (1 - prog(t, 12.2, 12.4)));
+  for (const s of SPECS) {
+    if (t < s.t0 || t >= s.t1 + 0.02) continue;
+    lowShade(0.8, 1050, 1600);
+    const out = prog(t, s.t1 - 0.15, s.t1), base = 1510 - (s.lines.length - 1) * 128;
+    txt(`POR QUE É O Nº 1 · ${s.n}`, 80, base - 150, { font: F.sans, weight: 700, size: 28, ls: 6, color: B.buy, p: prog(t, s.t0, s.t0 + 0.3), out, shadow: 0.3 });
+    s.lines.forEach((l, i) => fitTxt(l, 74, base + i * 128, 150, 936, { p: prog(t, s.t0 + 0.06 + i * 0.1, s.t0 + 0.42 + i * 0.1), out, color: B.paper }));
+  }
+
+  // 10.6–12.4 · season cue
+  if (t >= 10.6 && t < 12.42) {
+    lowShade(0.8, 1050, 1600);
+    const out = prog(t, 12.25, 12.4);
+    txt('MEIA-ESTAÇÃO', 80, 1250, { font: F.sans, weight: 700, size: 28, ls: 6, color: B.buy, p: prog(t, 10.6, 10.9), out, shadow: 0.3 });
+    fitTxt('PERFEITO PRA', 74, 1382, 150, 936, { p: prog(t, 10.66, 11.0), out, color: B.paper });
+    fitTxt('DIAS AMENOS', 74, 1510, 150, 936, { p: prog(t, 10.76, 11.1), out, color: B.buy });
+  }
+
+  // 12.4–15 · end card = store product card
+  if (t >= 12.4) endCard(t, 12.4, IMG.card, { dark: true });
+}
+const renderDesign = renderAt;
+window.renderAt = t => renderDesign(warp(t));
+window.ready = boot({ card: 'assets/p_jeans_frente.png' });
+</script>
+</body>
+</html>

@@ -1,0 +1,117 @@
+<!doctype html>
+<html lang="pt-br">
+<head>
+<meta charset="utf-8">
+<title>Just Co P2 Dias Amenos</title>
+<link href="fonts/fonts.css" rel="stylesheet">
+<style>html, body { margin: 0; background: #000; } canvas { display: block; }</style>
+</head>
+<body>
+<canvas id="c" width="1080" height="1920"></canvas>
+<script src="common.js"></script>
+<script src="engine.js"></script>
+<script src="audio/timeline_p2.js"></script>
+<script>
+// P2 — "A PEÇA DOS DIAS AMENOS". Studio lookbook built from the campaign photos: seasonal hook + price on frame 0,
+// then styling (casual ou elegante), fit (gola camisa · regular fit), the three colours with the size range,
+// three PDP benefits over a detail crop, and the light version of the product end card.
+// Claims from the PDP: "Ideal para composições casuais e elegantes", "Gola: Camisa", "Modelagem: Regular Fit",
+// "Toque macio e confortável", "Excelente respirabilidade", "Bolsos frontais com lapela", "Perfeito para dias amenos".
+const DUR = window.TIMELINE ? TIMELINE.actual[TIMELINE.actual.length - 1] : 15.0;
+const CARD = { x: 60, y: 130, w: 960, h: 1110 };
+const SHOTS = [   // photo blocks: each wipes in over the previous one and keeps a slow push-in
+  { t0: 0.0, t1: 2.8, img: 'f1', fx: 0.5, fy: 0.42, z0: 1.0, z1: 1.07 },
+  { t0: 2.8, t1: 5.4, img: 'f3', fx: 0.5, fy: 0.4, z0: 1.0, z1: 1.06 },
+  { t0: 5.4, t1: 8.0, img: 'f2', fx: 0.5, fy: 0.36, z0: 1.12, z1: 1.04, cut: true },   // colours come in on bare sand
+  { t0: 10.6, t1: 12.4, img: 'f1', fx: 0.56, fy: 0.6, z0: 1.9, z1: 2.05 },
+];
+const COPY = [
+  { t0: 0.0, t1: 2.8, k: 'Nº 1 EM VENDAS DA JUST CO', l: 'A PEÇA DOS DIAS AMENOS', s: 'Cardigan Pietro · R$ 284,90 no PIX', hook: true },
+  { t0: 2.8, t1: 5.4, k: 'COMO USAR', l: 'DO CASUAL AO ELEGANTE', s: 'Por cima da camiseta, com chino ou jeans' },
+  { t0: 5.4, t1: 8.0, k: 'CAIMENTO', l: 'GOLA DE CAMISA · REGULAR FIT', s: 'Botões frontais e manga longa' },
+];
+const COLORS = [
+  { img: 'cj', name: 'JEANS', c: B.jeans, fy: 0, z: 1.45 },
+  { img: 'cp', name: 'PRETO', c: B.preto, fy: 0, z: 1.0 },
+  { img: 'cm', name: 'AZUL MARINHO', c: B.marinho, fy: 0, z: 1.0 },
+];
+const CHECKS = ['Toque macio e confortável', 'Excelente respirabilidade', 'Bolsos frontais com lapela'];
+
+function fitTxt(str, x, y, size, maxW, o) {
+  ctx.save(); ctx.font = `400 ${size}px ${F.display}`; ctx.letterSpacing = '0px'; const w = ctx.measureText(str).width; ctx.restore();
+  return txt(str, x, y, { ...o, size: w > maxW ? size * maxW / w : size });
+}
+
+function check(x, y, a) {
+  ctx.save(); ctx.globalAlpha = a;
+  ctx.beginPath(); ctx.arc(x, y, 24, 0, Math.PI * 2); ctx.fillStyle = B.buy; ctx.fill();
+  ctx.beginPath(); ctx.moveTo(x - 11, y + 1); ctx.lineTo(x - 3, y + 9); ctx.lineTo(x + 12, y - 8);
+  ctx.strokeStyle = '#fff'; ctx.lineWidth = 5; ctx.lineCap = 'round'; ctx.lineJoin = 'round'; ctx.stroke();
+  ctx.restore();
+}
+
+async function renderAt(t) {
+  ctx.fillStyle = B.sand; ctx.fillRect(0, 0, W, H);
+  logo(W / 2 - 50, 52, 44, 1 - prog(t, 12.2, 12.4), IMG.logoB);
+
+  // photo cards (wipe in from the right, push-in while on screen)
+  for (const s of SHOTS) {
+    if (t < s.t0 || t >= s.t1 + (s.cut ? 0 : 0.45)) continue;
+    const p = s.t0 === 0 ? 1 : eout(prog(t, s.t0, s.t0 + 0.45)), z = lerp(s.z0, s.z1, prog(t, s.t0, s.t1 + 0.45));
+    ctx.save(); ctx.beginPath(); ctx.rect(CARD.x + CARD.w * (1 - p), 0, CARD.w * p + 10, H); ctx.clip();
+    photo(IMG[s.img], CARD.x, CARD.y, CARD.w, CARD.h, { z, fx: s.fx, fy: s.fy, r: 32 });
+    ctx.restore();
+  }
+
+  // copy under the card
+  for (const c of COPY) {
+    if (t < c.t0 || t >= c.t1 + 0.02) continue;
+    const out = prog(t, c.t1 - 0.15, c.t1), pi = a => c.hook ? 1 : prog(t, c.t0 + a, c.t0 + a + 0.35);
+    txt(c.k, 80, 1330, { font: F.sans, weight: 700, size: 28, ls: 6, color: B.price, p: pi(0.05), out, shadow: 0 });
+    fitTxt(c.l, 74, 1455, 132, 932, { color: B.ink, p: pi(0.12), out, shadow: 0 });
+    txt(c.s, 80, 1520, { font: F.sans, weight: 500, size: 34, color: B.text, p: pi(0.22), out, shadow: 0 });
+    if (c.hook) {
+      pill('Nº 1', 90, 160, { size: 28, h: 64, bg: B.buy, color: '#fff', p: 1, out, ls: 4 });
+      pill('3X SEM JUROS NO CARTÃO', 74, 1565, { size: 26, h: 70, bg: B.ink, color: B.paper, p: 1, out, ls: 3 });
+    }
+  }
+
+  // 8.0–10.6 · three colours, sizes
+  if (t >= 8.0 && t < 10.62) {
+    const out = prog(t, 10.45, 10.6), cw = 300, ch = 760, gap = 30, x0 = (W - cw * 3 - gap * 2) / 2, y = 250;
+    txt('3 CORES', 80, 1250, { font: F.sans, weight: 700, size: 28, ls: 6, color: B.price, p: prog(t, 8.0, 8.3), out, shadow: 0 });
+    fitTxt('ESCOLHA A SUA', 74, 1375, 132, 932, { color: B.ink, p: prog(t, 8.06, 8.4), out, shadow: 0 });
+    txt('Jeans, preto e azul marinho · do P ao GG', 80, 1440, { font: F.sans, weight: 500, size: 34, color: B.text, p: prog(t, 8.2, 8.55), out, shadow: 0 });
+    COLORS.forEach((c, i) => {
+      const p = eout(prog(t, 8.0 + i * 0.12, 8.5 + i * 0.12)), x = x0 + i * (cw + gap), yy = y + (1 - p) * 80;
+      ctx.save(); ctx.globalAlpha = p * (1 - out);
+      rrect(x, yy, cw, ch, 26); ctx.fillStyle = B.card; ctx.fill();
+      photo(IMG[c.img], x, yy, cw, ch, { z: c.z, fx: 0.5, fy: c.fy, r: 26 });
+      ctx.beginPath(); ctx.arc(x + 40, yy + ch + 56, 17, 0, Math.PI * 2); ctx.fillStyle = c.c; ctx.fill();
+      ctx.font = `700 22px ${F.sans}`; ctx.letterSpacing = '2px'; ctx.fillStyle = B.ink; ctx.textBaseline = 'middle';
+      ctx.fillText(c.name, x + 68, yy + ch + 57);
+      ctx.restore();
+    });
+  }
+
+  // 10.6–12.4 · benefits over the detail crop
+  if (t >= 10.6 && t < 12.42) {
+    const out = prog(t, 12.25, 12.4);
+    txt('POR QUE É O Nº 1', 80, 1320, { font: F.sans, weight: 700, size: 28, ls: 6, color: B.price, p: prog(t, 10.6, 10.9), out, shadow: 0 });
+    CHECKS.forEach((s, i) => {
+      const p = prog(t, 10.7 + i * 0.15, 11.05 + i * 0.15);
+      check(104, 1392 + i * 82, clamp(p * 2) * (1 - out));
+      txt(s, 150, 1406 + i * 82, { font: F.sans, weight: 600, size: 40, color: B.ink, p, out, shadow: 0 });
+    });
+  }
+
+  // 12.4–15 · product card (light)
+  if (t >= 12.4) endCard(t, 12.4, IMG.card, { dark: false });
+}
+const renderDesign = renderAt;
+window.renderAt = t => renderDesign(warp(t));
+window.ready = boot({ f1: 'src/foto_1.jpg', f2: 'src/foto_2.jpg', f3: 'src/foto_3.jpg', card: 'assets/p_jeans_frente.png',
+  cj: 'assets/p_jeans_frente.png', cp: 'assets/p_preto.png', cm: 'assets/p_marinho.png' });
+</script>
+</body>
+</html>

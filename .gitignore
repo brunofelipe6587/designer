@@ -38,3 +38,6 @@ sandwalk-everflame/build/still_*.png
 sandwalk-everflame/out/*_silent.mp4
 sandwalk-everflame/fonts/g.css
 sandwalk-everflame/build/v3/
+sandwalk-void/build/chk/
+sandwalk-void/frames/
+sandwalk-void/audio/

@@ -22,3 +22,11 @@ hgg-djavan/build/g_check.png
 hgg-djavan/build/h[0-9].png
 hgg-djavan/build/i[0-9].png
 hgg-djavan/build/j[0-9].png
+hgg-sabotage/audio/
+hgg-sabotage/cut/
+hgg-sabotage/build/*_2x.png
+hgg-sabotage/build/still_*.png
+hgg-sabotage/build/s[0-9].png
+hgg-sabotage/build/grid_*.png
+hgg-sabotage/build/final*_tiles.png
+hgg-sabotage/out/*_silent.mp4

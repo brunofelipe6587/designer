@@ -30,3 +30,4 @@ hgg-sabotage/build/s[0-9].png
 hgg-sabotage/build/grid_*.png
 hgg-sabotage/build/final*_tiles.png
 hgg-sabotage/out/*_silent.mp4
+hgg-sabotage/build/sb*.png

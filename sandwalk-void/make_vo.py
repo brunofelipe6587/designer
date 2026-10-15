@@ -4,10 +4,11 @@
 import json, subprocess, sys
 V = sys.argv[1] if len(sys.argv) > 1 else 'void2'
 SCRIPTS = {'void2': [
-    ('hook', 'Shorts de jogo com bolso de zíper? Tem sim.'),
-    ('zip', 'No kit Void, o shorts tem bolso com zíper. Celular e chave vão junto pro jogo.'),
-    ('fabric', 'A camisa é leve, respirável e seca rápido.'),
-    ('move', 'E o corte atlético não trava nenhum movimento.'),
+    ('hook', 'Quatro motivos pra jogar de kit Void.'),
+    ('m1', 'Um: tecido leve e respirável, que seca rápido.'),
+    ('m2', 'Dois: material elástico. Não trava nenhum movimento.'),
+    ('m3', 'Três: as cores continuam vivas, mesmo depois de muitas lavagens.'),
+    ('m4', 'Quatro: visual de time profissional, até na pelada com os amigos.'),
     ('offer', 'Camisa e shorts por noventa e nove e noventa, no site da Sand Walk.'),
 ]}
 LINES = SCRIPTS[V]

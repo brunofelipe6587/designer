@@ -41,3 +41,5 @@ sandwalk-everflame/build/v3/
 sandwalk-void/build/chk/
 sandwalk-void/frames/
 sandwalk-void/audio/
+sandwalk-void/build/still_*.png
+sandwalk-void/out/*_silent.mp4

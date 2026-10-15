@@ -1,0 +1,290 @@
+<!doctype html>
+<html lang="pt-br">
+<head>
+<meta charset="utf-8">
+<title>Sand Walk Ever Flame V3</title>
+<link href="fonts/fonts.css" rel="stylesheet">
+<style>html, body { margin: 0; background: #000; } canvas { display: block; }</style>
+</head>
+<body>
+<canvas id="c" width="1080" height="1920"></canvas>
+<script src="build/vo_v3.js"></script>
+<script>
+// Creative V3 "A foto vs. a peça" — trust angle for a product with no reviews yet: the store's product photo
+// side by side with the real kit, a wipe from photo to real, the details matching (print / side panels / logo),
+// the fit on the body, the kit in training, then the offer with the 7-day exchange.
+// Footage frames are only scaled/moved; the site photo is the store's own product image (src/site_mockup.jpg).
+const W = 1080, H = 1920, DUR = 22.6;
+const YEL = '#FFCC29', BLUE = '#2E86F5';
+const ctx = document.getElementById('c').getContext('2d');
+const clamp = (x, a = 0, b = 1) => Math.min(b, Math.max(a, x));
+const lerp = (a, b, t) => a + (b - a) * t;
+const eio = t => t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
+const eout = t => 1 - Math.pow(1 - t, 3);
+const eback = t => { const c1 = 1.8, c3 = c1 + 1; return 1 + c3 * Math.pow(t - 1, 3) + c1 * Math.pow(t - 1, 2); };
+const prog = (t, a, b) => clamp((t - a) / (b - a));
+const env = (t, a, b, fin = 0.15, fout = 0.15) => (t < a || t > b) ? 0 : Math.min(eout(prog(t, a, a + fin)), 1 - eio(prog(t, b - fout, b)));
+const pop = (t, a, d = 0.28) => t < a ? 0 : eback(prog(t, a, a + d));
+const L = k => VO.find(l => l.k === k);
+const word = (k, w) => L(k).w.find(x => x.w.toLowerCase() === w).s;
+
+// [folder, fps, extraction start (source s), frame count] — prep_v3.sh / prep_v2.sh / prep_v1.sh
+const CLIP = {
+  r03: ['r03', 60, 5.9, 96], t03: ['t03', 60, 0, 192], m03: ['m03', 60, 15.3, 156], k03: ['k03', 60, 3.9, 174],
+  a02: ['a02', 30, 0, 375], g04a: ['g04a', 30, 37.9, 48], g04b: ['g04b', 30, 57.9, 48],
+};
+const cache = new Map();
+function frameImg(c, idx) {
+  const [dir, , , n] = CLIP[c], i = clamp(idx, 1, n), key = dir + i;
+  if (!cache.has(key)) {
+    const im = new Image(); im.src = `frames/${dir}/${String(i).padStart(4, '0')}.jpg`;
+    cache.set(key, im.decode().then(() => im));
+    if (cache.size > 80) cache.delete(cache.keys().next().value);
+  }
+  return cache.get(key);
+}
+const srcFrame = (c, srcT) => frameImg(c, Math.floor((srcT - CLIP[c][2]) * CLIP[c][1]) + 1);
+// draw a 1080x1920 frame with zoom z around (ax, ay) placed at (tx, ty)
+function place(img, z, ax = 540, ay = 960, tx = ax, ty = ay, iw = W, ih = H) {
+  ctx.save(); ctx.translate(tx, ty); ctx.scale(z, z); ctx.translate(-ax, -ay);
+  ctx.imageSmoothingEnabled = true; ctx.imageSmoothingQuality = 'high';
+  ctx.drawImage(img, 0, 0, iw, ih); ctx.restore();
+}
+
+// ---------- the site photo ----------
+// PDP pose: product framed like the store page. ALIGNED pose: roughly on top of the real kit in r03 (for the wipe).
+const MOCK = { w: 2000, h: 3000 };
+const POSE_PDP = { s: 0.62, x: 540 - 1000 * 0.62, y: 340 - 544 * 0.62 };
+const POSE_ALIGN = { s: 0.85, x: -310, y: -407 };
+function drawMock(p, alpha = 1) {
+  ctx.save(); ctx.globalAlpha = alpha; ctx.imageSmoothingQuality = 'high';
+  ctx.drawImage(IMG.mock, p.x, p.y, MOCK.w * p.s, MOCK.h * p.s); ctx.restore();
+}
+function siteChrome(a) {
+  if (a <= 0) return;
+  ctx.save(); ctx.globalAlpha = a;
+  ctx.fillStyle = '#F1F3F5'; ctx.beginPath(); ctx.roundRect(190, 140, 700, 76, 38); ctx.fill();
+  ctx.fillStyle = '#5F6B7A'; ctx.font = '600 34px Inter'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+  ctx.fillText('🔒 lojasandwalk.com.br', 540, 180);
+  ctx.textAlign = 'left'; ctx.fillStyle = '#1B1F24'; ctx.font = '600 36px Inter';
+  ctx.fillText('Kit Masculino | Camiseta e shorts | Ever Flame', 80, 1590);
+  ctx.font = '800 58px Inter'; ctx.fillText('R$ 99,90', 80, 1665);
+  ctx.restore();
+}
+// circular inset with a crop of the site photo (cx, cy, r in photo pixels)
+function inset(x, y, R, crop, a, label) {
+  if (a <= 0) return;
+  const [cx, cy, r] = crop;
+  ctx.save(); ctx.globalAlpha = clamp(a); ctx.translate(x, y); ctx.scale(a, a);
+  ctx.shadowColor = 'rgba(0,0,0,0.5)'; ctx.shadowBlur = 30;
+  ctx.fillStyle = '#fff'; ctx.beginPath(); ctx.arc(0, 0, R + 10, 0, Math.PI * 2); ctx.fill(); ctx.shadowColor = 'transparent';
+  ctx.save(); ctx.beginPath(); ctx.arc(0, 0, R, 0, Math.PI * 2); ctx.clip();
+  ctx.drawImage(IMG.mock, cx - r, cy - r, 2 * r, 2 * r, -R, -R, 2 * R, 2 * R); ctx.restore();
+  ctx.restore();
+  chip(label, x, y + R + 40, { scale: a, size: 30, bg: '#fff', color: '#000' });
+}
+
+// ---------- typography (same system as V1) ----------
+function txt(str, x, y, o = {}) {
+  const { size = 96, color = '#fff', scale = 1, alpha = 1, sw = 14, font = 'Syne', weight = 800, align = 'center', maxW = 980, glow = null, ls = 0 } = o;
+  if (alpha <= 0 || scale <= 0) return;
+  ctx.save(); ctx.globalAlpha = alpha; ctx.translate(x, y); ctx.scale(scale, scale);
+  ctx.font = `${weight} ${size}px ${font}`; ctx.textAlign = align; ctx.textBaseline = 'middle'; ctx.lineJoin = 'round';
+  ctx.letterSpacing = ls + 'px';
+  const w = ctx.measureText(str).width; if (w > maxW) ctx.scale(maxW / w, maxW / w);
+  if (sw) { ctx.shadowColor = 'rgba(0,0,0,0.45)'; ctx.shadowBlur = 22; ctx.shadowOffsetY = 6; ctx.lineWidth = sw; ctx.strokeStyle = '#000'; ctx.strokeText(str, 0, 0); }
+  ctx.shadowColor = glow || 'transparent'; ctx.shadowBlur = glow ? 40 : 0; ctx.shadowOffsetY = 0;
+  ctx.fillStyle = color; ctx.fillText(str, 0, 0);
+  ctx.restore();
+}
+function chip(str, x, y, o = {}) {
+  const { size = 40, alpha = 1, bg = '#fff', color = '#000', scale = 1, font = 'Inter', weight = 800 } = o;
+  if (alpha <= 0 || scale <= 0) return;
+  ctx.save(); ctx.globalAlpha = alpha; ctx.translate(x, y); ctx.scale(scale, scale);
+  ctx.font = `${weight} ${size}px ${font}`; ctx.textBaseline = 'middle';
+  const w = ctx.measureText(str).width + 60, h = size + 34;
+  ctx.shadowColor = 'rgba(0,0,0,0.35)'; ctx.shadowBlur = 22; ctx.shadowOffsetY = 8;
+  ctx.fillStyle = bg; ctx.beginPath(); ctx.roundRect(-w / 2, -h / 2, w, h, h / 2); ctx.fill();
+  ctx.shadowColor = 'transparent'; ctx.fillStyle = color; ctx.textAlign = 'center'; ctx.fillText(str, 0, 3);
+  ctx.restore();
+}
+function tick(x, y, s, bg = YEL) {
+  if (s <= 0) return;
+  ctx.save(); ctx.translate(x, y); ctx.scale(s, s);
+  ctx.fillStyle = bg; ctx.beginPath(); ctx.arc(0, 0, 40, 0, Math.PI * 2); ctx.fill();
+  ctx.strokeStyle = '#000'; ctx.lineWidth = 9; ctx.lineCap = 'round'; ctx.lineJoin = 'round';
+  ctx.beginPath(); ctx.moveTo(-16, 1); ctx.lineTo(-4, 13); ctx.lineTo(18, -12); ctx.stroke(); ctx.restore();
+}
+function logo(x, y, w, alpha = 1) {
+  if (alpha <= 0) return;
+  ctx.save(); ctx.globalAlpha = alpha; ctx.shadowColor = 'rgba(0,0,0,0.5)'; ctx.shadowBlur = 18;
+  ctx.drawImage(IMG.logo, x - w / 2, y - w * IMG.logo.height / IMG.logo.width / 2, w, w * IMG.logo.height / IMG.logo.width);
+  ctx.restore();
+}
+// karaoke captions from the voiceover word timings
+const CAPS = [];
+for (const l of VO) {
+  let cur = [];
+  const flush = () => { if (cur.length) CAPS.push({ s: cur[0].s, e: cur[cur.length - 1].e + 0.3, w: cur }); cur = []; };
+  for (const w of l.w) { const len = cur.reduce((n, x) => n + x.w.length + 1, 0) + w.w.length; if (cur.length && (len > 17 || cur.length === 3)) flush(); cur.push({ ...w, w: w.w.toUpperCase() }); }
+  flush();
+}
+CAPS.forEach((c, i) => { if (CAPS[i + 1]) c.e = Math.min(c.e, CAPS[i + 1].s); });
+function captions(t, y) {
+  const c = CAPS.find(c => t >= c.s && t < c.e); if (!c) return;
+  const p = pop(t, c.s, 0.18);
+  ctx.save(); ctx.font = '900 76px Inter';
+  const sp = 22, widths = c.w.map(w => ctx.measureText(w.w).width);
+  const total = widths.reduce((a, b) => a + b, 0) + sp * (c.w.length - 1), sc = Math.min(1, 960 / total) * p;
+  ctx.translate(540, y); ctx.scale(sc, sc); ctx.textBaseline = 'middle'; ctx.textAlign = 'left'; ctx.lineJoin = 'round';
+  let x = -total / 2;
+  c.w.forEach((w, i) => {
+    ctx.shadowColor = 'rgba(0,0,0,0.5)'; ctx.shadowBlur = 20; ctx.shadowOffsetY = 6;
+    ctx.lineWidth = 16; ctx.strokeStyle = '#000'; ctx.strokeText(w.w, x, 0); ctx.shadowColor = 'transparent';
+    ctx.fillStyle = t >= w.s - 0.02 ? (t < w.e + 0.05 ? YEL : '#fff') : 'rgba(255,255,255,0.55)';
+    ctx.fillText(w.w, x, 0); x += widths[i] + sp;
+  });
+  ctx.restore();
+}
+
+// ---------- scene timing (from the voiceover) ----------
+const T = {};
+function times() {
+  T.site = 2.5; T.real = L('real').s; T.same = L('same').s; T.rec = word('same', 'recorte') - 0.34; T.logo = word('same', 'logo') - 0.35;
+  T.body = L('body').s; T.move = L('move').s; T.move2 = (L('move').s + L('offer').s) / 2; T.offer = L('offer').s; T.trust = L('trust').s;
+}
+const WIPE = 0.65;
+
+async function render(t) {
+  ctx.setTransform(1, 0, 0, 1, 0, 0);
+  ctx.fillStyle = '#000'; ctx.fillRect(0, 0, W, H);
+  const cut = [T.site, T.real, T.same, T.rec, T.logo, T.body, T.move, T.move2, T.offer].filter(c => t >= c).pop() || 0;
+  const punch = 1 + 0.06 * (1 - eout(prog(t, cut, cut + 0.22))) * (cut > 0 && cut !== T.real ? 1 : 0);
+  let capY = 1150;
+
+  if (t < T.site) {
+    // ===== A · hook: split screen, site photo vs real kit =====
+    const top = 290, bot = 1580, cy = (top + bot) / 2 + 20;
+    ctx.save(); ctx.beginPath(); ctx.rect(0, top, 540, bot - top); ctx.clip();
+    ctx.fillStyle = '#fff'; ctx.fillRect(0, top, 540, bot - top);
+    drawMock({ s: 0.62, x: 270 - 1000 * 0.62, y: cy - 1500 * 0.62 }); ctx.restore();
+    ctx.save(); ctx.beginPath(); ctx.rect(540, top, 540, bot - top); ctx.clip();
+    place(await srcFrame('r03', 5.9 + t * 0.4), 0.66, 502, 952, 810, cy); ctx.restore();
+    ctx.fillStyle = '#fff'; ctx.fillRect(536, top, 8, bot - top);
+    chip('FOTO DO SITE', 270, top + 70, { size: 34, bg: '#000', color: '#fff', scale: t < 0.02 ? 1 : pop(t, 0) });
+    chip('PEÇA REAL', 810, top + 70, { size: 34, bg: YEL, scale: t < 0.02 ? 1 : pop(t, 0.12) });
+    // VS badge
+    const vs = t < 0.02 ? 1 : pop(t, 0.25, 0.32);
+    if (vs > 0) {
+      ctx.save(); ctx.translate(540, cy); ctx.scale(vs * (1 + 0.04 * Math.sin(t * 9)), vs * (1 + 0.04 * Math.sin(t * 9)));
+      ctx.shadowColor = 'rgba(0,0,0,0.5)'; ctx.shadowBlur = 30; ctx.fillStyle = YEL; ctx.beginPath(); ctx.arc(0, 0, 78, 0, Math.PI * 2); ctx.fill();
+      ctx.shadowColor = 'transparent'; ctx.fillStyle = '#000'; ctx.font = '800 64px Syne'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillText('VS', 0, 4); ctx.restore();
+    }
+    txt('SERÁ QUE É IGUAL?', 540, 200, { size: 84, color: YEL, scale: t < 0.02 ? 1 : pop(t, 0), sw: 0 });
+    capY = 1460;
+  } else if (t < T.real + WIPE) {
+    // ===== B · the store photo, then it moves onto the real kit and wipes into it =====
+    ctx.fillStyle = '#fff'; ctx.fillRect(0, 0, W, H);
+    const m = eio(prog(t, T.real - 0.32, T.real));     // PDP pose -> aligned pose
+    const z = 1 + 0.03 * prog(t, T.site, T.real);
+    const p = { s: lerp(POSE_PDP.s * z, POSE_ALIGN.s, m), x: lerp(540 - (540 - POSE_PDP.x) * z, POSE_ALIGN.x, m), y: lerp(340 - (340 - POSE_PDP.y) * z, POSE_ALIGN.y, m) };
+    drawMock(p);
+    siteChrome(1 - m);
+    chip('📷 FOTO DO SITE', 540, 285, { size: 38, bg: '#000', color: '#fff', scale: pop(t, T.site + 0.05) * (1 - m) });
+    // wipe: real kit revealed from the left with a glowing edge
+    const wx = W * eio(prog(t, T.real, T.real + WIPE));
+    if (wx > 0) {
+      ctx.save(); ctx.beginPath(); ctx.rect(0, 0, wx, H); ctx.clip();
+      place(await srcFrame('r03', 6.0 + (t - T.real) * 0.5), 1); ctx.restore();
+      ctx.save(); ctx.shadowColor = YEL; ctx.shadowBlur = 40; ctx.fillStyle = YEL; ctx.fillRect(wx - 6, 0, 12, H); ctx.restore();
+    }
+  } else if (t < T.same) {
+    // ===== C · the real kit =====
+    place(await srcFrame('r03', 6.0 + (t - T.real) * 0.5), 1 + 0.04 * prog(t, T.real, T.same));
+    chip('✓ PEÇA REAL', 540, 300, { size: 46, bg: YEL, scale: pop(t, T.real + WIPE - 0.1) });
+    txt('a que chega na sua casa', 540, 400, { size: 44, font: 'Inter', weight: 800, sw: 10, alpha: clamp(prog(t, word('real', 'chega') - 0.1, word('real', 'chega') + 0.15)) });
+  } else if (t < T.body) {
+    // ===== D · details match: real macro + site-photo inset =====
+    const parts = [
+      [T.same, T.rec, 't03', 2.25, 0.7, 'MESMA ESTAMPA', [1000, 1300, 260]],
+      [T.rec, T.logo, 't03', 1.30, 0.7, 'MESMO RECORTE', [760, 1400, 190]],
+      [T.logo, T.body, 'm03', 16.15, 0.6, 'MESMO LOGO', [1170, 900, 150]],
+    ];
+    const [a, b, c, s0, sp, title, crop] = parts.find(p => t >= p[0] && t < p[1]) || parts[2];
+    place(await srcFrame(c, s0 + (t - a) * sp), punch * (1.04 + 0.04 * prog(t, a, b)));
+    const g = ctx.createLinearGradient(0, 0, 0, 900); g.addColorStop(0, 'rgba(0,0,0,0.55)'); g.addColorStop(1, 'rgba(0,0,0,0)');
+    ctx.fillStyle = g; ctx.fillRect(0, 0, W, 900);
+    tick(130, 330, pop(t, a + 0.05, 0.3));
+    txt(title, 190, 335, { size: 84, align: 'left', scale: pop(t, a + 0.05, 0.3), sw: 0, maxW: 820 });
+    inset(800, 640, 165, crop, pop(t, a + 0.15, 0.32), 'NA FOTO DO SITE');
+    chip('PEÇA REAL', 210, 830, { size: 30, bg: YEL, scale: pop(t, a + 0.25) });
+  } else if (t < T.move) {
+    // ===== E · on the body =====
+    place(await srcFrame('a02', 9.3 + (t - T.body)), punch * (1 + 0.04 * prog(t, T.body, T.move)));
+    chip('CAIMENTO NO CORPO', 540, 300, { size: 44, bg: '#fff', scale: pop(t, T.body + 0.1) });
+  } else if (t < T.offer) {
+    // ===== F · in training =====
+    const second = t >= T.move2;
+    place(await srcFrame(second ? 'g04b' : 'g04a', (second ? 58.0 + (t - T.move2) : 38.0 + (t - T.move))), punch * 1.05, 540, 1100);
+    chip('NO TREINO', 540, 300, { size: 44, bg: '#fff', scale: pop(t, T.move + 0.1) });
+    ctx.save(); ctx.globalAlpha = clamp(prog(t, word('move', 'acompanha'), word('move', 'acompanha') + 0.2));
+    txt('LIBERDADE DE MOVIMENTO', 540, 400, { size: 52, font: 'Inter', weight: 900, color: YEL, sw: 12 });
+    ctx.restore();
+  } else {
+    // ===== G · offer + 7-day exchange, over the real kit =====
+    const E = T.offer;
+    place(await srcFrame('k03', 4.0 + (t - E) * 0.35), 1.1 - 0.08 * prog(t, E, DUR));
+    const b = eout(prog(t, E, E + 0.4));
+    ctx.fillStyle = `rgba(4,8,20,${0.66 * b})`; ctx.fillRect(0, 0, W, H);
+    let g = ctx.createRadialGradient(540, 700, 50, 540, 700, 700); g.addColorStop(0, `rgba(46,134,245,${0.28 * b})`); g.addColorStop(1, 'rgba(46,134,245,0)');
+    ctx.fillStyle = g; ctx.fillRect(0, 0, W, H);
+    logo(540, 250, 220, clamp(prog(t, E + 0.05, E + 0.3)));
+    txt('KIT EVER FLAME', 540, 430, { size: 96, scale: pop(t, word('offer', 'kit')), sw: 0, glow: BLUE });
+    txt('CAMISETA + SHORTS', 540, 520, { size: 40, font: 'Inter', weight: 800, sw: 0, ls: 8, color: 'rgba(255,255,255,0.85)', alpha: clamp(prog(t, word('offer', 'camisa'), word('offer', 'camisa') + 0.2)) });
+    const pp = pop(t, word('offer', 'noventa') - 0.05, 0.32);
+    txt('R$ 99,90', 540, 700, { size: 210, color: YEL, scale: pp, sw: 0, glow: 'rgba(255,204,41,0.35)' });
+    chip('3x de R$ 33,30 sem juros', 540, 865, { scale: pop(t, word('offer', 'noventa') + 0.5), size: 40 });
+    chip('R$ 94,91 no PIX', 540, 965, { scale: pop(t, word('offer', 'noventa') + 0.75), size: 34, bg: 'rgba(255,255,255,0.14)', color: '#fff', weight: 700 });
+    // exchange guarantee (product page: "trocamos em até 7 dias... sem burocracia")
+    const tp = pop(t, word('trust', 'troca') - 0.1, 0.32);
+    if (tp > 0) {
+      ctx.save(); ctx.translate(540, 1085); ctx.scale(tp, tp);
+      ctx.fillStyle = '#fff'; ctx.shadowColor = 'rgba(0,0,0,0.4)'; ctx.shadowBlur = 24; ctx.beginPath(); ctx.roundRect(-330, -52, 660, 104, 26); ctx.fill(); ctx.shadowColor = 'transparent';
+      ctx.strokeStyle = BLUE; ctx.lineWidth = 7; ctx.lineCap = 'round';                 // circular-arrows icon
+      ctx.beginPath(); ctx.arc(-262, 0, 26, -0.3, Math.PI - 0.5); ctx.stroke(); ctx.beginPath(); ctx.arc(-262, 0, 26, Math.PI - 0.3, 2 * Math.PI - 0.5); ctx.stroke();
+      ctx.fillStyle = '#000'; ctx.font = '900 40px Inter'; ctx.textAlign = 'left'; ctx.textBaseline = 'middle'; ctx.fillText('TROCA EM 7 DIAS', -210, -12);
+      ctx.fillStyle = '#5F6B7A'; ctx.font = '600 28px Inter'; ctx.fillText('sem burocracia', -210, 26); ctx.restore();
+    }
+    const cp = pop(t, L('trust').e + 0.1, 0.35);
+    if (cp > 0) {
+      const pulse = 1 + 0.03 * Math.sin((t - L('trust').e) * 7) * clamp((t - L('trust').e - 0.4) * 3);
+      ctx.save(); ctx.translate(540, 1240); ctx.scale(cp * pulse, cp * pulse);
+      ctx.shadowColor = 'rgba(255,204,41,0.55)'; ctx.shadowBlur = 40; ctx.fillStyle = YEL;
+      ctx.beginPath(); ctx.roundRect(-360, -60, 720, 120, 60); ctx.fill();
+      ctx.shadowColor = 'transparent'; ctx.fillStyle = '#000'; ctx.font = '800 48px Syne'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+      ctx.fillText('VER NO SITE', 0, 3); ctx.restore();
+      txt('lojasandwalk.com.br', 540, 1350, { size: 36, font: 'Inter', weight: 700, sw: 0, color: 'rgba(255,255,255,0.9)', alpha: clamp(prog(t, L('trust').e + 0.35, L('trust').e + 0.6)) });
+    }
+    const fo = prog(t, DUR - 0.25, DUR); if (fo > 0) { ctx.fillStyle = `rgba(0,0,0,${fo * 0.6})`; ctx.fillRect(0, 0, W, H); }
+    capY = null;   // the card says it
+  }
+
+  if (capY) captions(t, capY);
+  // flash on the offer
+  const f = prog(t, T.offer - 0.005, T.offer + 0.2);
+  if (f > 0 && f < 1) { ctx.fillStyle = `rgba(255,255,255,${0.55 * (1 - eout(f))})`; ctx.fillRect(0, 0, W, H); }
+  // progress bar
+  ctx.fillStyle = 'rgba(255,255,255,0.18)'; ctx.fillRect(0, H - 8, W, 8);
+  ctx.fillStyle = YEL; ctx.fillRect(0, H - 8, W * (t / DUR), 8);
+}
+
+const IMG = {};
+window.ready = (async () => {
+  for (const [k, src] of [['mock', 'src/site_mockup.jpg'], ['logo', 'build/sw_logo_white.png']]) { IMG[k] = new Image(); IMG[k].src = src; await IMG[k].decode(); }
+  for (const f of ['800 40px Syne', '900 40px Inter', '800 40px Inter', '700 40px Inter', '600 40px Inter']) await document.fonts.load(f);
+  await document.fonts.ready; times(); await render(0); return true;
+})();
+window.renderAt = t => render(t);
+</script>
+</body>
+</html>

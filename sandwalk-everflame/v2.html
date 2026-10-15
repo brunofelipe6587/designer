@@ -1,0 +1,202 @@
+<!doctype html>
+<html lang="pt-br">
+<head>
+<meta charset="utf-8">
+<title>Sand Walk Ever Flame V2</title>
+<link href="fonts/fonts.css" rel="stylesheet">
+<style>html, body { margin: 0; background: #000; } canvas { display: block; }</style>
+</head>
+<body>
+<canvas id="c" width="1080" height="1920"></canvas>
+<script src="build/vo_v2.js"></script>
+<script>
+// Creative V2 "3 detalhes" — listicle over real footage: (1) the fabric, (2) the pocket, (3) the finish, then the offer.
+// Voiceover lines + word timings come from make_vo_v2.py. Same Instagram-native look as V1c (brand-colour text boxes).
+const W = 1080, H = 1920, DUR = 21.0, XF = 0.2;   // XF: soft cross-dissolve between shots
+const BLUE = '#1E66F5', YEL = '#FFCC29', INK = '#111';
+const ctx = document.getElementById('c').getContext('2d');
+const clamp = (x, a = 0, b = 1) => Math.min(b, Math.max(a, x));
+const lerp = (a, b, t) => a + (b - a) * t;
+const eio = t => t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
+const eout = t => 1 - Math.pow(1 - t, 3);
+const eback = t => { const c1 = 1.7, c3 = c1 + 1; return 1 + c3 * Math.pow(t - 1, 3) + c1 * Math.pow(t - 1, 2); };
+const prog = (t, a, b) => clamp((t - a) / (b - a));
+const pop = (t, a, d = 0.22) => t < a ? 0 : eback(prog(t, a, a + d));
+const on = (t, a, b) => (t < a || t >= b) ? 0 : (a <= 0 ? 1 : pop(t, a)) * (1 - prog(t, b - 0.18, b));
+const EMOJI = '"Noto Color Emoji"';
+const line = k => VO.find(l => l.k === k);
+
+// [folder, fps, extraction start (source s), frame count] — see prep_v2.sh / prep_v1b.sh
+const CLIP = {
+  a02: ['a02', 30, 0, 375], m03: ['m03', 60, 15.3, 156], t03: ['t03', 60, 0, 192],
+  k03: ['k03', 60, 3.9, 174], u05all: ['u05all', 30, 0, 690],
+};
+// shots: [t0, t1, clip, srcStart, speed, z0, z1, anchorX, anchorY, screenX?, screenY?]
+const SHOTS = [
+  [0.00, 3.30, 'a02', 9.20, 1.00, 1.00, 1.05, 540, 960],          // hook: the athlete in the full kit
+  [3.30, 6.80, 'm03', 15.45, 0.55, 1.02, 1.08, 540, 900],         // 1 · fabric: mesh + SW logo macro, slow motion
+  [6.80, 10.40, 'u05all', 10.95, 0.72, 1.25, 1.25, 665, 1265, 600, 1150], // 2 · pocket: the creator's hand going in
+  [10.40, 11.90, 't03', 0.05, 0.80, 1.02, 1.07, 540, 1300],       // 3 · finish: Sand Walk tag
+  [11.90, 13.70, 'a02', 5.00, 1.00, 1.00, 1.05, 540, 1000],       //   tag shown on the body
+  [13.70, 14.70, 't03', 1.60, 1.00, 1.00, 1.05, 540, 960],        //   side panels
+  [14.70, 15.60, 'a02', 0.00, 1.00, 1.00, 1.04, 540, 960],        //   SW logo
+  [15.60, DUR, 'k03', 4.00, 0.50, 1.08, 1.00, 540, 1000],         // offer over the whole kit
+];
+
+const cache = new Map();
+function frameImg(c, idx) {
+  const [dir, , , n] = CLIP[c], i = clamp(idx, 1, n), key = dir + i;
+  if (!cache.has(key)) {
+    const im = new Image(); im.src = `frames/${dir}/${String(i).padStart(4, '0')}.jpg`;
+    cache.set(key, im.decode().then(() => im));
+    if (cache.size > 80) cache.delete(cache.keys().next().value);
+  }
+  return cache.get(key);
+}
+async function drawShot(si, t, alpha = 1) {
+  const [t0, t1, c, s0, sp, z0, z1, ax, ay, tx = ax, ty = ay] = SHOTS[si];
+  const [, fps, start] = CLIP[c];
+  const img = await frameImg(c, Math.floor((s0 + (t - t0) * sp - start) * fps) + 1);
+  const z = lerp(z0, z1, eio(prog(t, t0, t1 + XF)));
+  ctx.save(); ctx.globalAlpha = alpha;
+  ctx.translate(tx, ty); ctx.scale(z, z); ctx.translate(-ax, -ay);
+  ctx.imageSmoothingEnabled = true; ctx.imageSmoothingQuality = 'high';
+  ctx.drawImage(img, 0, 0, W, H);
+  ctx.restore();
+}
+async function drawFootage(t) {
+  let si = 0; for (let i = 0; i < SHOTS.length; i++) if (t >= SHOTS[i][0]) si = i;
+  const k = si > 0 ? prog(t, SHOTS[si][0], SHOTS[si][0] + XF) : 1;
+  if (k < 1) { await drawShot(si - 1, t); await drawShot(si, t, eio(k)); } else await drawShot(si, t);
+  return si;
+}
+
+// voiceover captions: each line split into short chunks, sentence case
+const CAPS = [];
+for (const l of VO) {
+  let cur = [];
+  const flush = () => { if (cur.length) CAPS.push({ s: cur[0].s, e: cur[cur.length - 1].e + 0.25, w: cur.map(w => ({ w: w.w })) }); cur = []; };
+  for (const w of l.w) { const len = cur.reduce((n, x) => n + x.w.length + 1, 0) + w.w.length; if (cur.length && (len > 24 || cur.length === 5)) flush(); cur.push({ ...w, w: ['Sand', 'Walk', 'Ever', 'Flame', 'SW'].includes(w.w) ? w.w : w.w.toLowerCase() }); }
+  flush();
+}
+CAPS.forEach((c, i) => { if (CAPS[i + 1]) c.e = Math.min(c.e, CAPS[i + 1].s); });
+
+// ---------- Instagram-native text ----------
+// "text with background" style: one rounded box per line, lines touching. segs: [{t, u (underline), e (emoji)}]
+function igText(lines, x, y, o = {}) {
+  const { size = 52, bg = '#fff', color = '#000', scale = 1, rot = 0, align = 'center', lh = 1.32 } = o;
+  if (scale <= 0) return;
+  ctx.save(); ctx.translate(x, y); ctx.rotate(rot); ctx.scale(scale, scale);
+  ctx.textBaseline = 'middle';
+  const font = s => s.e ? `${size * 0.92}px ${EMOJI}` : `700 ${size}px Inter`;
+  const rows = lines.map(l => (typeof l === 'string' ? [{ t: l }] : l));
+  const widths = rows.map(r => r.reduce((w, s) => { ctx.font = font(s); return w + ctx.measureText(s.t).width; }, 0));
+  const lineH = size * lh, padX = size * 0.42, total = lineH * rows.length;
+  rows.forEach((r, i) => {
+    const w = widths[i], cy = -total / 2 + lineH * (i + 0.5);
+    const bx = align === 'left' ? 0 : align === 'right' ? -w - 2 * padX : -w / 2 - padX;
+    ctx.fillStyle = bg; ctx.beginPath(); ctx.roundRect(bx, cy - lineH / 2 - 1, w + 2 * padX, lineH + 2, size * 0.28); ctx.fill();
+    let cx = bx + padX;
+    for (const s of r) {
+      ctx.font = font(s); ctx.fillStyle = color; ctx.fillText(s.t, cx, cy + (s.e ? 2 : 3));
+      const sw = ctx.measureText(s.t).width;
+      if (s.u) { ctx.fillRect(cx, cy + size * 0.42, sw, Math.max(3, size * 0.06)); }
+      cx += sw;
+    }
+  });
+  ctx.restore();
+}
+// Instagram link sticker: white pill, blue link glyph, uppercase domain
+function linkSticker(str, x, y, scale = 1, rot = 0) {
+  if (scale <= 0) return;
+  ctx.save(); ctx.translate(x, y); ctx.rotate(rot); ctx.scale(scale, scale);
+  ctx.font = '700 40px Inter'; const w = ctx.measureText(str).width + 130, h = 92;
+  ctx.shadowColor = 'rgba(0,0,0,0.18)'; ctx.shadowBlur = 16; ctx.shadowOffsetY = 3;
+  ctx.fillStyle = '#fff'; ctx.beginPath(); ctx.roundRect(-w / 2, -h / 2, w, h, 22); ctx.fill(); ctx.shadowColor = 'transparent';
+  ctx.save(); ctx.translate(-w / 2 + 52, 0); ctx.rotate(-Math.PI / 4);
+  ctx.strokeStyle = '#3D7CF5'; ctx.lineWidth = 6.5; ctx.lineCap = 'round';
+  ctx.beginPath(); ctx.roundRect(-21, -10, 25, 20, 10); ctx.stroke(); ctx.beginPath(); ctx.roundRect(-4, -10, 25, 20, 10); ctx.stroke();
+  ctx.restore();
+  ctx.fillStyle = '#3D7CF5'; ctx.textAlign = 'left'; ctx.textBaseline = 'middle'; ctx.fillText(str, -w / 2 + 92, 3);
+  ctx.restore();
+}
+// pen-tool scribble around a point (wobbly, drawn on), like the Instagram marker
+function scribble(x, y, rx, ry, p, color = '#FFE14D') {
+  if (p <= 0) return;
+  ctx.save(); ctx.translate(x, y);
+  ctx.strokeStyle = color; ctx.lineWidth = 11; ctx.lineCap = 'round'; ctx.lineJoin = 'round';
+  ctx.shadowColor = 'rgba(0,0,0,0.25)'; ctx.shadowBlur = 6;
+  const turns = 1.12, n = 90;
+  ctx.beginPath();
+  for (let i = 0; i <= n * p; i++) {
+    const a = -1.9 + (i / n) * turns * Math.PI * 2, wob = 1 + 0.05 * Math.sin(i * 0.37) + 0.03 * (i / n);
+    const px = Math.cos(a) * rx * wob, py = Math.sin(a) * ry * wob;
+    i ? ctx.lineTo(px, py) : ctx.moveTo(px, py);
+  }
+  ctx.stroke(); ctx.restore();
+}
+function arrow(x0, y0, x1, y1, p, color = '#FFE14D') {
+  if (p <= 0) return;
+  const mx = (x0 + x1) / 2 + 60, my = (y0 + y1) / 2 - 40;
+  ctx.save(); ctx.strokeStyle = color; ctx.lineWidth = 11; ctx.lineCap = 'round'; ctx.lineJoin = 'round';
+  ctx.shadowColor = 'rgba(0,0,0,0.25)'; ctx.shadowBlur = 6;
+  ctx.beginPath(); ctx.moveTo(x0, y0);
+  const n = 30; for (let i = 1; i <= n * clamp(p / 0.75); i++) { const k = i / n; ctx.lineTo((1 - k) ** 2 * x0 + 2 * (1 - k) * k * mx + k * k * x1, (1 - k) ** 2 * y0 + 2 * (1 - k) * k * my + k * k * y1); }
+  ctx.stroke();
+  if (p > 0.75) { const a = Math.atan2(y1 - my, x1 - mx), l = 46 * eout(prog(p, 0.75, 1));
+    ctx.beginPath(); ctx.moveTo(x1 - l * Math.cos(a - 0.5), y1 - l * Math.sin(a - 0.5)); ctx.lineTo(x1, y1); ctx.lineTo(x1 - l * Math.cos(a + 0.5), y1 - l * Math.sin(a + 0.5)); ctx.stroke(); }
+  ctx.restore();
+}
+
+// auto-captions, Instagram "classic" look: white, sentence case, soft outline
+function captions(t, y) {
+  const c = CAPS.find(c => t >= c.s && t < c.e); if (!c) return;
+  const str = c.w.map(w => w.w).join(' ');
+  ctx.save(); ctx.translate(540, y);
+  ctx.font = '800 66px Inter'; const w = ctx.measureText(str).width; if (w > 960) ctx.scale(960 / w, 960 / w);
+  ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.lineJoin = 'round';
+  ctx.lineWidth = 9; ctx.strokeStyle = 'rgba(0,0,0,0.85)'; ctx.strokeText(str, 0, 0);
+  ctx.shadowColor = 'rgba(0,0,0,0.5)'; ctx.shadowBlur = 14; ctx.fillStyle = '#fff'; ctx.fillText(str, 0, 0);
+  ctx.restore();
+}
+
+async function render(t) {
+  ctx.setTransform(1, 0, 0, 1, 0, 0);
+  ctx.fillStyle = '#000'; ctx.fillRect(0, 0, W, H);
+  await drawFootage(t);
+  const d1 = line('d1'), d2 = line('d2'), d3 = line('d3'), of = line('offer');
+
+  // ===== hook: what it is + price from frame 1 =====
+  let a = on(t, 0, 3.3);
+  if (a > 0) {
+    ctx.save(); ctx.globalAlpha = clamp(a);
+    igText(['3 detalhes do', [{ t: 'Kit Ever Flame ' }, { t: '👀', e: 1 }]], 540, 1230, { bg: BLUE, color: '#fff', size: 66, rot: -0.03 });
+    igText(['que só dá pra ver de perto'], 540, 1395, { bg: INK, color: '#fff', size: 52, rot: -0.01 });
+    igText(['camisa + shorts · R$ 99,90'], 580, 1530, { bg: YEL, color: '#000', size: 54, rot: 0.03 });
+    ctx.restore();
+  }
+  // ===== numbered details (top), each with its own colour =====
+  igText([[{ t: '1 · tecido leve e respirável ' }, { t: '💨', e: 1 }]], 540, 360, { scale: on(t, d1.s, d2.s - 0.05), bg: BLUE, color: '#fff', size: 54, rot: -0.02 });
+  igText([[{ t: '2 · shorts com bolso ' }, { t: '📱', e: 1 }]], 540, 360, { scale: on(t, d2.s, d3.s - 0.05), bg: YEL, color: '#000', size: 58, rot: 0.02 });
+  igText([[{ t: '3 · acabamento caprichado ' }, { t: '✨', e: 1 }]], 540, 360, { scale: on(t, d3.s, of.s - 0.05), bg: INK, color: '#fff', size: 54, rot: -0.02 });
+  // pocket: pen scribble while the hand goes in (source 12.45–13.3 s of the creator's take)
+  if (t >= 6.8 && t < 10.4) scribble(600, 1150, 200, 185, eout(prog(t, 8.9, 9.4)) * (1 - prog(t, 10.2, 10.4)));
+  // ===== offer =====
+  if (t >= of.s) {
+    igText([[{ t: 'Kit Ever Flame ' }, { t: '🔥', e: 1 }]], 540, 1210, { scale: pop(t, of.s + 0.05), bg: BLUE, color: '#fff', size: 62, rot: -0.03 });
+    igText(['camisa + shorts · R$ 99,90'], 540, 1345, { scale: pop(t, of.s + 0.9), bg: YEL, color: '#000', size: 58, rot: -0.01 });
+    igText(['3x R$ 33,30 ou R$ 94,91 no PIX'], 560, 1455, { scale: pop(t, of.s + 1.3), bg: INK, color: '#fff', size: 46, rot: 0.02 });
+    linkSticker('LOJASANDWALK.COM.BR', 540, 1590, pop(t, of.s + 2.3), 0.02);
+  }
+  // captions follow the voice (the hook's text boxes already say it)
+  if (t >= d1.s - 0.05) captions(t, 1040);
+}
+
+window.ready = (async () => {
+  for (const f of ['700 40px Inter', '800 40px Inter', `40px ${EMOJI}`]) await document.fonts.load(f, '🔥📱💨👀✨');
+  await document.fonts.ready; await render(0); return true;
+})();
+window.renderAt = t => render(t);
+</script>
+</body>
+</html>

@@ -1,0 +1,233 @@
+<!doctype html>
+<html lang="pt-br">
+<head>
+<meta charset="utf-8">
+<title>Sand Walk Void 2</title>
+<link href="fonts/fonts.css" rel="stylesheet">
+<style>html, body { margin: 0; background: #000; } canvas { display: block; }</style>
+</head>
+<body>
+<canvas id="c" width="1080" height="1920"></canvas>
+<script src="build/vo_void2.js"></script>
+<script>
+// Void creative 2 "Bolso com zíper?" — curiosity hook on the shorts' zip pocket, then why it matters (phone and keys go
+// to the game), the fabric (product-page claims), the athletic cut in action, and the offer. Voiceover + karaoke captions,
+// same Void look as creative 1. Kit name and price on frame 1.
+const W = 1080, H = 1920, DUR = 20.0;
+const RED = '#E2333F', NAVY = '#14205E', YEL = '#FFCC29';
+const ctx = document.getElementById('c').getContext('2d');
+const clamp = (x, a = 0, b = 1) => Math.min(b, Math.max(a, x));
+const lerp = (a, b, t) => a + (b - a) * t;
+const eio = t => t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
+const eout = t => 1 - Math.pow(1 - t, 3);
+const eback = t => { const c1 = 1.8, c3 = c1 + 1; return 1 + c3 * Math.pow(t - 1, 3) + c1 * Math.pow(t - 1, 2); };
+const prog = (t, a, b) => clamp((t - a) / (b - a));
+const pop = (t, a, d = 0.26) => t < a ? 0 : eback(prog(t, a, a + d));
+const L = k => VO.find(l => l.k === k);
+const word = (k, w) => L(k).w.find(x => x.w.toLowerCase() === w).s;
+
+// [folder, fps, extraction start (source s), frame count] — prep_void1.sh / prep_void2.sh
+const CLIP = { a02: ['a02', 30, 12.9, 471], p01: ['p01', 30, 2.9, 165], z01: ['z01', 30, 12.4, 69] };
+// shots: [t0, t1, kind, ...]  video: ['v', clip, srcStart, speed, z0, z1, ax, ay, tx, ty]  photo: ['p', img, z0, z1, ax, ay, tx, ty]
+const T = { zip: 3.61, phone: 6.95, fabric: 8.90, fabric2: 10.40, move: 11.97, move2: 13.81, offer: 14.56 };
+const SHOTS = [
+  [0.00, 1.80, 'v', 'p01', 3.00, 1.00, 1.04, 1.10, 540, 1100, 540, 1060],   // hook: hand pulling the zip open
+  [1.80, T.zip, 'v', 'z01', 12.50, 1.00, 1.06, 1.14, 540, 1100, 540, 1060], // second zip close-up ("tem sim")
+  [T.zip, T.phone, 'p', 'f2', 1.20, 1.60, 820, 760, 540, 850],              // studio: hand in the zip pocket, push in
+  [T.phone, 7.90, 'v', 'a02', 18.60, 1.00, 1.30, 1.34, 520, 1000, 540, 1000], // "celular e chave vão junto pro jogo"
+  [7.90, T.fabric, 'v', 'a02', 21.20, 0.80, 1.35, 1.40, 495, 760, 540, 1000], //   bicycle kick
+  [T.fabric, T.fabric2, 'p', 'f1', 1.50, 1.80, 1000, 1150, 540, 900],      // studio: mesh + SW logo on the chest
+  [T.fabric2, T.move, 'v', 'p01', 4.80, 1.00, 1.04, 1.08, 540, 960, 540, 960], // fabric on the shoulder
+  [T.move, T.move2, 'v', 'a02', 15.20, 0.75, 1.55, 1.62, 460, 700, 540, 820], // bicycle kick #2, slow motion
+  [T.move2, T.offer, 'v', 'a02', 27.60, 1.00, 1.25, 1.30, 630, 1000, 540, 1000], // scissor volley
+];
+
+const cache = new Map();
+function frameImg(c, idx) {
+  const [dir, , , n] = CLIP[c], i = clamp(idx, 1, n), key = dir + i;
+  if (!cache.has(key)) {
+    const im = new Image(); im.src = `frames/${dir}/${String(i).padStart(4, '0')}.jpg`;
+    cache.set(key, im.decode().then(() => im));
+    if (cache.size > 60) cache.delete(cache.keys().next().value);
+  }
+  return cache.get(key);
+}
+// photos are drawn "cover" into 1080x1920 first (1500x2000 -> 1440x1920, centred), then zoomed
+function coverPhoto(img) { const s = Math.max(W / img.width, H / img.height); return [s, (W - img.width * s) / 2, (H - img.height * s) / 2]; }
+async function drawShot(t) {
+  let si = 0; for (let i = 0; i < SHOTS.length; i++) if (t >= SHOTS[i][0]) si = i;
+  const sh = SHOTS[si], [t0, t1, kind] = sh;
+  const punch = 1 + 0.06 * (1 - eout(prog(t, t0, t0 + 0.2))) * (si > 0 ? 1 : 0);
+  ctx.save(); ctx.imageSmoothingEnabled = true; ctx.imageSmoothingQuality = 'high';
+  if (kind === 'v') {
+    const [, , , c, s0, sp, z0, z1, ax, ay, tx, ty] = sh, [, fps, start] = CLIP[c];
+    const f = (s0 + (t - t0) * sp - start) * fps + 1, ia = Math.floor(f);
+    const img = await frameImg(c, ia), img2 = sp < 1 && f - ia > 0.05 ? await frameImg(c, ia + 1) : null;
+    const z = lerp(z0, z1, eio(prog(t, t0, t1))) * punch;
+    ctx.translate(tx, ty); ctx.scale(z, z); ctx.translate(-ax, -ay);
+    ctx.drawImage(img, 0, 0, W, H);
+    if (img2) { ctx.globalAlpha = f - ia; ctx.drawImage(img2, 0, 0, W, H); }
+  } else {
+    // photo anchor (ax, ay) is in the photo's own pixels
+    const [, , , key, z0, z1, ax, ay, tx, ty] = sh, img = IMG[key], [s, ox, oy] = coverPhoto(img);
+    const z = lerp(z0, z1, eio(prog(t, t0, t1))) * punch, px = ox + ax * s, py = oy + ay * s;
+    ctx.translate(tx, ty); ctx.scale(z, z); ctx.translate(-px, -py);
+    ctx.drawImage(img, ox, oy, img.width * s, img.height * s);
+  }
+  ctx.restore();
+}
+
+// ---------- typography ----------
+function txt(str, x, y, o = {}) {
+  const { size = 96, color = '#fff', scale = 1, alpha = 1, sw = 14, font = 'Syne', weight = 800, align = 'center', maxW = 980, glow = null, ls = 0 } = o;
+  if (alpha <= 0 || scale <= 0) return;
+  ctx.save(); ctx.globalAlpha = alpha; ctx.translate(x, y); ctx.scale(scale, scale);
+  ctx.font = `${weight} ${size}px ${font}`; ctx.textAlign = align; ctx.textBaseline = 'middle'; ctx.lineJoin = 'round';
+  ctx.letterSpacing = ls + 'px';
+  const w = ctx.measureText(str).width; if (w > maxW) ctx.scale(maxW / w, maxW / w);
+  if (sw) { ctx.shadowColor = 'rgba(0,0,0,0.5)'; ctx.shadowBlur = 24; ctx.shadowOffsetY = 6; ctx.lineWidth = sw; ctx.strokeStyle = '#000'; ctx.strokeText(str, 0, 0); }
+  ctx.shadowColor = glow || 'transparent'; ctx.shadowBlur = glow ? 44 : 0; ctx.shadowOffsetY = 0;
+  ctx.fillStyle = color; ctx.fillText(str, 0, 0);
+  ctx.restore();
+}
+function chip(parts, x, y, o = {}) {   // parts: [[text, color], ...]
+  const { size = 40, bg = '#000', scale = 1, font = 'Inter', weight = 800, alpha = 1 } = o;
+  if (scale <= 0 || alpha <= 0) return;
+  ctx.save(); ctx.globalAlpha = alpha; ctx.translate(x, y); ctx.scale(scale, scale);
+  ctx.font = `${weight} ${size}px ${font}`; ctx.textBaseline = 'middle';
+  const tw = parts.reduce((w, [s]) => w + ctx.measureText(s).width, 0), w = tw + 60, h = size + 34;
+  ctx.shadowColor = 'rgba(0,0,0,0.4)'; ctx.shadowBlur = 22; ctx.shadowOffsetY = 8;
+  ctx.fillStyle = bg; ctx.beginPath(); ctx.roundRect(-w / 2, -h / 2, w, h, h / 2); ctx.fill(); ctx.shadowColor = 'transparent';
+  let cx = -tw / 2; ctx.textAlign = 'left';
+  for (const [s, col] of parts) { ctx.fillStyle = col; ctx.fillText(s, cx, 3); cx += ctx.measureText(s).width; }
+  ctx.restore();
+}
+function callout(t, [a, b, label, line]) {
+  if (t < a || t >= b) return;
+  const out = 1 - prog(t, b - 0.12, b);
+  const pl = pop(t, a + 0.06, 0.24) * out, pb = pop(t, a + 0.16, 0.28) * out;
+  // red label tag
+  if (pl > 0) {
+    ctx.save(); ctx.translate(540, 1150); ctx.scale(pl, pl); ctx.rotate(-0.025);
+    ctx.font = '900 36px Inter'; const w = ctx.measureText(label).width + 48;
+    ctx.fillStyle = RED; ctx.shadowColor = 'rgba(0,0,0,0.4)'; ctx.shadowBlur = 18; ctx.fillRect(-w / 2, -30, w, 60); ctx.shadowColor = 'transparent';
+    ctx.fillStyle = '#fff'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillText(label, 0, 2); ctx.restore();
+  }
+  line.split('|').forEach((l, i) => txt(l, 540, 1250 + i * 96, { size: 88, scale: pb, sw: 16 }));
+}
+function logo(x, y, w, alpha = 1) {
+  if (alpha <= 0) return;
+  ctx.save(); ctx.globalAlpha = alpha; ctx.shadowColor = 'rgba(0,0,0,0.5)'; ctx.shadowBlur = 18;
+  ctx.drawImage(IMG.logo, x - w / 2, y - w * IMG.logo.height / IMG.logo.width / 2, w, w * IMG.logo.height / IMG.logo.width);
+  ctx.restore();
+}
+function vignette(k = 0.55) {
+  const g = ctx.createRadialGradient(540, 960, 500, 540, 960, 1250);
+  g.addColorStop(0, 'rgba(0,0,0,0)'); g.addColorStop(1, `rgba(5,8,25,${k})`);
+  ctx.fillStyle = g; ctx.fillRect(0, 0, W, H);
+}
+
+// karaoke captions from the voiceover word timings
+const CAPS = [];
+for (const l of VO) {
+  let cur = [];
+  const flush = () => { if (cur.length) CAPS.push({ s: cur[0].s, e: cur[cur.length - 1].e + 0.3, w: cur }); cur = []; };
+  for (const w of l.w) { const len = cur.reduce((n, x) => n + x.w.length + 1, 0) + w.w.length; if (cur.length && (len > 17 || cur.length === 3)) flush(); cur.push({ ...w, w: w.w.toUpperCase() }); }
+  flush();
+}
+CAPS.forEach((c, i) => { if (CAPS[i + 1]) c.e = Math.min(c.e, CAPS[i + 1].s); });
+function captions(t, y) {
+  const c = CAPS.find(c => t >= c.s && t < c.e); if (!c) return;
+  const p = pop(t, c.s, 0.18);
+  ctx.save(); ctx.font = '900 76px Inter';
+  const sp = 22, widths = c.w.map(w => ctx.measureText(w.w).width);
+  const total = widths.reduce((a, b) => a + b, 0) + sp * (c.w.length - 1), sc = Math.min(1, 960 / total) * p;
+  ctx.translate(540, y); ctx.scale(sc, sc); ctx.textBaseline = 'middle'; ctx.textAlign = 'left'; ctx.lineJoin = 'round';
+  let x = -total / 2;
+  c.w.forEach((w, i) => {
+    ctx.shadowColor = 'rgba(0,0,0,0.5)'; ctx.shadowBlur = 20; ctx.shadowOffsetY = 6;
+    ctx.lineWidth = 16; ctx.strokeStyle = '#000'; ctx.strokeText(w.w, x, 0); ctx.shadowColor = 'transparent';
+    ctx.fillStyle = t >= w.s - 0.02 ? (t < w.e + 0.05 ? YEL : '#fff') : 'rgba(255,255,255,0.55)';
+    ctx.fillText(w.w, x, 0); x += widths[i] + sp;
+  });
+  ctx.restore();
+}
+
+
+async function render(t) {
+  ctx.setTransform(1, 0, 0, 1, 0, 0);
+  ctx.fillStyle = '#000'; ctx.fillRect(0, 0, W, H);
+  if (t < T.offer) {
+    await drawShot(t);
+    vignette();
+    let g = ctx.createLinearGradient(0, 0, 0, 560); g.addColorStop(0, 'rgba(5,8,25,0.65)'); g.addColorStop(1, 'rgba(5,8,25,0)');
+    ctx.fillStyle = g; ctx.fillRect(0, 0, W, 560);
+    g = ctx.createLinearGradient(0, 1000, 0, 1420); g.addColorStop(0, 'rgba(5,8,25,0)'); g.addColorStop(0.5, 'rgba(5,8,25,0.38)'); g.addColorStop(1, 'rgba(5,8,25,0)');
+    ctx.fillStyle = g; ctx.fillRect(0, 1000, W, 420);
+
+    if (t < T.zip) {
+      // ===== hook: the question + what/how much, from frame 1 =====
+      const k = 1 - prog(t, T.zip - 0.12, T.zip), s0 = t < 0.02 ? 1 : pop(t, -0.1, 0.25);
+      txt('SHORTS DE JOGO', 540, 270, { size: 92, scale: s0 * k, sw: 0, glow: 'rgba(0,0,0,0.6)' });
+      txt('COM BOLSO DE', 540, 375, { size: 92, scale: s0 * k, sw: 0, glow: 'rgba(0,0,0,0.6)' });
+      txt('ZÍPER? 🤯', 540, 500, { size: 140, color: YEL, scale: (t < 0.02 ? 1 : pop(t, 0.05, 0.3)) * k, sw: 0, glow: 'rgba(0,0,0,0.6)' });
+      chip([['KIT ', '#fff'], ['VOID', RED], ['  ·  camiseta + shorts  ·  ', '#fff'], ['R$ 99,90', YEL]], 540, 1330, { size: 36, bg: 'rgba(0,0,0,0.75)', font: 'Inter', scale: (t < 0.02 ? 1 : pop(t, 0.2)) * k });
+      // "tem sim" stamp
+      const ts = pop(t, word('hook', 'tem') - 0.05, 0.3) * k;
+      if (ts > 0) { ctx.save(); ctx.translate(800, 760); ctx.rotate(-0.12); ctx.scale(ts, ts);
+        ctx.strokeStyle = RED; ctx.lineWidth = 10; ctx.fillStyle = 'rgba(226,51,63,0.92)'; ctx.beginPath(); ctx.roundRect(-190, -62, 380, 124, 18); ctx.fill();
+        ctx.fillStyle = '#fff'; ctx.font = '800 64px Syne'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillText('TEM SIM', 0, 4); ctx.restore(); }
+    } else {
+      chip([['KIT ', '#fff'], ['VOID', RED], ['  ·  R$ 99,90', YEL]], 540, 250, { size: 38, bg: 'rgba(0,0,0,0.72)', font: 'Syne', scale: pop(t, T.zip + 0.02, 0.22) });
+      // feature checks, one per section
+      const feat = t < T.fabric ? [T.zip, 'BOLSO COM ZÍPER'] : t < T.move ? [T.fabric, 'LEVE · RESPIRÁVEL · SECA RÁPIDO'] : [T.move, 'CORTE ATLÉTICO'];
+      const end = t < T.fabric ? T.fabric : t < T.move ? T.move : T.offer;
+      const p = pop(t, feat[0] + 0.15) * (1 - prog(t, end - 0.12, end));
+      chip([['✓ ', RED], [feat[1], '#fff']], 540, 370, { size: 40, bg: 'rgba(20,32,94,0.88)', scale: p });
+      captions(t, 1180);
+    }
+  } else {
+    // ===== offer over the studio photo =====
+    const E = T.offer, img = IMG.f3, [s0, ox, oy] = coverPhoto(img), z = 1 + 0.06 * prog(t, E, DUR);
+    ctx.save(); ctx.translate(540, 700); ctx.scale(z, z); ctx.translate(-540, -700);
+    ctx.drawImage(img, ox + 60, oy - 120, img.width * s0, img.height * s0); ctx.restore();
+    const b = eout(prog(t, E, E + 0.4));
+    let g = ctx.createLinearGradient(0, 600, 0, 1300); g.addColorStop(0, 'rgba(5,8,25,0)'); g.addColorStop(1, `rgba(5,8,25,${0.92 * b})`);
+    ctx.fillStyle = g; ctx.fillRect(0, 600, W, 700); ctx.fillStyle = `rgba(5,8,25,${0.92 * b})`; ctx.fillRect(0, 1300, W, H - 1300);
+    g = ctx.createRadialGradient(540, 1150, 60, 540, 1150, 620); g.addColorStop(0, `rgba(226,51,63,${0.22 * b})`); g.addColorStop(1, 'rgba(226,51,63,0)');
+    ctx.fillStyle = g; ctx.fillRect(0, 500, W, 1400);
+    vignette(0.45);
+    txt('KIT VOID', 540, 860, { size: 120, scale: pop(t, E + 0.1), sw: 0, glow: RED, ls: 4 });
+    txt('CAMISETA + SHORTS COM BOLSO DE ZÍPER', 540, 950, { size: 34, font: 'Inter', weight: 800, sw: 0, ls: 3, color: 'rgba(255,255,255,0.88)', alpha: clamp(prog(t, E + 0.35, E + 0.6)) });
+    txt('R$ 99,90', 540, 1085, { size: 180, color: YEL, scale: pop(t, word('offer', 'noventa') - 0.05, 0.32), sw: 0, glow: 'rgba(255,204,41,0.35)' });
+    chip([['3x de R$ 33,30 sem juros', '#000']], 540, 1225, { size: 38, bg: '#fff', scale: pop(t, word('offer', 'noventa') + 0.45) });
+    chip([['R$ 94,91 no PIX  ·  troca em 7 dias', '#fff']], 540, 1320, { size: 32, bg: 'rgba(255,255,255,0.14)', weight: 700, scale: pop(t, word('offer', 'noventa') + 0.7) });
+    const cs = word('offer', 'site') - 0.1, cp = pop(t, cs, 0.35);
+    if (cp > 0) {
+      const pulse = 1 + 0.03 * Math.sin((t - cs) * 7) * clamp((t - cs - 0.4) * 3);
+      ctx.save(); ctx.translate(540, 1450); ctx.scale(cp * pulse, cp * pulse);
+      ctx.shadowColor = 'rgba(255,204,41,0.5)'; ctx.shadowBlur = 40; ctx.fillStyle = YEL;
+      ctx.beginPath(); ctx.roundRect(-360, -58, 720, 116, 58); ctx.fill();
+      ctx.shadowColor = 'transparent'; ctx.fillStyle = '#000'; ctx.font = '800 46px Syne'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+      ctx.fillText('VER NO SITE', 0, 3); ctx.restore();
+      txt('lojasandwalk.com.br', 540, 1550, { size: 34, font: 'Inter', weight: 700, sw: 0, color: 'rgba(255,255,255,0.9)', alpha: clamp(prog(t, cs + 0.3, cs + 0.6)) });
+    }
+    const fo = prog(t, DUR - 0.25, DUR); if (fo > 0) { ctx.fillStyle = `rgba(0,0,0,${fo * 0.6})`; ctx.fillRect(0, 0, W, H); }
+  }
+  // flash into the offer
+  const f = prog(t, T.offer - 0.005, T.offer + 0.18);
+  if (f > 0 && f < 1) { ctx.fillStyle = `rgba(255,255,255,${0.5 * (1 - eout(f))})`; ctx.fillRect(0, 0, W, H); }
+  ctx.fillStyle = 'rgba(255,255,255,0.18)'; ctx.fillRect(0, H - 8, W, 8);
+  ctx.fillStyle = RED; ctx.fillRect(0, H - 8, W * (t / DUR), 8);
+}
+
+const IMG = {};
+window.ready = (async () => {
+  for (const [k, src] of [['logo', 'build/sw_logo_white.png'], ['f1', 'src/foto1.jpg'], ['f2', 'src/foto2.jpg'], ['f3', 'src/foto3.jpg']]) { IMG[k] = new Image(); IMG[k].src = src; await IMG[k].decode(); }
+  for (const f of ['800 40px Syne', '900 40px Inter', '800 40px Inter', '700 40px Inter']) await document.fonts.load(f, 'A🤯');
+  await document.fonts.ready; await render(0); return true;
+})();
+window.renderAt = t => render(t);
+</script>
+</body>
+</html>

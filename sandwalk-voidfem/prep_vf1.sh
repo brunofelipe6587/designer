@@ -30,3 +30,8 @@ clip m10 v03 4.30  5.40   # high five / hug
 clip o1 v03 33.00 34.60   # hug
 clip o2 v01 29.20 31.30   # celebrating
 clip o3 v02  0.00  1.36   # Sand Walk logo close-up
+# extra plays for vf1b.html (track 3 has a longer opening: 8 cuts before the section change)
+clip x1 v03 26.00 26.85   # receiving, diving
+clip x2 v03 17.45 18.15   # play at the net
+clip x3 v03  0.25  1.25   # rally
+clip x4 v01  6.30  7.30   # rally, wide

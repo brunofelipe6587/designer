@@ -57,3 +57,7 @@ sandwalk-ftvpreta/frames/
 sandwalk-ftvpreta/audio/
 sandwalk-ftvpreta/build/still_*.png
 sandwalk-ftvpreta/out/*_silent.mp4
+sandwalk-voidfem/frames/
+sandwalk-voidfem/audio/
+sandwalk-voidfem/build/still_*.png
+sandwalk-voidfem/out/*_silent.mp4

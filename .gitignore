@@ -61,3 +61,6 @@ sandwalk-voidfem/frames/
 sandwalk-voidfem/audio/
 sandwalk-voidfem/build/still_*.png
 sandwalk-voidfem/out/*_silent.mp4
+sandwalk-blackoutfem/audio/
+sandwalk-blackoutfem/build/still_*.png
+sandwalk-blackoutfem/out/*_silent.mp4

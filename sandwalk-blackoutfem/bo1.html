@@ -1,0 +1,265 @@
+<!doctype html>
+<html lang="pt-br">
+<head>
+<meta charset="utf-8">
+<title>Sand Walk Blackout Feminino 1</title>
+<link href="fonts/fonts.css" rel="stylesheet">
+<style>html, body { margin: 0; background: #000; } canvas { display: block; }</style>
+</head>
+<body>
+<canvas id="c" width="1080" height="1920"></canvas>
+<script>
+// Kit Feminino Blackout, creative 1 — the approved Void creative 1b (../sandwalk-voidfem/vf1b.html) for the Blackout kit:
+// same plays, track and timing; Blackout store image (cut out), its page's benefits, black + pink palette.
+// Notes carried over from vf1b: re-timed to the track the client picked: reference video 3
+// ("essa menina é bipolar", 140 bpm, window 0–20.6 s): the hook runs over the whole "bipolar" verse (8 cuts), the
+// card stops switch at the section change (6.84 s) and "3 peças" lands where the beat thickens (13.70 s).
+// Original notes from vf1: women's futevôlei plays full screen (client's three reference videos), the kit in
+// front on a reduced, centred card. Segments from frame 1 ("pra ela que joga FUTEVÔLEI" + the kit + -34%).
+// Cut to the trap track of reference video 1 (window 8.0–28.6 s, beat 0.518 s, drop at 4.168 s video time):
+//   0–4.17     hook: 4 plays (2 beats each), headline, kit card, then the price
+//   4.17–14.53 drop: 10 plays on 2-beat cuts with speed ramps, zoom punches and alternating whip/flash/zoom
+//              transitions; the card flips to one piece per bar (manga longa, manga curta, shorts, estampa, 3 peças)
+//   14.53–20.6 offer: card left, price panel right (de/por, -34%, 3x, troca), CTA pulsing on the beat
+// Plays are framed so the athlete sits in the top half, above the card. Essential text inside y ≈ 270–1250.
+const W = 1080, H = 1920, DUR = 20.6, FPS = 30;
+const BEAT = 0.4285, B0 = 0.41, beat = k => B0 + k * BEAT, BARL = 4 * BEAT;
+const DROP = beat(15), OUT = DROP + 5 * BARL;
+const RED = '#FF2E6E', NAVY = '#16161C', WHITE = '#FFFFFF', INK = '#0E0F1A', PINK = '#FFC9D9';
+const ctx = document.getElementById('c').getContext('2d');
+const clamp = (x, a = 0, b = 1) => Math.min(b, Math.max(a, x));
+const lerp = (a, b, t) => a + (b - a) * t;
+const eout = t => 1 - Math.pow(1 - t, 3);
+const eio = t => t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
+const eback = t => { const c1 = 1.6, c3 = c1 + 1; return 1 + c3 * Math.pow(t - 1, 3) + c1 * Math.pow(t - 1, 2); };
+const prog = (t, a, b) => clamp((t - a) / (b - a));
+const enter = (t, at, d = 0.4) => eout(prog(t, at, at + d));
+const pop = (t, at, d = 0.3) => t < at ? 0 : eback(prog(t, at, at + d));
+
+// 808 hits from the track (video time) for zoom punches
+const HITS = [0.03, 1.80, 3.26, 5.17, 6.88, 12.01, 14.29, 14.56, 14.99, 15.59, 15.85, 16.42, 16.70, 16.97, 17.13, 17.94,
+  18.15, 18.69, 19.12, 19.28, 19.56, 19.99, 20.19, 20.40, 20.56];
+const hit = t => HITS.reduce((m, h) => t >= h ? Math.max(m, Math.exp(-(t - h) / 0.1)) : m, 0);
+
+// ---------- plays ----------
+// [dir, frames, zoom, anchorX, start, length(s), transition]  anchorY is always bottom-aligned (players land up top)
+const SEQ = [];
+const add = (dir, n, z, ax, len, tr) => { const s = SEQ.length ? SEQ[SEQ.length - 1].t1 : 0; SEQ.push({ dir, n, z, ax, t0: s, t1: s + len, tr }); };
+add('h1', 36, 1.02, 430, beat(2), 'cut'); add('h2', 34, 1.30, 540, 2 * BEAT, 'whip'); add('h3', 34, 1.05, 650, 2 * BEAT, 'flash');
+add('h4', 33, 1.08, 760, 2 * BEAT, 'whip'); add('x1', 26, 1.10, 520, 2 * BEAT, 'zoom'); add('x2', 22, 1.20, 560, 2 * BEAT, 'flash');
+add('x3', 31, 1.10, 600, 2 * BEAT, 'whip'); add('x4', 30, 1.15, 560, DROP - beat(14), 'zoom');
+const M = [['m1', 34, 1.18, 540], ['m2', 33, 1.24, 900], ['m3', 17, 1.0, 540], ['m4', 23, 1.02, 420], ['m5', 33, 1.35, 300],
+  ['m6', 33, 1.35, 430], ['m7', 30, 1.35, 680], ['m8', 30, 1.40, 400], ['m9', 36, 1.04, 470], ['m10', 33, 1.03, 540]];
+const TR = ['flash', 'whip', 'zoom', 'whip', 'flash', 'zoom', 'whip', 'flash', 'whip', 'zoom'];
+M.forEach((m, i) => add(m[0], m[1], m[2], m[3], 2 * BEAT, TR[i]));
+add('o1', 48, 1.20, 430, BARL, 'flash'); add('o2', 63, 1.02, 430, BARL, 'whip'); add('o3', 41, 1.10, 540, DUR - OUT - 2 * BARL + 0.01, 'zoom');
+
+const cache = new Map();
+function frameImg(dir, n, i) {
+  i = clamp(Math.round(i), 1, n); const key = dir + i;
+  if (!cache.has(key)) { const im = new Image(); im.src = `../sandwalk-voidfem/frames/${dir}/${String(i).padStart(4, '0')}.jpg`; cache.set(key, im.decode().then(() => im)); if (cache.size > 60) cache.delete(cache.keys().next().value); }
+  return cache.get(key);
+}
+async function drawShot(sh, t, extraZ = 0, dx = 0, alpha = 1) {
+  const u = clamp((t - sh.t0) / (sh.t1 - sh.t0)), slow = sh.n < 20;
+  // speed ramp: rushes in, settles into slow motion (short clips just play slowed)
+  const r = slow ? u : 1 - Math.pow(1 - u, 1.7), f = 1 + r * (sh.n - 1), ia = Math.floor(f), fr = f - ia;
+  const a = await frameImg(sh.dir, sh.n, ia), b = fr > 0.08 ? await frameImg(sh.dir, sh.n, ia + 1) : null;
+  const z = sh.z * (1.02 + 0.035 * u + extraZ), ax = clamp(sh.ax, 540 / z, W - 540 / z), ay = H - 960 / z;
+  ctx.save(); ctx.globalAlpha = alpha; ctx.filter = 'contrast(1.1) saturate(1.18) brightness(0.9)';
+  ctx.translate(540 + dx, 960); ctx.scale(z, z); ctx.translate(-ax, -ay);
+  ctx.drawImage(a, 0, 0, W, H);
+  if (b) { ctx.globalAlpha = alpha * fr; ctx.drawImage(b, 0, 0, W, H); }
+  ctx.restore();
+}
+async function plays(t) {
+  ctx.fillStyle = '#000'; ctx.fillRect(0, 0, W, H);
+  let i = SEQ.findIndex(s => t < s.t1); if (i < 0) i = SEQ.length - 1;
+  const sh = SEQ[i], dt = t - sh.t0, punch = 0.09 * Math.exp(-dt / 0.13) + 0.045 * hit(t);
+  if (sh.tr === 'whip' && i > 0 && dt < 0.22) {
+    // whip pan: outgoing slides out left, incoming slides in from the right, both motion-blurred
+    const p = eio(dt / 0.22);
+    await drawShot(SEQ[i - 1], sh.t0 - 0.001, 0, -p * 1080);
+    await drawShot(sh, t, punch, (1 - p) * 1080);
+    ctx.save(); ctx.globalAlpha = 0.6 * Math.sin(Math.PI * p); ctx.filter = 'blur(22px)'; ctx.drawImage(ctx.canvas, 40, 0); ctx.restore();
+  } else if (sh.tr === 'zoom' && i > 0 && dt < 0.2) {
+    const p = dt / 0.2;
+    await drawShot(sh, t, punch + 0.35 * (1 - eout(p)));
+    ctx.save(); ctx.globalAlpha = 0.5 * (1 - p); ctx.filter = 'blur(16px)'; ctx.translate(540, 960); ctx.scale(1.08, 1.08); ctx.translate(-540, -960); ctx.drawImage(ctx.canvas, 0, 0); ctx.restore();
+  } else {
+    await drawShot(sh, t, punch);
+    if (sh.tr === 'flash' && i > 0 && dt < 0.14) { ctx.fillStyle = `rgba(255,255,255,${0.75 * (1 - dt / 0.14)})`; ctx.fillRect(0, 0, W, H); }
+  }
+  // grade: top and bottom gradients keep the headline and the card area readable
+  let g = ctx.createLinearGradient(0, 0, 0, 560); g.addColorStop(0, 'rgba(10,12,30,0.65)'); g.addColorStop(1, 'rgba(10,12,30,0)');
+  ctx.fillStyle = g; ctx.fillRect(0, 0, W, 560);
+  g = ctx.createLinearGradient(0, 700, 0, 1400); g.addColorStop(0, 'rgba(10,12,30,0)'); g.addColorStop(1, 'rgba(10,12,30,0.7)');
+  ctx.fillStyle = g; ctx.fillRect(0, 700, W, 1220);
+}
+
+// ---------- the kit card ----------
+// views of the store image (2000x3000, cut out): [imageX, imageY, scale] at the card centre
+const VIEW = { full: [1042, 1578, 0.194], ls: [615, 1257, 0.31], ss: [1510, 1262, 0.31], sh: [1018, 2232, 0.42] };
+const CARD = { cx: 540, cy: 935, w: 400, h: 400 };
+const STOPS = [   // [time, view, title, sub]
+  [0, 'full', null, null],
+  [DROP, 'ls', 'MANGA LONGA', 'rash guard com proteção UV'],
+  [DROP + BARL, 'ss', 'MANGA CURTA', 'tecido elástico que seca rápido'],
+  [DROP + 2 * BARL, 'sh', 'SHORTS', 'liberdade de movimento'],
+  [DROP + 3 * BARL, 'full', 'ESTAMPA FUTE VÔLEI', 'exclusiva, tom sobre tom'],
+  [DROP + 4 * BARL, 'pieces', '3 PEÇAS', 'use juntas ou separadas'],
+  [OUT, 'offer', null, null],
+];
+function stopAt(t) { let k = 0; for (let i = 0; i < STOPS.length; i++) if (t >= STOPS[i][0]) k = i; return k; }
+function cardRect(t) {
+  const k = enter(t, OUT, 0.55);
+  return { cx: lerp(CARD.cx, 285, k), cy: lerp(CARD.cy, 905, k), w: lerp(CARD.w, 390, k), h: lerp(CARD.h, 470, k) };
+}
+function drawKitView(view, r, t, tStop) {
+  const v = VIEW[view === 'pieces' || view === 'offer' ? 'full' : view];
+  const s = v[2] * (r.w / CARD.w) * (1 + 0.03 * prog(t, tStop, tStop + BARL));
+  if (view !== 'pieces') { ctx.drawImage(IMG.kit, r.cx - v[0] * s, r.cy - v[1] * s, IMG.kit.width * s, IMG.kit.height * s); return; }
+  // "3 peças": the three pieces pop in one per beat (long sleeve, short sleeve, shorts)
+  const parts = [[0, 0, 1060, 1950], [1060, 0, 940, 1950], [0, 1950, 2000, 1050]];
+  parts.forEach(([sx, sy, sw, shh], i) => {
+    const p = pop(t, tStop + i * BEAT, 0.3); if (p <= 0) return;
+    const cx = r.cx + (sx + sw / 2 - v[0]) * s, cy = r.cy + (sy + shh / 2 - v[1]) * s;
+    ctx.save(); ctx.translate(cx, cy); ctx.scale(p, p); ctx.translate(-cx, -cy);
+    ctx.drawImage(IMG.kit, sx, sy, sw, shh, r.cx + (sx - v[0]) * s, r.cy + (sy - v[1]) * s, sw * s, shh * s); ctx.restore();
+  });
+}
+function card(t) {
+  const r = cardRect(t), k = stopAt(t), st = STOPS[k];
+  // flip between views: the card squeezes to 0 width and back in 0.24 s around each stop
+  const dt = t - st[0];
+  const squeeze = k > 0 && st[1] !== 'offer' ? Math.abs(Math.cos(Math.PI * clamp(dt / 0.24) )) : 1;
+  const view = dt < 0.12 && k > 0 && st[1] !== 'offer' ? STOPS[k - 1][1] : st[1];
+  const sc = (0.94 + 0.06 * squeeze) * (1 + 0.02 * hit(t));
+  ctx.save(); ctx.translate(r.cx, r.cy); ctx.scale(Math.max(0.02, squeeze) * sc, sc); ctx.translate(-r.cx, -r.cy);
+  const x = r.cx - r.w / 2, y = r.cy - r.h / 2;
+  ctx.shadowColor = 'rgba(0,0,0,0.55)'; ctx.shadowBlur = 50; ctx.shadowOffsetY = 18;
+  ctx.fillStyle = WHITE; ctx.beginPath(); ctx.roundRect(x, y, r.w, r.h, 30); ctx.fill(); ctx.shadowColor = 'transparent';
+  ctx.save(); ctx.beginPath(); ctx.roundRect(x, y, r.w, r.h, 30); ctx.clip();
+  const g = ctx.createRadialGradient(r.cx, r.cy - 40, 20, r.cx, r.cy, r.h * 0.8); g.addColorStop(0, '#FFFFFF'); g.addColorStop(1, '#E6E9F2');
+  ctx.fillStyle = g; ctx.fillRect(x, y, r.w, r.h);
+  drawKitView(view === 'offer' ? 'full' : view, r, t, st[0]);
+  // shine sweep once per bar
+  const sw = ((t - B0) % BARL) / BARL, gx = x - 200 + (r.w + 400) * eio(clamp(sw * 2));
+  const sg = ctx.createLinearGradient(gx - 90, 0, gx + 90, 0); sg.addColorStop(0, 'rgba(255,255,255,0)'); sg.addColorStop(0.5, 'rgba(255,255,255,0.45)'); sg.addColorStop(1, 'rgba(255,255,255,0)');
+  ctx.save(); ctx.transform(1, 0, -0.3, 1, 0, 0); ctx.fillStyle = sg; ctx.fillRect(x - 200, y, r.w + 600, r.h); ctx.restore();
+  ctx.restore();
+  // red stripe + -34% sticker
+  ctx.fillStyle = RED; ctx.beginPath(); ctx.roundRect(x, y + r.h - 12, r.w, 12, [0, 0, 30, 30]); ctx.fill();
+  ctx.restore();
+  const sp = 1 + 0.08 * hit(t);
+  ctx.save(); ctx.translate(r.cx + r.w / 2 - 18, r.cy - r.h / 2 + 18); ctx.rotate(0.18); ctx.scale(sp, sp);
+  ctx.fillStyle = RED; ctx.beginPath(); ctx.arc(0, 0, 62, 0, Math.PI * 2); ctx.fill();
+  ctx.fillStyle = WHITE; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.font = '900 40px Inter'; ctx.fillText('-34%', 0, 2);
+  ctx.restore();
+  return r;
+}
+function label(t, r) {
+  const k = stopAt(t), st = STOPS[k]; if (!st[2]) return;
+  const dt = t - st[0], a = enter(dt, 0.12, 0.35) * (1 - prog(dt, BARL - 0.22, BARL - 0.04));
+  if (a <= 0) return;
+  ctx.save(); ctx.globalAlpha = a; ctx.textAlign = 'center'; ctx.textBaseline = 'alphabetic';
+  ctx.font = '900 54px Inter'; const tw = ctx.measureText(st[2]).width; ctx.font = '700 31px Inter'; const sw = ctx.measureText(st[3]).width;
+  const w = Math.max(tw, sw) + 70, top = r.cy + r.h / 2 - 15 + (1 - a) * 20;
+  ctx.fillStyle = NAVY; ctx.beginPath(); ctx.roundRect(540 - w / 2, top, w, 122, 24); ctx.fill();
+  ctx.fillStyle = WHITE; ctx.font = '900 54px Inter'; ctx.fillText(st[2], 540, top + 60);
+  ctx.fillStyle = PINK; ctx.font = '700 31px Inter'; ctx.fillText(st[3], 540, top + 102);
+  ctx.restore();
+}
+// ---------- text ----------
+function headline(t) {
+  const out = 1 - prog(t, DROP - 0.25, DROP - 0.02); if (out <= 0) return;
+  ctx.save(); ctx.globalAlpha = out; ctx.textAlign = 'center'; ctx.textBaseline = 'alphabetic';
+  ctx.font = 'italic 400 64px "DM Serif Display"'; ctx.fillStyle = WHITE; ctx.fillText('pra ela que joga', 540, 322);
+  // FUTEVÔLEI: letters slam in one by one over the first beat (frame 1 already shows them, just bigger)
+  ctx.font = '900 132px Inter'; const word = 'FUTEVÔLEI', total = ctx.measureText(word).width; let x = 540 - total / 2;
+  ctx.textAlign = 'left';
+  for (let i = 0; i < word.length; i++) {
+    const ch = word[i], w = ctx.measureText(ch).width, p = clamp((t - 0.05 - i * 0.035) / 0.25), s = 1 + 0.16 * Math.sin(Math.PI * p);
+    ctx.save(); ctx.translate(x + w / 2, 470); ctx.transform(1, 0, -0.12, 1, 0, 0); ctx.scale(s, s);
+    ctx.fillStyle = WHITE; ctx.fillText(ch, -w / 2, 0); ctx.restore(); x += w;
+  }
+  ctx.fillStyle = RED; ctx.fillRect(540 - total / 2 * eout(prog(t, 0.2, 0.6)), 490, total * eout(prog(t, 0.2, 0.6)), 10);
+  ctx.restore();
+}
+function hookInfo(t, r) {
+  // under the card: name + pieces, then (bar 2) the price
+  const top = r.cy + r.h / 2 - 15, out = 1 - prog(t, DROP - 0.2, DROP);
+  if (out <= 0) return;
+  ctx.save(); ctx.globalAlpha = out; ctx.textAlign = 'center'; ctx.textBaseline = 'alphabetic';
+  const a1 = 1 - prog(t, beat(8) - 0.15, beat(8));
+  if (a1 > 0) {
+    ctx.globalAlpha = out * a1; ctx.font = '900 50px Inter'; const s1 = 'KIT FEMININO BLACKOUT', w1 = ctx.measureText(s1).width + 70;
+    ctx.fillStyle = NAVY; ctx.beginPath(); ctx.roundRect(540 - w1 / 2, top, w1, 122, 24); ctx.fill();
+    ctx.fillStyle = WHITE; ctx.fillText(s1, 540, top + 58); ctx.font = '700 31px Inter'; ctx.fillStyle = PINK;
+    ctx.fillText('manga longa + manga curta + shorts', 540, top + 100);
+  }
+  const a2 = enter(t, beat(8), 0.3);
+  if (a2 > 0) {
+    ctx.globalAlpha = out * a2; const s2 = 'R$ 189,70'; ctx.font = '900 64px Inter'; const w2 = ctx.measureText(s2).width;
+    ctx.font = '700 34px Inter'; const old = 'de R$ 287,70', wo = ctx.measureText(old).width, w = wo + w2 + 120;
+    ctx.fillStyle = RED; ctx.beginPath(); ctx.roundRect(540 - w / 2, top + 8, w, 108, 24); ctx.fill();
+    ctx.textAlign = 'left'; ctx.fillStyle = 'rgba(255,255,255,0.85)'; ctx.fillText(old, 540 - w / 2 + 40, top + 76);
+    const sl = eout(prog(t, beat(8) + 0.15, beat(8) + 0.45)); ctx.fillStyle = WHITE; ctx.fillRect(540 - w / 2 + 38, top + 64, (wo + 4) * sl, 4);
+    ctx.font = '900 64px Inter'; ctx.fillStyle = WHITE; ctx.fillText(s2, 540 - w / 2 + 80 + wo, top + 85);
+  }
+  ctx.restore();
+}
+function topPill(t) {
+  const a = enter(t, DROP, 0.3) * (1 - prog(t, OUT - 0.25, OUT)); if (a <= 0) return;
+  ctx.save(); ctx.globalAlpha = a; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.font = '800 34px Inter';
+  const s = 'KIT FEMININO BLACKOUT  ·  R$ 189,70', w = ctx.measureText(s).width + 64;
+  ctx.fillStyle = 'rgba(14,15,26,0.7)'; ctx.beginPath(); ctx.roundRect(540 - w / 2, 300, w, 72, 36); ctx.fill();
+  ctx.fillStyle = WHITE; ctx.fillText(s, 540, 337); ctx.restore();
+}
+function offer(t) {
+  const u = t - OUT; if (u < 0.15) return;
+  const col = 770, kp = enter(u, 0.15, 0.4);
+  ctx.save(); ctx.globalAlpha = kp; ctx.fillStyle = 'rgba(22,22,28,0.9)'; ctx.beginPath(); ctx.roundRect(col - 245, 655, 490, 500, 30); ctx.fill(); ctx.restore();
+  const line = (at, draw) => { const k = enter(u, at, 0.35); if (k <= 0) return; ctx.save(); ctx.globalAlpha = k; ctx.translate(0, (1 - k) * 18); ctx.textAlign = 'center'; ctx.textBaseline = 'alphabetic'; draw(); ctx.restore(); };
+  line(0.25, () => { ctx.font = '900 46px Inter'; ctx.fillStyle = WHITE; ctx.fillText('KIT FEMININO', col, 728); ctx.fillStyle = PINK; ctx.fillText('BLACKOUT', col, 778);
+    ctx.font = '700 28px Inter'; ctx.fillStyle = 'rgba(255,255,255,0.8)'; ctx.fillText('3 peças', col, 818); });
+  line(0.25 + 1.5 * BEAT, () => { ctx.font = '700 34px Inter'; ctx.fillStyle = 'rgba(255,255,255,0.75)'; const o = 'de R$ 287,70', w = ctx.measureText(o).width; ctx.fillText(o, col, 878);
+    ctx.fillRect(col - w / 2 - 2, 866, (w + 4) * eout(prog(u, 0.25 + 1.5 * BEAT + 0.15, 0.25 + 1.5 * BEAT + 0.45)), 4); });
+  line(0.25 + 3 * BEAT, () => { ctx.font = '900 96px Inter'; ctx.fillStyle = WHITE; ctx.fillText('R$ 189,70', col, 975);
+    ctx.font = '700 31px Inter'; ctx.fillStyle = PINK; ctx.fillText('em até 3x sem juros', col, 1025); });
+  line(0.25 + 4.5 * BEAT, () => { ctx.font = '700 29px Inter'; ctx.fillStyle = 'rgba(255,255,255,0.9)'; ctx.fillText('✓ troca em 7 dias', col, 1085); ctx.fillText('✓ pagamento 100% seguro', col, 1125); });
+  const kc = enter(u, 0.25 + 6 * BEAT, 0.35);
+  if (kc > 0) {
+    const pb = 1 + 0.035 * Math.exp(-(((t - B0) % BEAT)) / 0.12) * (u > 3.2 ? 1 : 0);
+    ctx.save(); ctx.globalAlpha = kc; ctx.translate(540, 1200 + (1 - kc) * 24); ctx.scale(pb, pb);
+    ctx.shadowColor = 'rgba(255,46,110,0.6)'; ctx.shadowBlur = 40; ctx.fillStyle = RED; ctx.beginPath(); ctx.roundRect(-400, -52, 800, 104, 52); ctx.fill();
+    ctx.shadowColor = 'transparent'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.font = '900 46px Inter'; ctx.fillStyle = WHITE; ctx.fillText('GARANTA O SEU  →', 0, 3);
+    ctx.restore();
+  }
+}
+
+async function render(t) {
+  ctx.setTransform(1, 0, 0, 1, 0, 0); ctx.globalAlpha = 1; ctx.filter = 'none'; ctx.globalCompositeOperation = 'source-over';
+  await plays(t);
+  // the drop: a white hit and a small shake
+  if (t >= DROP && t < DROP + 0.18) { ctx.fillStyle = `rgba(255,255,255,${0.85 * (1 - (t - DROP) / 0.18)})`; ctx.fillRect(0, 0, W, H); }
+  const r = card(t);
+  headline(t);
+  hookInfo(t, r);
+  label(t, r);
+  topPill(t);
+  offer(t);
+  const fo = prog(t, DUR - 0.45, DUR); if (fo > 0) { ctx.fillStyle = `rgba(0,0,0,${fo * 0.6})`; ctx.fillRect(0, 0, W, H); }
+}
+
+const IMG = {};
+function load(src) { const im = new Image(); im.src = src; return im.decode().then(() => im); }
+window.ready = (async () => {
+  IMG.kit = await load('build/kit_cut.png');
+  for (const f of ['italic 400 40px "DM Serif Display"', '900 40px Inter', '800 40px Inter', '700 40px Inter']) await document.fonts.load(f, 'AÔéí→·✓');
+  await document.fonts.ready; await render(0); return true;
+})();
+window.renderAt = t => render(t);
+</script>
+</body>
+</html>

@@ -1,0 +1,199 @@
+<!doctype html>
+<html lang="pt-br">
+<head>
+<meta charset="utf-8">
+<title>Sand Walk Futevolei Preto 1</title>
+<link href="fonts/fonts.css" rel="stylesheet">
+<style>html, body { margin: 0; background: #000; } canvas { display: block; }</style>
+</head>
+<body>
+<canvas id="c" width="1080" height="1920"></canvas>
+<script>
+// Kit Futevôlei Preto, creative 1 — the kit has no footage, only the store image. So:
+//   * the product itself is the hero (reveal, two close-ups of the store image: fabric/logo and the FUTEVÔLEI band)
+//   * action comes from other Sand Walk shoots, in black and white so other kits' colours don't read as this product,
+//     with "KIT FUTEVÔLEI PRETO · R$ 99,90" pinned on screen while they play
+//   * the kit's own FUTEVÔLEI band is the graphic motif: tickers on the reveal and band wipes between shots
+// Original 100 bpm track (make_beat.py), bars of 2.4 s: reveal 2 bars, four 1-bar shots, offer 2 bars.
+// One idea on screen at a time; essential text inside the Reels safe area (y ≈ 270–1250).
+const W = 1080, H = 1920, DUR = 19.2, FPS = 30;
+const BAR = 2.4, GROOVE = 2 * BAR, OUT = 6 * BAR;
+const PAPER = '#EEEDE9', INK = '#0B0B0C', YEL = '#FFCC29', GREY = '#8A8A8A', WHITE = '#FFFFFF';
+const ctx = document.getElementById('c').getContext('2d');
+const clamp = (x, a = 0, b = 1) => Math.min(b, Math.max(a, x));
+const lerp = (a, b, t) => a + (b - a) * t;
+const eout = t => 1 - Math.pow(1 - t, 3);
+const eio = t => t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
+const prog = (t, a, b) => clamp((t - a) / (b - a));
+const enter = (t, at, d = 0.45) => eout(prog(t, at, at + d));
+
+// ---------- sources ----------
+const cache = new Map();
+function frameImg(dir, n, i) {
+  i = clamp(Math.round(i), 1, n); const key = dir + i;
+  if (!cache.has(key)) { const im = new Image(); im.src = `frames/${dir}/${String(i).padStart(4, '0')}.jpg`; cache.set(key, im.decode().then(() => im)); if (cache.size > 40) cache.delete(cache.keys().next().value); }
+  return cache.get(key);
+}
+const CLIP = { shd: 87, vd: 72 };
+async function drawFoot(dir, src, z, ax, ay, alpha = 1) {
+  const f = src * FPS + 1, ia = Math.floor(f), fr = f - ia;
+  const a = await frameImg(dir, CLIP[dir], ia), b = fr > 0.08 ? await frameImg(dir, CLIP[dir], ia + 1) : null;
+  ax = clamp(ax, 540 / z, W - 540 / z); ay = clamp(ay, 960 / z, H - 960 / z);
+  ctx.save(); ctx.globalAlpha = alpha; ctx.filter = 'grayscale(1) contrast(1.25) brightness(0.92)';
+  ctx.translate(540, 960); ctx.scale(z, z); ctx.translate(-ax, -ay);
+  ctx.drawImage(a, 0, 0, W, H);
+  if (b) { ctx.globalAlpha = alpha * fr; ctx.drawImage(b, 0, 0, W, H); }
+  ctx.restore();
+}
+// store image (2000x3000, white background): drawn with multiply so it sits on the paper colour.
+// (px, py) = image point placed at screen (sx, sy) with scale s.
+function product(px, py, sx, sy, s) {
+  ctx.save(); ctx.globalCompositeOperation = 'multiply';
+  ctx.drawImage(IMG.mock, sx - px * s, sy - py * s, 2000 * s, 3000 * s); ctx.restore();
+}
+
+// ---------- graphics ----------
+function band(y, h, offset, angle = 0, cx = 540) {
+  // a strip like the kit's own: black, two rows of outlined FUTEVÔLEI, grey piping
+  ctx.save(); ctx.translate(cx, y); ctx.rotate(angle);
+  ctx.fillStyle = INK; ctx.fillRect(-1400, -h / 2, 2800, h);
+  ctx.fillStyle = GREY; ctx.fillRect(-1400, h / 2 - 10, 2800, 6);
+  ctx.font = `${Math.round(h * 0.36)}px Anton`; ctx.textBaseline = 'middle'; ctx.lineWidth = 2; ctx.strokeStyle = GREY;
+  const word = 'FUTEVÔLEI  ', ww = ctx.measureText(word).width;
+  for (let r = 0; r < 2; r++) {
+    const yy = -h / 2 + h * (r ? 0.66 : 0.3), off = ((r ? -offset : offset) % ww + ww) % ww;
+    for (let x = -1400 - off; x < 1400; x += ww) ctx.strokeText(word, x, yy);
+  }
+  ctx.restore();
+}
+function pill(str, x, y, bg, fg, size = 30) {
+  ctx.save(); ctx.font = `800 ${size}px Inter`; ctx.textBaseline = 'middle';
+  const w = ctx.measureText(str).width + 52, h = size * 2.1;
+  ctx.fillStyle = bg; ctx.beginPath(); ctx.roundRect(x, y - h / 2, w, h, h / 2); ctx.fill();
+  ctx.fillStyle = fg; ctx.fillText(str, x + 26, y + 1); ctx.restore();
+}
+function headline(t, at, y, size, color = INK) {
+  const k = enter(t, at, 0.5); if (k <= 0) return;
+  ctx.save(); ctx.globalAlpha = k; ctx.translate(0, (1 - k) * 26); ctx.textAlign = 'center'; ctx.textBaseline = 'alphabetic';
+  ctx.font = `900 ${size}px Inter`; ctx.letterSpacing = '-2px'; ctx.fillStyle = color; ctx.fillText('KIT FUTEVÔLEI', 540, y);
+  ctx.font = `900 ${Math.round(size * 0.5)}px Inter`; ctx.letterSpacing = '4px'; const s = 'PRETO', w = ctx.measureText(s).width + 50;
+  ctx.fillStyle = INK; ctx.beginPath(); ctx.roundRect(540 - w / 2, y + 20, w, size * 0.72, 12); ctx.fill();
+  ctx.fillStyle = WHITE; ctx.fillText(s, 540, y + 20 + size * 0.54); ctx.restore();
+}
+// caption used on every shot: one big line + one small yellow line
+function caption(t0, t, big, small, color = WHITE) {
+  const dt = t - t0, k = enter(dt, 0.3, 0.5) * (1 - prog(dt, BAR - 0.35, BAR - 0.1));
+  if (k <= 0) return;
+  ctx.save(); ctx.globalAlpha = k; ctx.translate(0, (1 - k) * 28); ctx.textAlign = 'center'; ctx.textBaseline = 'alphabetic';
+  ctx.font = '900 100px Inter'; ctx.letterSpacing = '-2px'; ctx.fillStyle = color;
+  big.forEach((ln, i) => ctx.fillText(ln, 540, 1040 + i * 98 - (big.length - 1) * 98));
+  if (small) {
+    ctx.letterSpacing = '0px'; ctx.font = '800 40px Inter'; const w = ctx.measureText(small).width + 60;
+    ctx.fillStyle = YEL; ctx.beginPath(); ctx.roundRect(540 - w / 2, 1088, w, 72, 36); ctx.fill();
+    ctx.fillStyle = INK; ctx.fillText(small, 540, 1138);
+  }
+  ctx.restore();
+}
+function shade(top = 760) {
+  const g = ctx.createLinearGradient(0, top, 0, 1330); g.addColorStop(0, 'rgba(0,0,0,0)'); g.addColorStop(1, 'rgba(0,0,0,0.72)');
+  ctx.fillStyle = g; ctx.fillRect(0, top, W, 1330 - top); ctx.fillStyle = 'rgba(0,0,0,0.72)'; ctx.fillRect(0, 1330, W, H - 1330);
+}
+
+// ---------- scenes ----------
+function reveal(t) {
+  ctx.fillStyle = PAPER; ctx.fillRect(0, 0, W, H);
+  // kit, centred, slow push-in; the band tickers run behind it at the waist height
+  band(150, 130, t * 60, 0); band(1420, 130, -t * 60, 0);
+  const s = 0.38 * (1 + 0.03 * eio(prog(t, 0, GROOVE)));
+  product(1000, 1500, 540, 840, s);
+  headline(t, -1, 345, 96);                       // frame 1: name + colour already on screen (thumbnail)
+  const k1 = enter(t, 1.2);
+  if (k1 > 0) { ctx.save(); ctx.globalAlpha = k1; ctx.translate(0, (1 - k1) * 22); ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+    ctx.font = '700 42px Inter'; ctx.fillStyle = INK; ctx.fillText('camiseta manga curta + shorts', 540, 1238); ctx.restore(); }
+  const k2 = enter(t, 2.4);
+  if (k2 > 0) { ctx.save(); ctx.globalAlpha = k2; ctx.translate(850, 640); ctx.rotate(-0.06); ctx.scale(lerp(0.85, 1, k2), lerp(0.85, 1, k2));
+    ctx.fillStyle = YEL; ctx.beginPath(); ctx.roundRect(-165, -58, 330, 116, 20); ctx.fill();
+    ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.font = '900 64px Inter'; ctx.fillStyle = INK; ctx.fillText('R$ 99,90', 0, 4); ctx.restore(); }
+}
+const SHOTS = [
+  // [kind, ...]  action: dir, srcStart, speed, zoom, ax, ay | detail: px0, py0, px1, py1, scale0, scale1
+  { kind: 'act', dir: 'shd', s0: 0.30, sp: 1.0, z: 1.12, ax: 600, ay: 820, big: ['FEITO PRA', 'AREIA'], small: 'liberdade em cada lance' },
+  { kind: 'det', sy: 640, p0: [1150, 900], p1: [1060, 1180], s0: 1.05, s1: 0.95, big: ['LEVE E', 'RESPIRÁVEL'], small: 'seca rápido' },
+  { kind: 'act', dir: 'vd', s0: 0.00, sp: 0.95, z: 1.25, ax: 560, ay: 900, big: ['JOGA', 'SOLTO'], small: 'corte atlético' },
+  { kind: 'det', sy: 560, p0: [1000, 2020], p1: [1060, 2070], s0: 0.78, s1: 0.84, big: ['FAIXA', 'FUTEVÔLEI'], small: 'nas mangas, no cós e na perna' },
+];
+async function shots(t) {
+  const i = clamp(Math.floor((t - GROOVE) / BAR), 0, 3), t0 = GROOVE + i * BAR, dt = t - t0, u = dt / BAR, sh = SHOTS[i];
+  if (sh.kind === 'act') {
+    ctx.fillStyle = '#000'; ctx.fillRect(0, 0, W, H);
+    await drawFoot(sh.dir, sh.s0 + dt * sh.sp, sh.z * (1 + 0.05 * eio(u)), sh.ax, sh.ay);
+    shade();
+    pill('KIT FUTEVÔLEI PRETO  ·  R$ 99,90', 60, 320, 'rgba(0,0,0,0.65)', WHITE);
+    caption(t0, t, sh.big, sh.small);
+  } else {
+    // close-ups of the store image on a dark studio background (cutout), so the white captions read cleanly
+    ctx.fillStyle = '#141416'; ctx.fillRect(0, 0, W, H);
+    const sg = ctx.createRadialGradient(540, sh.sy, 80, 540, sh.sy, 900); sg.addColorStop(0, 'rgba(255,255,255,0.16)'); sg.addColorStop(1, 'rgba(255,255,255,0)');
+    ctx.fillStyle = sg; ctx.fillRect(0, 0, W, H);
+    const e = eio(u), px = lerp(sh.p0[0], sh.p1[0], e), py = lerp(sh.p0[1], sh.p1[1], e), s = lerp(sh.s0, sh.s1, e);
+    ctx.drawImage(IMG.cut, 540 - px * s, sh.sy - py * s, 2000 * s, 3000 * s);
+    shade(820);
+    pill('CLOSE NO KIT', 60, 320, INK, WHITE);
+    caption(t0, t, sh.big, sh.small);
+  }
+  // band wipe across each cut (and into the offer)
+  for (const c of [GROOVE, GROOVE + BAR, GROOVE + 2 * BAR, GROOVE + 3 * BAR, OUT]) wipe(t, c);
+}
+function wipe(t, c) {
+  const d = 0.55, p = prog(t, c - d / 2, c + d / 2); if (p <= 0 || p >= 1) return;
+  // a thick band sweeps bottom-left to top-right; at the cut it covers the frame centre
+  const y = lerp(2300, -380, eio(p));
+  band(y, 620, t * 300, -0.32);
+}
+function offer(t) {
+  const u = t - OUT;
+  ctx.fillStyle = PAPER; ctx.fillRect(0, 0, W, H);
+  // kit on the left, info on the right, CTA full width
+  const ks = 0.27 * (1 + 0.02 * eio(prog(u, 0, 4.8)));
+  product(1000, 1500, 300, 790, ks);
+  ctx.save(); ctx.globalAlpha = enter(u, 0, 0.5); ctx.drawImage(IMG.logoDark, 540 - 75, 285, 150, 150 * IMG.logoDark.height / IMG.logoDark.width); ctx.restore();
+  const col = 790, line = (at, draw) => { const k = enter(u, at); if (k <= 0) return; ctx.save(); ctx.globalAlpha = k; ctx.translate(0, (1 - k) * 22); ctx.textAlign = 'center'; ctx.textBaseline = 'alphabetic'; draw(); ctx.restore(); };
+  ctx.save(); ctx.globalAlpha = enter(u, 0.1, 0.5); ctx.translate(0, -45); headline(t, OUT + 0.1, 520, 84); ctx.restore();
+  line(0.75, () => { ctx.font = '700 36px Inter'; ctx.fillStyle = INK; ctx.fillText('camiseta', col, 700); ctx.fillText('manga curta', col, 744); ctx.fillText('+ shorts', col, 788); });
+  line(1.35, () => { ctx.font = '900 104px Inter'; ctx.letterSpacing = '-2px'; ctx.fillStyle = INK; ctx.fillText('R$ 99,90', col, 915); });
+  line(1.95, () => { ctx.font = '700 34px Inter'; ctx.fillStyle = '#333'; ctx.fillText('ou 3x de R$ 33,30', col, 975); ctx.fillText('sem juros', col, 1017); });
+  const kc = enter(u, 2.6, 0.5);
+  if (kc > 0) {
+    const pulse = u > 3.2 ? 1 + 0.02 * Math.max(0, Math.sin((u - 3.2) * Math.PI / 0.6)) : 1;
+    ctx.save(); ctx.globalAlpha = kc; ctx.translate(540, 1170 + (1 - kc) * 24); ctx.scale(pulse, pulse);
+    ctx.fillStyle = INK; ctx.beginPath(); ctx.roundRect(-400, -62, 800, 124, 62); ctx.fill();
+    ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.font = '900 54px Inter'; ctx.fillStyle = YEL; ctx.fillText('GARANTA O SEU  →', 0, 3);
+    ctx.restore();
+  }
+}
+
+async function render(t) {
+  ctx.setTransform(1, 0, 0, 1, 0, 0); ctx.globalAlpha = 1; ctx.filter = 'none'; ctx.globalCompositeOperation = 'source-over';
+  if (t < GROOVE) reveal(t); else if (t < OUT) await shots(t); else offer(t);
+  if (t < GROOVE + 0.3 && t >= GROOVE - 0.3) wipe(t, GROOVE);
+  if (t >= OUT && t < OUT + 0.3) wipe(t, OUT);
+  const fo = prog(t, DUR - 0.4, DUR); if (fo > 0) { ctx.fillStyle = `rgba(0,0,0,${fo * 0.6})`; ctx.fillRect(0, 0, W, H); }
+}
+
+const IMG = {};
+function load(src) { const im = new Image(); im.src = src; return im.decode().then(() => im); }
+window.ready = (async () => {
+  IMG.mock = await load('src/site_mockup.jpg');
+  IMG.cut = await load('build/kit_cutout.png');
+  // brand logo, white S turned dark for the paper background (yellow W kept)
+  const lg = await load('build/sw_logo_white.png'), c = document.createElement('canvas'); c.width = lg.width; c.height = lg.height;
+  const g = c.getContext('2d'); g.drawImage(lg, 0, 0); const d = g.getImageData(0, 0, c.width, c.height);
+  for (let p = 0; p < d.data.length; p += 4) { const r = d.data[p], gg = d.data[p + 1], b = d.data[p + 2]; if (r > 200 && gg > 200 && b > 200) { d.data[p] = d.data[p + 1] = d.data[p + 2] = 12; } }
+  g.putImageData(d, 0, 0); IMG.logoDark = c;
+  for (const f of ['40px Anton', '900 40px Inter', '800 40px Inter', '700 40px Inter']) await document.fonts.load(f, 'AÔÉ→·');
+  await document.fonts.ready; await render(0); return true;
+})();
+window.renderAt = t => render(t);
+</script>
+</body>
+</html>

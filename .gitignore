@@ -53,3 +53,7 @@ sandwalk-shadow/frames/
 sandwalk-shadow/audio/
 sandwalk-shadow/build/still_*.png
 sandwalk-shadow/out/*_silent.mp4
+sandwalk-ftvpreta/frames/
+sandwalk-ftvpreta/audio/
+sandwalk-ftvpreta/build/still_*.png
+sandwalk-ftvpreta/out/*_silent.mp4

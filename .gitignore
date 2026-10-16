@@ -48,3 +48,8 @@ sandwalk-phoenix/frames/
 sandwalk-phoenix/audio/
 sandwalk-phoenix/build/still_*.png
 sandwalk-phoenix/out/*_silent.mp4
+sandwalk-shadow/build/chk/
+sandwalk-shadow/frames/
+sandwalk-shadow/audio/
+sandwalk-shadow/build/still_*.png
+sandwalk-shadow/out/*_silent.mp4

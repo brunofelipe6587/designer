@@ -1,0 +1,349 @@
+<!doctype html>
+<html lang="pt-br">
+<head>
+<meta charset="utf-8">
+<title>Sand Walk Shadow 2b</title>
+<link href="fonts/fonts.css" rel="stylesheet">
+<style>html, body { margin: 0; background: #000; } canvas { display: block; }</style>
+</head>
+<body>
+<canvas id="c" width="1080" height="1920"></canvas>
+<script>
+// Shadow creative 2b — same edit as shd2, re-timed to the client's funk track (src/trilha_quebrar_a_cama.mp3, window
+// 23.40–39.00 s, beat grid P = 0.719 s ≈ 83.5 bpm, a lyric line every 4P). Intro 4P, eight shots of [2,1,1,2,1,1,2,2]·P,
+// offer from 16P, CTA slam on 20P.
+// Original notes from shd2: beat-cut Reel, no voiceover.
+// Deliberately unlike Shadow 1 (split screen + narration): full-bleed, Anton type, dark/neon look, speed ramps.
+//   0–3.75   reveal: the short-sleeve kit itself on frame 1 (name, what's in it, price); riser strobes action glimpses
+//   3.75–11.25  drop: 8 shots cut every half bar, one product-page benefit slammed per shot; kit thumbnail stays on
+//   11.25–15.6  offer: kit + price + 3x + troca em 7 dias, CTA hits on the final boom (15.0)
+// Essential text sits inside the Reels safe area (y ≈ 270–1250).
+const W = 1080, H = 1920, DUR = 15.6, FPS = 30, NFR = 550;
+const TQ = '#22D3C5', INK = '#07080B', WHITE = '#F4F6F8';
+const P = 0.719, STEP = P / 4, BAR = 2 * P, DROP = 4 * P, OUT = 16 * P, END = 20 * P;
+const SHOT_LEN = [2, 1, 1, 2, 1, 1, 2, 2], SHOT_T0 = SHOT_LEN.map((_, i) => DROP + P * SHOT_LEN.slice(0, i).reduce((a, b) => a + b, 0));
+const ctx = document.getElementById('c').getContext('2d');
+const clamp = (x, a = 0, b = 1) => Math.min(b, Math.max(a, x));
+const lerp = (a, b, t) => a + (b - a) * t;
+const eout = t => 1 - Math.pow(1 - t, 3);
+const eio = t => t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
+const eback = t => { const c1 = 1.7, c3 = c1 + 1; return 1 + c3 * Math.pow(t - 1, 3) + c1 * Math.pow(t - 1, 2); };
+const prog = (t, a, b) => clamp((t - a) / (b - a));
+const pop = (t, a, d = 0.22) => t < a ? 0 : eback(prog(t, a, a + d));
+const hash = n => { const x = Math.sin(n * 127.1 + 311.7) * 43758.5453; return x - Math.floor(x); };
+
+// drum hits from the beat layout, for punches/shakes
+const KICK = [], CLAP = [];
+for (let k = 4; k < 22; k++) { KICK.push(k * P); CLAP.push(k * P + P / 2); }
+const hit = (list, t, d) => list.reduce((m, h) => t >= h ? Math.max(m, Math.exp(-(t - h) / d)) : m, 0);
+
+// ---------- footage ----------
+const cache = new Map();
+function frameImg(i) {
+  i = clamp(Math.round(i), 1, NFR);
+  if (!cache.has(i)) { const im = new Image(); im.src = `frames/v01/${String(i).padStart(4, '0')}.jpg`; cache.set(i, im.decode().then(() => im)); if (cache.size > 40) cache.delete(cache.keys().next().value); }
+  return cache.get(i);
+}
+// shots: [srcA, srcB, zoom, anchorX, anchorY, word, style]. Source time ramps fast→slow across the half bar.
+const SHOTS = [
+  [15.35, 16.45, 1.15, 560, 820, ['LEVE'], 0],                   // bicycle kick
+  [11.85, 12.75, 1.30, 600, 820, ['ELÁSTICO'], 1],               // volley at the net
+  [3.45, 4.35, 1.10, 560, 1000, ['RESPIRÁVEL'], 2],              // kick near the camera
+  [0.05, 0.95, 1.05, 520, 760, ['ESTAMPA', 'QUE DURA'], 0],       // the print on his back
+  [13.95, 14.80, 1.25, 620, 760, ['SECA', 'RÁPIDO'], 1],          // header / juggling
+  [8.55, 9.45, 1.00, 540, 760, ['NÃO', 'AMASSA'], 2],             // close, showing the shirt
+  [16.45, 17.75, 1.15, 600, 980, ['JOGA', 'SOLTO'], 0],           // bicycle landing
+  [9.70, 10.55, 1.05, 540, 760, ['TÁ', 'PRONTO?'], 1],            // laughing at the camera
+];
+async function drawFoot(src, z, ax, ay, sx = 540, sy = 960, alpha = 1, filter = 'none') {
+  const f = src * FPS + 1, ia = Math.floor(f), fr = f - ia;
+  const a = await frameImg(ia), b = fr > 0.08 ? await frameImg(ia + 1) : null;
+  ctx.save(); ctx.globalAlpha = alpha; ctx.filter = filter;
+  // keep the frame covering the canvas whatever the anchor (no bands at the edges)
+  ax = clamp(ax, sx / z, W - (W - sx) / z); ay = clamp(ay, sy / z, H - (H - sy) / z);
+  ctx.translate(sx, sy); ctx.scale(z, z); ctx.translate(-ax, -ay);
+  ctx.drawImage(a, 0, 0, W, H);
+  if (b) { ctx.globalAlpha = alpha * fr; ctx.drawImage(b, 0, 0, W, H); }
+  ctx.restore();
+}
+const GRADE = 'contrast(1.18) saturate(1.12) brightness(0.96)';
+
+// ---------- type helpers ----------
+function anton(size) { ctx.font = `${size}px Anton`; }
+function word(lines, cx, cy, size, style, p, t) {
+  // style 0: white fill + turquoise drop; 1: turquoise outline over white ghost; 2: black on turquoise slab
+  ctx.save(); ctx.textAlign = 'center'; ctx.textBaseline = 'alphabetic'; anton(size);
+  const lh = size * 0.98, top = cy - (lines.length * lh) / 2 + size * 0.86;
+  const s = lerp(1.5, 1, eout(clamp(p * 1.5))), a = clamp(p * 4);
+  ctx.translate(cx, cy); ctx.scale(s, s); ctx.translate(-cx, -cy); ctx.globalAlpha = a;
+  lines.forEach((ln, i) => {
+    const y = top + i * lh;
+    if (style === 2) {
+      const w = ctx.measureText(ln).width + 50;
+      ctx.save(); ctx.translate(cx, y - size * 0.38); ctx.transform(1, 0, -0.18, 1, 0, 0);
+      ctx.fillStyle = TQ; ctx.fillRect(-w / 2, -size * 0.55, w, size * 1.0); ctx.restore();
+      ctx.fillStyle = INK; ctx.fillText(ln, cx, y);
+    } else if (style === 1) {
+      ctx.lineJoin = 'round'; ctx.lineWidth = 16; ctx.strokeStyle = 'rgba(0,0,0,0.55)'; ctx.strokeText(ln, cx, y);
+      ctx.fillStyle = WHITE; ctx.fillText(ln, cx, y);
+      ctx.lineWidth = 5; ctx.strokeStyle = TQ; ctx.strokeText(ln, cx + 9, y + 9);
+    } else {
+      ctx.fillStyle = TQ; ctx.fillText(ln, cx + 10, y + 10);
+      ctx.lineJoin = 'round'; ctx.lineWidth = 12; ctx.strokeStyle = 'rgba(0,0,0,0.5)'; ctx.strokeText(ln, cx, y);
+      ctx.fillStyle = WHITE; ctx.fillText(ln, cx, y);
+    }
+  });
+  ctx.restore();
+}
+function pill(str, x, y, bg, fg, dot = true, size = 26) {
+  ctx.save(); ctx.font = `800 ${size}px Inter`; ctx.textBaseline = 'middle';
+  const w = ctx.measureText(str).width + (dot ? 64 : 40), h = size * 1.8;
+  ctx.fillStyle = bg; ctx.beginPath(); ctx.roundRect(x, y - h / 2, w, h, h / 2); ctx.fill();
+  if (dot) { ctx.fillStyle = TQ; ctx.beginPath(); ctx.arc(x + 24, y, 7, 0, Math.PI * 2); ctx.fill(); }
+  ctx.fillStyle = fg; ctx.fillText(str, x + (dot ? 42 : 20), y + 1); ctx.restore();
+  return w;
+}
+
+// ---------- the kit (cutout with turquoise rim glow) ----------
+function kit(cx, top, h, glow = 1, alpha = 1) {
+  const im = IMG.kit, w = h * im.width / im.height;
+  ctx.save(); ctx.globalAlpha = alpha;
+  if (glow > 0) { ctx.save(); ctx.globalAlpha = alpha * 0.85 * glow; ctx.filter = 'blur(28px)'; ctx.drawImage(IMG.kitGlow, cx - w / 2, top, w, h); ctx.restore(); }
+  ctx.drawImage(im, cx - w / 2, top, w, h);
+  ctx.restore();
+}
+function backdrop(t, k = 1) {
+  ctx.fillStyle = INK; ctx.fillRect(0, 0, W, H);
+  const g = ctx.createRadialGradient(540, 860, 40, 540, 860, 820);
+  g.addColorStop(0, `rgba(34,211,197,${0.30 * k})`); g.addColorStop(0.45, `rgba(34,211,197,${0.07 * k})`); g.addColorStop(1, 'rgba(34,211,197,0)');
+  ctx.fillStyle = g; ctx.fillRect(0, 0, W, H);
+  // rotating light rays
+  ctx.save(); ctx.translate(540, 860); ctx.rotate(t * 0.12); ctx.globalCompositeOperation = 'lighter';
+  for (let i = 0; i < 14; i++) {
+    ctx.rotate(Math.PI * 2 / 14); ctx.fillStyle = `rgba(34,211,197,${0.035 * k})`;
+    ctx.beginPath(); ctx.moveTo(0, 0); ctx.lineTo(-70, -1300); ctx.lineTo(70, -1300); ctx.closePath(); ctx.fill();
+  }
+  ctx.restore();
+  // drifting particles
+  ctx.save(); ctx.fillStyle = 'rgba(160,255,248,0.55)';
+  for (let i = 0; i < 46; i++) {
+    const x = hash(i) * W, y = (hash(i + 99) * H - t * (30 + hash(i + 7) * 60) + H * 4) % H, r = 1.2 + hash(i + 3) * 2.8;
+    ctx.globalAlpha = (0.25 + 0.5 * hash(i + 5)) * k; ctx.beginPath(); ctx.arc(x, y, r, 0, Math.PI * 2); ctx.fill();
+  }
+  ctx.restore();
+  // ghost "SHADOW" wall
+  ctx.save(); anton(260); ctx.textAlign = 'center'; ctx.lineWidth = 2; ctx.strokeStyle = `rgba(255,255,255,${0.07 * k})`;
+  for (let r = 0; r < 8; r++) { const off = (r % 2 ? 1 : -1) * ((t * 40) % 560); for (let c = -1; c < 3; c++) ctx.strokeText('SHADOW', c * 620 + off, 220 + r * 250); }
+  ctx.restore();
+}
+
+// ---------- glitch / grain post ----------
+function glitch(amount, seed) {
+  if (amount <= 0.01) return;
+  const n = 5 + Math.floor(amount * 7);
+  for (let i = 0; i < n; i++) {
+    const y = Math.floor(hash(seed * 13 + i) * H), h = 12 + Math.floor(hash(seed * 7 + i) * 90 * amount);
+    const dx = Math.round((hash(seed * 3 + i) - 0.5) * 140 * amount);
+    ctx.drawImage(ctx.canvas, 0, y, W, h, dx, y, W, h);
+  }
+  // RGB split: tinted offset copies
+  ctx.save(); ctx.globalCompositeOperation = 'lighter'; ctx.globalAlpha = 0.35 * amount;
+  ctx.filter = 'sepia(1) saturate(6) hue-rotate(130deg)'; ctx.drawImage(ctx.canvas, 14 * amount, 0);
+  ctx.filter = 'sepia(1) saturate(6) hue-rotate(-50deg)'; ctx.drawImage(ctx.canvas, -14 * amount, 0);
+  ctx.restore();
+}
+function grain(t) {
+  const i = Math.floor(t * FPS) % IMG.noise.length;
+  ctx.save(); ctx.globalAlpha = 0.07; ctx.globalCompositeOperation = 'overlay';
+  ctx.drawImage(IMG.noise[i], 0, 0, W, H); ctx.restore();
+}
+function vignette(a = 0.55) {
+  const g = ctx.createRadialGradient(540, 960, 520, 540, 960, 1250);
+  g.addColorStop(0, 'rgba(0,0,0,0)'); g.addColorStop(1, `rgba(0,0,0,${a})`);
+  ctx.fillStyle = g; ctx.fillRect(0, 0, W, H);
+}
+function flash(t, at, d = 0.12, color = '255,255,255', peak = 0.9) {
+  if (t < at || t > at + d) return;
+  ctx.fillStyle = `rgba(${color},${peak * (1 - (t - at) / d)})`; ctx.fillRect(0, 0, W, H);
+}
+
+// ---------- scenes ----------
+const GLIMPSE = [[BAR + P / 2, 16.0], [BAR + P, 12.3], [BAR + P * 1.5, 3.9], [BAR + P * 1.75, 0.4]];
+async function intro(t) {
+  // riser builds: push-in, faster rays, shake near the drop
+  const r = prog(t, BAR, DROP), shake = r * r * 10 * Math.sin(t * 90);
+  backdrop(t + r * r * 2, 1 + r * 0.6);
+  // action glimpses strobing through the riser (2 frames each, duotone)
+  for (const [at, src] of GLIMPSE) if (t >= at && t < at + 0.1) {
+    await drawFoot(src + (t - at), 1.15, 540, 900, 540, 960, 0.55, 'grayscale(1) contrast(1.6) brightness(0.8)');
+    ctx.save(); ctx.globalCompositeOperation = 'color'; ctx.fillStyle = TQ; ctx.globalAlpha = 0.6; ctx.fillRect(0, 0, W, H); ctx.restore();
+  }
+  ctx.save(); ctx.translate(shake, -shake * 0.6);
+  const z = 1 + 0.05 * eout(prog(t, 0, 1.6)) + 0.1 * r * r;
+  ctx.translate(540, 900); ctx.scale(z, z); ctx.translate(-540, -900);
+  // kit slams in on the boom
+  // frame 1 is the clean product (it is also the thumbnail); a punch-in follows on the boom
+  const kin = 1 + 0.06 * Math.sin(Math.PI * prog(t, 0.03, 0.33));
+  ctx.translate(540, 900); ctx.scale(kin, kin); ctx.translate(-540, -900);
+  kit(540, 470, 760, 0.6 + 0.4 * Math.sin(t * 3) ** 2);
+  ctx.restore();
+  // title
+  ctx.save(); ctx.translate(shake * 0.5, 0);
+  const tp = 1 + 0.08 * Math.sin(Math.PI * prog(t, 0.03, 0.3));
+  ctx.save(); ctx.translate(540, 355); ctx.scale(tp, tp);
+  anton(170); ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+  const a = 'KIT ', b = 'SHADOW', wa = ctx.measureText(a).width, wb = ctx.measureText(b).width;
+  ctx.textAlign = 'left'; ctx.fillStyle = WHITE; ctx.fillText(a, -(wa + wb) / 2, 0);
+  ctx.shadowColor = TQ; ctx.shadowBlur = 30; ctx.fillStyle = TQ; ctx.fillText(b, -(wa + wb) / 2 + wa, 0);
+  ctx.restore();
+  // callouts: what's in the kit, pointing at each piece
+  callout(t, STEP * 2, 'CAMISETA', 'MANGA CURTA', 300, 640, 470, 690, 'L');
+  callout(t, STEP * 4, 'SHORTS', '', 780, 1010, 620, 1030, 'R');
+  // price slab
+  const pp = pop(t, STEP * 6, 0.28);
+  if (pp > 0) {
+    ctx.save(); ctx.translate(770, 1165); ctx.rotate(-0.05); ctx.scale(pp, pp);
+    ctx.transform(1, 0, -0.14, 1, 0, 0); ctx.fillStyle = TQ; ctx.fillRect(-190, -62, 380, 124); ctx.restore();
+    ctx.save(); ctx.translate(770, 1165); ctx.rotate(-0.05); ctx.scale(pp, pp); ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+    anton(96); ctx.fillStyle = INK; ctx.fillText('R$ 99,90', 0, -4); ctx.restore();
+    ctx.save(); ctx.globalAlpha = clamp(pp); ctx.textAlign = 'center'; ctx.font = '800 30px Inter'; ctx.fillStyle = WHITE;
+    ctx.fillText('ou 3x de R$ 33,30', 770, 1246); ctx.restore();
+  }
+  ctx.restore();
+  vignette(0.6);
+  const gl = Math.max(t > 0.03 ? 0.8 * (1 - prog(t, 0.03, 0.3)) : 0, t > BAR && t < BAR + 0.07 ? 0.7 : 0, prog(t, DROP - 0.3, DROP) * 0.9);
+  glitch(gl, Math.floor(t * FPS));
+}
+function callout(t, at, l1, l2, x, y, px, py, side) {
+  const p = prog(t, at, at + 0.2); if (p <= 0) return;
+  ctx.save();
+  ctx.strokeStyle = TQ; ctx.lineWidth = 4; ctx.beginPath(); ctx.moveTo(px, py);
+  const ex = lerp(px, x, eout(p)), ey = lerp(py, y, eout(p)); ctx.lineTo(ex, ey); ctx.stroke();
+  ctx.fillStyle = TQ; ctx.beginPath(); ctx.arc(px, py, 9, 0, Math.PI * 2); ctx.fill();
+  ctx.fillStyle = 'rgba(34,211,197,0.3)'; ctx.beginPath(); ctx.arc(px, py, 9 + 10 * ((t * 1.5) % 1), 0, Math.PI * 2); ctx.fill();
+  const tp = pop(t, at + 0.08, 0.22);
+  ctx.translate(x, y); ctx.scale(tp, tp); ctx.textBaseline = 'alphabetic'; ctx.textAlign = side === 'L' ? 'right' : 'left';
+  const dx = side === 'L' ? -14 : 14; anton(64); ctx.fillStyle = WHITE; ctx.fillText(l1, dx, l2 ? -6 : 22);
+  if (l2) { anton(44); ctx.fillStyle = TQ; ctx.fillText(l2, dx, 46); }
+  ctx.restore();
+}
+
+async function drop(t) {
+  let i = 0; for (let k = 0; k < SHOT_T0.length; k++) if (t >= SHOT_T0[k]) i = k;
+  const t0 = SHOT_T0[i], u = clamp((t - t0) / (SHOT_LEN[i] * P));
+  const [a, b, z0, ax, ay, lines, style] = SHOTS[i];
+  // speed ramp: rushes in, then hangs in slow motion
+  const ramp = 1 - Math.pow(1 - u, 2.4), src = a + (b - a) * ramp;
+  const punch = 0.1 * Math.exp(-(t - t0) / 0.12) + 0.035 * hit(KICK, t, 0.09);
+  const sh = 9 * hit(CLAP, t, 0.07), sx = sh * Math.sin(t * 157), sy = sh * Math.cos(t * 131);
+  ctx.fillStyle = '#000'; ctx.fillRect(0, 0, W, H);
+  await drawFoot(src, z0 * (1.02 + punch + 0.05 * u), ax, ay, 540 + sx, 960 + sy, 1, GRADE);
+  // teal/black grade: lift shadows to teal a touch
+  ctx.save(); ctx.globalCompositeOperation = 'soft-light'; ctx.fillStyle = 'rgba(20,90,100,0.35)'; ctx.fillRect(0, 0, W, H); ctx.restore();
+  vignette(0.6);
+  // benefit word, low-centre (faces sit higher)
+  const wp = prog(t, t0 + 0.02, t0 + 0.24);
+  word(lines, 540, 1060, lines.length > 1 ? 165 : 190, style, wp, t);
+  // counter + fixed tag
+  ctx.save(); anton(40); ctx.textAlign = 'left'; ctx.fillStyle = TQ; ctx.fillText(String(i + 1).padStart(2, '0'), 60, 1245);
+  ctx.fillStyle = 'rgba(255,255,255,0.5)'; ctx.fillText('/08', 108, 1245);
+  ctx.fillStyle = TQ; ctx.fillRect(60, 1258, 170 * ((i + u) / 8), 5); ctx.restore();
+  pill('ESTAMPA SHADOW EM AÇÃO', 60, 310, 'rgba(0,0,0,0.6)', WHITE);
+  pip(t);
+  // cut transitions alternate: flash / glitch / whip
+  const kind = i % 3, dt = t - t0;
+  if (i > 0 && kind === 0) flash(t, t0, 0.1, '255,255,255', 0.85);
+  if (kind === 1) glitch(clamp(1 - dt / 0.18), Math.floor(t * FPS) + i * 31);
+  if (kind === 2 && dt < 0.12) { ctx.save(); ctx.globalAlpha = 0.5 * (1 - dt / 0.12); ctx.filter = 'blur(18px)'; ctx.drawImage(ctx.canvas, 60 * (1 - dt / 0.12), 0); ctx.restore(); }
+  if (i === 0) { flash(t, DROP, 0.16, '34,211,197', 1); glitch(clamp(1 - dt / 0.25), Math.floor(t * FPS)); }
+}
+function pip(t) {
+  // kit thumbnail: keeps the short-sleeve kit + price on screen while the footage shows the print in play
+  const p = pop(t, DROP + 0.25, 0.3); if (p <= 0) return;
+  const x = 800, y = 268, w = 220, h = 300;
+  ctx.save(); ctx.translate(x + w, y); ctx.scale(p, p); ctx.translate(-w, 0);
+  ctx.shadowColor = 'rgba(0,0,0,0.5)'; ctx.shadowBlur = 24; ctx.fillStyle = 'rgba(7,8,11,0.82)';
+  ctx.beginPath(); ctx.roundRect(0, 0, w, h, 24); ctx.fill(); ctx.shadowBlur = 0;
+  ctx.strokeStyle = TQ; ctx.lineWidth = 3; ctx.stroke();
+  ctx.save(); ctx.beginPath(); ctx.roundRect(0, 0, w, h, 24); ctx.clip(); const fl = 4 * Math.sin(t * 2.2);
+  kit(w / 2, 46 + fl, 168, 0.5); ctx.restore();
+  ctx.textAlign = 'center'; ctx.font = '800 17px Inter'; ctx.fillStyle = TQ; ctx.fillText('NO KIT', w / 2, 30);
+  ctx.font = '700 17px Inter'; ctx.fillStyle = WHITE; ctx.fillText('manga curta + shorts', w / 2, 240);
+  anton(38); ctx.fillStyle = WHITE; ctx.fillText('R$ 99,90', w / 2, 284);
+  ctx.restore();
+}
+
+async function outro(t) {
+  const u = t - OUT;
+  // slow-motion bicycle kick behind, dark and tinted
+  ctx.fillStyle = INK; ctx.fillRect(0, 0, W, H);
+  await drawFoot(15.6 + u * 0.35, 1.2, 560, 820, 540, 960, 0.2, 'grayscale(1) contrast(1.3) brightness(0.7) blur(3px)');
+  ctx.save(); ctx.globalCompositeOperation = 'color'; ctx.fillStyle = TQ; ctx.globalAlpha = 0.35; ctx.fillRect(0, 0, W, H); ctx.restore();
+  const g = ctx.createRadialGradient(330, 800, 30, 330, 800, 620);
+  g.addColorStop(0, 'rgba(34,211,197,0.28)'); g.addColorStop(1, 'rgba(34,211,197,0)'); ctx.fillStyle = g; ctx.fillRect(0, 0, W, H);
+  vignette(0.7);
+  const bump = 0.025 * hit(KICK, t, 0.1);
+  // logo + title
+  const lp = pop(t, OUT, 0.25);
+  ctx.save(); ctx.globalAlpha = clamp(lp); const lw = 150, lh = lw * IMG.logo.height / IMG.logo.width;
+  ctx.drawImage(IMG.logo, 540 - lw / 2, 280, lw, lh); ctx.restore();
+  ctx.save(); ctx.translate(540, 440); const tp = pop(t, OUT + STEP * 2, 0.25); ctx.scale(tp * (1 + bump), tp * (1 + bump));
+  anton(150); ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+  const a = 'KIT ', b = 'SHADOW', wa = ctx.measureText(a).width, wb = ctx.measureText(b).width;
+  ctx.textAlign = 'left'; ctx.fillStyle = WHITE; ctx.fillText(a, -(wa + wb) / 2, 0);
+  ctx.shadowColor = TQ; ctx.shadowBlur = 26; ctx.fillStyle = TQ; ctx.fillText(b, -(wa + wb) / 2 + wa, 0); ctx.restore();
+  // kit rises from below on the left
+  const kp = eback(prog(t, OUT, OUT + 0.45));
+  kit(300, lerp(1300, 540 + 6 * Math.sin(t * 2), kp), 600, 0.9, clamp(prog(t, OUT, OUT + 0.15)));
+  // info column on the right, one line per beat
+  const col = 760, rows = [
+    [OUT + STEP * 2, () => { ctx.font = '800 30px Inter'; ctx.fillStyle = TQ; ctx.fillText('CAMISETA', col, 640); ctx.fillText('MANGA CURTA', col, 678); ctx.fillStyle = WHITE; ctx.fillText('+ SHORTS', col, 716); }],
+    [OUT + STEP * 4, () => { anton(116); ctx.fillStyle = WHITE; ctx.fillText('R$ 99,90', col, 860); }],
+    [OUT + STEP * 6, () => { ctx.font = '800 30px Inter'; ctx.fillStyle = WHITE; ctx.fillText('3x de R$ 33,30', col, 920); ctx.font = '600 26px Inter'; ctx.fillStyle = 'rgba(255,255,255,0.7)'; ctx.fillText('sem juros', col, 956); }],
+    [OUT + STEP * 8, () => { ctx.fillStyle = 'rgba(34,211,197,0.16)'; ctx.beginPath(); ctx.roundRect(col - 150, 995, 300, 60, 30); ctx.fill(); ctx.font = '800 25px Inter'; ctx.fillStyle = TQ; ctx.fillText('troca em 7 dias', col, 1034); }],
+  ];
+  ctx.save(); ctx.textAlign = 'center'; ctx.textBaseline = 'alphabetic';
+  for (const [at, draw] of rows) { const p = pop(t, at, 0.22); if (p <= 0) continue; ctx.save(); ctx.translate(col, 800); ctx.scale(p, p); ctx.translate(-col, -800); ctx.globalAlpha = clamp(p); draw(); ctx.restore(); }
+  ctx.restore();
+  // CTA: arrives on the bar, slams on the final boom
+  const cp = pop(t, OUT + STEP * 12, 0.25), boom = t >= END ? Math.exp(-(t - END) / 0.18) : 0;
+  if (cp > 0) {
+    ctx.save(); ctx.translate(540, 1170); const s = cp * (1 + 0.12 * boom + 0.02 * Math.sin(t * 8) * (t > END ? 0 : 1)); ctx.scale(s, s);
+    ctx.shadowColor = TQ; ctx.shadowBlur = 30 + 50 * boom; ctx.fillStyle = TQ; ctx.beginPath(); ctx.roundRect(-400, -60, 800, 120, 60); ctx.fill(); ctx.shadowBlur = 0;
+    anton(64); ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillStyle = INK; ctx.fillText('GARANTA O SEU  →', 0, 2);
+    ctx.restore();
+  }
+  flash(t, OUT, 0.12, '34,211,197', 0.8);
+  glitch(clamp(1 - u / 0.2), Math.floor(t * FPS) + 7);
+  flash(t, END, 0.14, '255,255,255', 0.55);
+  glitch(boom * 0.8, Math.floor(t * FPS) + 3);
+}
+
+async function render(t) {
+  ctx.setTransform(1, 0, 0, 1, 0, 0); ctx.globalAlpha = 1; ctx.filter = 'none'; ctx.globalCompositeOperation = 'source-over';
+  if (t < DROP) await intro(t); else if (t < OUT) await drop(t); else await outro(t);
+  grain(t);
+  const fo = prog(t, DUR - 0.25, DUR); if (fo > 0) { ctx.fillStyle = `rgba(0,0,0,${fo * 0.6})`; ctx.fillRect(0, 0, W, H); }
+}
+
+const IMG = {};
+function load(src) { const im = new Image(); im.src = src; return im.decode().then(() => im); }
+window.ready = (async () => {
+  IMG.kit = await load('build/kit_cutout.png');
+  IMG.logo = await load('build/sw_logo_white.png');
+  // glow source: the cutout silhouette filled turquoise
+  const gc = document.createElement('canvas'); gc.width = IMG.kit.width; gc.height = IMG.kit.height; const g = gc.getContext('2d');
+  g.drawImage(IMG.kit, 0, 0); g.globalCompositeOperation = 'source-in'; g.fillStyle = TQ; g.fillRect(0, 0, gc.width, gc.height); IMG.kitGlow = gc;
+  IMG.noise = [];
+  for (let k = 0; k < 6; k++) {
+    const nc = document.createElement('canvas'); nc.width = 540; nc.height = 960; const n = nc.getContext('2d'), d = n.createImageData(540, 960);
+    for (let p = 0; p < d.data.length; p += 4) { const v = hash(p * 0.37 + k * 1000.3) * 255; d.data[p] = d.data[p + 1] = d.data[p + 2] = v; d.data[p + 3] = 255; }
+    n.putImageData(d, 0, 0); IMG.noise.push(nc);
+  }
+  for (const f of ['40px Anton', '800 40px Inter', '700 40px Inter', '600 40px Inter']) await document.fonts.load(f, 'AÉÃ→');
+  await document.fonts.ready; await render(0); return true;
+})();
+window.renderAt = t => render(t);
+</script>
+</body>
+</html>

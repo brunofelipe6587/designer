@@ -1,0 +1,175 @@
+<!doctype html>
+<html lang="pt-br">
+<head>
+<meta charset="utf-8">
+<title>Sand Walk Futevolei Preto 2b</title>
+<link href="fonts/fonts.css" rel="stylesheet">
+<style>html, body { margin: 0; background: #000; } canvas { display: block; }</style>
+</head>
+<body>
+<canvas id="c" width="1080" height="1920"></canvas>
+<script>
+// Kit Futevôlei Preto, creative 2b — same tour/offer as creative 2, but on top of game footage (feedback: show plays so
+// the audience self-selects). Background: seven plays from other Sand Walk shoots, one per bar, black and white and
+// dimmed so they read as "futevôlei" without passing for this kit. Foreground: a reduced, centred product card whose
+// camera moves between the store image's details, with one label per stop. Original 85 bpm lo-fi (make_beat2.py).
+const W = 1080, H = 1920, DUR = 19.76, FPS = 30;
+const BAR = 4 * 60 / 85;
+const SAND = '#E4D5BC', INK = '#111111', WHITE = '#FFFFFF', MUTED = '#5B5243';
+const ctx = document.getElementById('c').getContext('2d');
+const clamp = (x, a = 0, b = 1) => Math.min(b, Math.max(a, x));
+const lerp = (a, b, t) => a + (b - a) * t;
+const eout = t => 1 - Math.pow(1 - t, 3);
+const eio = t => t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
+const prog = (t, a, b) => clamp((t - a) / (b - a));
+const enter = (t, at, d = 0.5) => eout(prog(t, at, at + d));
+
+// ---------- background plays ----------
+// [dir, frames, zoom, anchorX, anchorY]; each plays over one bar (speed = its length / bar)
+// Frames are bottom-aligned and zoomed so each player lands in the open top half (above the card).
+const PLAYS = [['b1', 85, 1.36, 760, 1920], ['b2', 84, 1.30, 420, 1920], ['b3', 54, 1.08, 600, 1920], ['b4', 84, 1.33, 480, 1920],
+               ['b5', 37, 1.15, 600, 1920], ['b6', 84, 1.24, 600, 1920], ['b7', 84, 1.30, 620, 1920]];
+const cache = new Map();
+function frameImg(dir, n, i) {
+  i = clamp(Math.round(i), 1, n); const key = dir + i;
+  if (!cache.has(key)) { const im = new Image(); im.src = `frames/${dir}/${String(i).padStart(4, '0')}.jpg`; cache.set(key, im.decode().then(() => im)); if (cache.size > 40) cache.delete(cache.keys().next().value); }
+  return cache.get(key);
+}
+async function drawPlay(k, u, alpha) {
+  const [dir, n, z0, ax0, ay0] = PLAYS[k], f = 1 + u * (n - 1), ia = Math.floor(f), fr = f - ia;
+  const a = await frameImg(dir, n, ia), b = fr > 0.08 ? await frameImg(dir, n, ia + 1) : null;
+  const z = z0 * (1 + 0.03 * u), ax = clamp(ax0, 540 / z, W - 540 / z), ay = clamp(ay0, 960 / z, H - 960 / z);
+  ctx.save(); ctx.globalAlpha = alpha; ctx.filter = 'grayscale(1) contrast(1.2) brightness(0.74)';
+  ctx.translate(540, 960); ctx.scale(z, z); ctx.translate(-ax, -ay);
+  ctx.drawImage(a, 0, 0, W, H);
+  if (b) { ctx.globalAlpha = alpha * fr; ctx.drawImage(b, 0, 0, W, H); }
+  ctx.restore();
+}
+async function background(t) {
+  ctx.fillStyle = '#000'; ctx.fillRect(0, 0, W, H);
+  const k = clamp(Math.floor(t / BAR), 0, PLAYS.length - 1), u = (t - k * BAR) / BAR;
+  await drawPlay(k, u, 1);
+  if (k > 0 && t - k * BAR < 0.25) await drawPlay(k - 1, 1, 1 - eio((t - k * BAR) / 0.25));
+  const g = ctx.createRadialGradient(540, 860, 300, 540, 860, 1200); g.addColorStop(0, 'rgba(0,0,0,0)'); g.addColorStop(1, 'rgba(0,0,0,0.55)');
+  ctx.fillStyle = g; ctx.fillRect(0, 0, W, H);
+}
+
+// ---------- product card ----------
+const T1 = BAR, T2 = 2 * BAR, T3 = 3 * BAR, OUT = 4 * BAR, MOVE = 0.75;
+// card rectangle [cx, cy, w, h] and the view inside it [imageX, imageY, scale], keyed in time
+const KEYS = [
+  [0,          [540, 915, 420, 500], [1000, 1500, 0.245]],
+  [T1 - 0.05,  [540, 915, 420, 500], [1000, 1500, 0.25]],
+  [T1 + MOVE,  [540, 915, 420, 500], [1130, 960, 0.60]],     // chest / fabric
+  [T2,         [540, 915, 420, 500], [1120, 980, 0.62]],
+  [T2 + MOVE,  [540, 915, 420, 500], [800, 1400, 0.39]],     // sleeve band + waistband
+  [T3,         [540, 915, 420, 500], [805, 1405, 0.40]],
+  [T3 + MOVE,  [540, 915, 420, 500], [1080, 2160, 0.44]],    // shorts
+  [OUT,        [540, 915, 420, 500], [1080, 2170, 0.45]],
+  [OUT + MOVE, [280, 900, 380, 480], [1000, 1500, 0.235]],   // offer: card left, info right
+  [DUR,        [280, 900, 380, 480], [1000, 1500, 0.24]],
+];
+function cardAt(t) {
+  let k = 0; while (k < KEYS.length - 2 && t >= KEYS[k + 1][0]) k++;
+  const a = KEYS[k], b = KEYS[k + 1], e = eio(prog(t, a[0], b[0]));
+  return { r: a[1].map((v, i) => lerp(v, b[1][i], e)), v: a[2].map((v, i) => lerp(v, b[2][i], e)) };
+}
+function card(t) {
+  const { r: [cx, cy, w, h], v: [px, py, s] } = cardAt(t), x = cx - w / 2, y = cy - h / 2;
+  ctx.save(); ctx.shadowColor = 'rgba(0,0,0,0.55)'; ctx.shadowBlur = 50; ctx.shadowOffsetY = 18;
+  ctx.fillStyle = SAND; ctx.beginPath(); ctx.roundRect(x, y, w, h, 34); ctx.fill(); ctx.restore();
+  ctx.save(); ctx.beginPath(); ctx.roundRect(x, y, w, h, 34); ctx.clip();
+  const g = ctx.createRadialGradient(cx, cy - h * 0.1, 30, cx, cy, h * 0.75); g.addColorStop(0, 'rgba(255,255,255,0.4)'); g.addColorStop(1, 'rgba(120,95,60,0.15)');
+  ctx.fillStyle = g; ctx.fillRect(x, y, w, h);
+  ctx.drawImage(IMG.cut, cx - px * s, cy - py * s, 2000 * s, 3000 * s);
+  ctx.restore();
+  return { cx, cy, w, h, px, py, s, toScreen: (ix, iy) => [cx + (ix - px) * s, cy + (iy - py) * s] };
+}
+// one label per stop: white card under the product card, dots on the details with leader lines down to it
+function pin(t, at, c, pts, title, sub) {
+  const k = enter(t, at, 0.5), kOut = 1 - prog(t, at + BAR - 0.95, at + BAR - 0.7); if (k <= 0 || kOut <= 0) return;
+  ctx.save(); ctx.globalAlpha = k * kOut; ctx.textAlign = 'center'; ctx.textBaseline = 'alphabetic';
+  const top = c.cy + c.h / 2 - 70 + (1 - k) * 24;
+  ctx.font = '400 70px "DM Serif Display"'; const tw = ctx.measureText(title).width;
+  ctx.font = '700 34px Inter'; const sw = ctx.measureText(sub).width, cw = Math.max(tw, sw) + 80;
+  for (const [ix, iy] of pts) {
+    const [x, y] = c.toScreen(ix, iy), L = eout(prog(t, at + 0.15, at + 0.6));
+    ctx.strokeStyle = WHITE; ctx.lineWidth = 4; ctx.beginPath(); ctx.moveTo(x, y); ctx.lineTo(x, lerp(y, top, L)); ctx.stroke();
+    ctx.fillStyle = WHITE; ctx.beginPath(); ctx.arc(x, y, 11, 0, Math.PI * 2); ctx.fill();
+    ctx.strokeStyle = 'rgba(255,255,255,0.75)'; ctx.lineWidth = 3; ctx.beginPath(); ctx.arc(x, y, 11 + 15 * ((t * 1.2) % 1), 0, Math.PI * 2); ctx.stroke();
+  }
+  ctx.fillStyle = WHITE; ctx.shadowColor = 'rgba(0,0,0,0.35)'; ctx.shadowBlur = 24; ctx.shadowOffsetY = 8;
+  ctx.beginPath(); ctx.roundRect(540 - cw / 2, top, cw, 152, 26); ctx.fill(); ctx.shadowColor = 'transparent';
+  ctx.fillStyle = INK; ctx.font = '400 70px "DM Serif Display"'; ctx.fillText(title, 540, top + 78);
+  ctx.fillStyle = MUTED; ctx.font = '700 34px Inter'; ctx.fillText(sub, 540, top + 126);
+  ctx.restore();
+}
+function topLine(t) {
+  // hook on bar 1, then the product + price stays on screen during the stops
+  ctx.save(); ctx.textAlign = 'center'; ctx.textBaseline = 'alphabetic';
+  const kh = 1 - prog(t, T1 - 0.45, T1 - 0.1);
+  if (kh > 0) {
+    ctx.globalAlpha = kh;
+    ctx.font = 'italic 400 54px "DM Serif Display"'; ctx.fillStyle = 'rgba(255,255,255,0.85)'; ctx.fillText('Ficou de olho no', 540, 318);
+    ctx.font = '400 92px "DM Serif Display"'; ctx.fillStyle = WHITE; ctx.fillText('Kit Futevôlei Preto?', 540, 412);
+  }
+  const kp = enter(t, T1 - 0.1) * (1 - prog(t, OUT - 0.4, OUT));
+  if (kp > 0) {
+    ctx.globalAlpha = kp; ctx.font = '700 36px Inter'; const s = 'Kit Futevôlei Preto  ·  R$ 99,90', w = ctx.measureText(s).width + 64;
+    ctx.fillStyle = 'rgba(0,0,0,0.6)'; ctx.beginPath(); ctx.roundRect(540 - w / 2, 340, w, 76, 38); ctx.fill();
+    ctx.fillStyle = WHITE; ctx.fillText(s, 540, 391);
+  }
+  ctx.restore();
+}
+function hookPill(t, c) {
+  const k = enter(t, 1.0) * (1 - prog(t, T1 - 0.45, T1 - 0.1)); if (k <= 0) return;
+  ctx.save(); ctx.globalAlpha = k; ctx.translate(0, (1 - k) * 20); ctx.textAlign = 'center'; ctx.textBaseline = 'alphabetic';
+  ctx.font = '700 38px Inter'; const s = 'camiseta manga curta + shorts  ·  R$ 99,90', w = ctx.measureText(s).width + 70, top = c.cy + c.h / 2 - 40;
+  ctx.fillStyle = WHITE; ctx.beginPath(); ctx.roundRect(540 - w / 2, top, w, 84, 42); ctx.fill();
+  ctx.fillStyle = INK; ctx.fillText(s, 540, top + 55); ctx.restore();
+}
+function offer(t) {
+  const u = t - OUT; if (u < 0.25) return;
+  const line = (at, draw) => { const k = enter(u, at); if (k <= 0) return; ctx.save(); ctx.globalAlpha = k; ctx.translate(0, (1 - k) * 20); ctx.textAlign = 'center'; ctx.textBaseline = 'alphabetic'; draw(); ctx.restore(); };
+  const col = 770, kp = enter(u, 0.25, 0.5);
+  // dark panel behind the info column so it always reads over the footage
+  ctx.save(); ctx.globalAlpha = kp; ctx.fillStyle = 'rgba(10,10,10,0.62)'; ctx.beginPath(); ctx.roundRect(col - 230, 660, 460, 480, 30); ctx.fill(); ctx.restore();
+  line(0.4, () => { ctx.font = '400 66px "DM Serif Display"'; ctx.fillStyle = WHITE; ctx.fillText('Kit Futevôlei', col, 720); ctx.fillText('Preto', col, 790); });
+  line(1.0, () => { ctx.font = '400 104px "DM Serif Display"'; ctx.fillStyle = WHITE; ctx.fillText('R$ 99,90', col, 910);
+    ctx.font = '700 32px Inter'; ctx.fillStyle = 'rgba(255,255,255,0.85)'; ctx.fillText('ou 3x de R$ 33,30', col, 960); ctx.fillText('sem juros', col, 1000); });
+  line(1.6, () => { ctx.font = '700 30px Inter'; ctx.fillStyle = SAND; ctx.fillText('✓ troca em 7 dias', col, 1060); ctx.fillText('✓ pagamento 100% seguro', col, 1102); });
+  const kc = enter(u, 2.4, 0.5);
+  if (kc > 0) {
+    const pulse = u > 3.0 ? 1 + 0.018 * Math.max(0, Math.sin((u - 3.0) * Math.PI / (BAR / 4))) : 1;
+    ctx.save(); ctx.globalAlpha = kc; ctx.translate(540, 1196 + (1 - kc) * 24); ctx.scale(pulse, pulse);
+    ctx.fillStyle = SAND; ctx.beginPath(); ctx.roundRect(-390, -54, 780, 108, 54); ctx.fill();
+    ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.font = '800 46px Inter'; ctx.fillStyle = INK; ctx.fillText('GARANTA O SEU  →', 0, 3);
+    ctx.restore();
+  }
+}
+
+async function render(t) {
+  ctx.setTransform(1, 0, 0, 1, 0, 0); ctx.globalAlpha = 1; ctx.filter = 'none'; ctx.globalCompositeOperation = 'source-over';
+  await background(t);
+  if (t >= OUT) { const d = enter(t, OUT, 0.6); ctx.fillStyle = `rgba(0,0,0,${0.25 * d})`; ctx.fillRect(0, 0, W, H); }
+  const c = card(t);
+  topLine(t);
+  hookPill(t, c);
+  pin(t, T1 + MOVE * 0.6, c, [[1150, 905]], 'Leve e respirável', 'tecido que seca rápido');
+  pin(t, T2 + MOVE * 0.6, c, [[565, 1035], [1000, 1755]], 'Faixa FUTEVÔLEI', 'nas mangas e no cós');
+  pin(t, T3 + MOVE * 0.6, c, [[1245, 2350]], 'Corte atlético', 'liberdade pra cada lance');
+  offer(t);
+  const fo = prog(t, DUR - 0.5, DUR); if (fo > 0) { ctx.fillStyle = `rgba(0,0,0,${fo * 0.5})`; ctx.fillRect(0, 0, W, H); }
+}
+
+const IMG = {};
+function load(src) { const im = new Image(); im.src = src; return im.decode().then(() => im); }
+window.ready = (async () => {
+  IMG.cut = await load('build/kit_cutout.png');
+  for (const f of ['400 40px "DM Serif Display"', 'italic 400 40px "DM Serif Display"', '800 40px Inter', '700 40px Inter']) await document.fonts.load(f, 'AÔéí→·✓');
+  await document.fonts.ready; await render(0); return true;
+})();
+window.renderAt = t => render(t);
+</script>
+</body>
+</html>

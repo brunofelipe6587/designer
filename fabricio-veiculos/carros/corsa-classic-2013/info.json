@@ -1,0 +1,13 @@
+{
+  "localizacao": ["Juazeiro", "do Norte - CE"],
+  "marca": "Chevrolet",
+  "modelo": ["Corsa Classic"],
+  "ano": "2013",
+  "km": "105.000",
+  "valor": "34.990",
+  "centavos": "00",
+  "entrada": "12 mil",
+  "ordem_feed": ["localizacao", "modelo", "ano", "km"],
+  "nome_arquivo": "Corsa_Classic_2013",
+  "prova_t": 1.0
+}

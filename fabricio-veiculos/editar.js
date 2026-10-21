@@ -56,20 +56,23 @@ function proof(mode, framePng) {
   if (info.inicio) trim.push('-ss', String(info.inicio));
   if (info.fim) trim.push('-to', String(info.fim));
   const fps = info.fps || 30;
-  const enc = ['-c:v', 'libx264', '-preset', 'medium', '-crf', '19', '-profile:v', 'high', '-pix_fmt', 'yuv420p',
+  const enc = ['-c:v', 'libx264', '-preset', 'medium', '-crf', '19', '-maxrate', '6M', '-bufsize', '12M', '-profile:v', 'high', '-pix_fmt', 'yuv420p',
     '-r', String(fps), '-c:a', 'aac', '-b:a', '160k', '-ar', '48000', '-movflags', '+faststart'];
   const name = (info.nome_arquivo || slug).replace(/[^\w.-]+/g, '_');
 
   // foco do enquadramento (0 = esquerda/topo, 0.5 = centro, 1 = direita/base)
   const fx = info.foco_x ?? 0.5, fy = info.foco_y ?? 0.5;
   const vw = FEED.w - FEED.videoX, vh = FEED.h;
-  const cover = (w, h) => `scale=${w}:${h}:force_original_aspect_ratio=increase,crop=${w}:${h}:(iw-${w})*${fx}:(ih-${h})*${fy},setsar=1`;
+  // vídeo de WhatsApp costuma vir pequeno (ex.: 478x850): amplia com lanczos e devolve um pouco de nitidez
+  const rawH = parseInt(execFileSync('ffprobe', ['-v', 'error', '-select_streams', 'v:0', '-show_entries', 'stream=height', '-of', 'csv=p=0', raw]).toString(), 10);
+  const sharpen = (info.nitidez ?? rawH < 1280) ? ',unsharp=5:5:0.7:5:5:0' : '';
+  const cover = (w, h) => `scale=${w}:${h}:force_original_aspect_ratio=increase:flags=lanczos,crop=${w}:${h}:(iw-${w})*${fx}:(ih-${h})*${fy},setsar=1${sharpen}`;
 
   const feedOut = path.join(out, `${name}_FEED_4x5.mp4`);
   const storiesOut = path.join(out, `${name}_STORIES_9x16.mp4`);
   if (!onlyOverlays) {
     ff([...trim, '-i', raw, '-loop', '1', '-i', ov.feed, '-filter_complex',
-      `[0:v]fps=${fps},${cover(vw, vh)}[v];color=black:${FEED.w}x${FEED.h}:r=${fps}[bg];[bg][v]overlay=${FEED.videoX}:0:shortest=1[b];[b][1:v]overlay=0:0:shortest=1,format=yuv420p[o]`,
+      `[0:v]fps=${fps},${cover(vw, vh)},pad=${FEED.w}:${FEED.h}:${FEED.videoX}:0:black[b];[b][1:v]overlay=0:0:shortest=1,format=yuv420p[o]`,
       '-map', '[o]', '-map', '0:a?', ...enc, '-shortest', feedOut]);
     ff([...trim, '-i', raw, '-loop', '1', '-i', ov.stories, '-filter_complex',
       `[0:v]fps=${fps},${cover(STORIES.w, STORIES.h)}[v];[v][1:v]overlay=0:0:shortest=1,format=yuv420p[o]`,
@@ -81,7 +84,7 @@ function proof(mode, framePng) {
     const t = String(info.prova_t ?? 1.5);
     const fFrame = path.join(out, '_frame_feed.png'), sFrame = path.join(out, '_frame_stories.png');
     if (onlyOverlays) {
-      ff(['-ss', t, '-i', raw, '-i', ov.feed, '-filter_complex', `[0:v]${cover(vw, vh)}[v];color=black:${FEED.w}x${FEED.h}[bg];[bg][v]overlay=${FEED.videoX}:0[b];[b][1:v]overlay=0:0`, '-frames:v', '1', fFrame]);
+      ff(['-ss', t, '-i', raw, '-i', ov.feed, '-filter_complex', `[0:v]${cover(vw, vh)},pad=${FEED.w}:${FEED.h}:${FEED.videoX}:0:black[b];[b][1:v]overlay=0:0`, '-frames:v', '1', fFrame]);
       ff(['-ss', t, '-i', raw, '-i', ov.stories, '-filter_complex', `[0:v]${cover(STORIES.w, STORIES.h)}[v];[v][1:v]overlay=0:0`, '-frames:v', '1', sFrame]);
     } else {
       ff(['-ss', t, '-i', feedOut, '-frames:v', '1', fFrame]);

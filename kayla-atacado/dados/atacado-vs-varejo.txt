@@ -1,0 +1,51 @@
+blusa alice            atac R$   89.90 | varejo cheio R$  189.90 (2.1x) | varejo promo min R$  149.90 (1.7x)
+blusa bel              atac R$   49.00 | varejo cheio R$  169.90 (3.5x) | varejo promo min R$   49.90 (1.0x)  [atac em sale]
+blusa chloe            atac R$   59.90 | varejo cheio R$  169.90 (2.8x) | varejo promo min R$   79.90 (1.3x)
+blusa cindy            atac R$   45.00 | varejo cheio R$  129.90 (2.9x) | varejo promo min R$   99.90 (2.2x)  [atac em sale]
+blusa clara            atac R$   69.00 | varejo cheio R$  119.90 (1.7x) | varejo promo min R$   79.90 (1.2x)
+blusa day              atac R$   79.90 | varejo cheio R$  169.90 (2.1x) | varejo promo min R$   99.90 (1.3x)
+blusa diana            atac R$   59.90 | varejo cheio R$  129.90 (2.2x) | varejo promo min R$  129.90 (2.2x)
+blusa eve              atac R$   79.90 | varejo cheio R$  219.90 (2.8x) | varejo promo min R$  169.90 (2.1x)
+blusa fairy            atac R$   99.00 | sem par no varejo
+blusa georgia          atac R$   62.00 | varejo cheio R$  239.90 (3.9x) | varejo promo min R$  139.90 (2.3x)  [atac em sale]
+blusa gloria           atac R$   79.90 | varejo cheio R$  179.90 (2.3x) | varejo promo min R$  179.90 (2.3x)
+blusa helena           atac R$   45.00 | sem par no varejo
+blusa julie            atac R$   62.00 | varejo cheio R$  149.90 (2.4x) | varejo promo min R$   99.90 (1.6x)  [atac em sale]
+blusa kelly            atac R$   59.90 | varejo cheio R$  129.90 (2.2x) | varejo promo min R$   99.90 (1.7x)
+blusa luna             atac R$   45.00 | varejo cheio R$  129.90 (2.9x) | varejo promo min R$   79.90 (1.8x)  [atac em sale]
+blusa maria            atac R$   59.90 | varejo cheio R$  139.90 (2.3x) | varejo promo min R$  109.90 (1.8x)  [atac em sale]
+blusa olivia           atac R$   55.00 | sem par no varejo
+blusa polo             atac R$   55.00 | varejo cheio R$  179.90 (3.3x) | varejo promo min R$   99.90 (1.8x)  [atac em sale]
+blusa rose             atac R$   69.90 | varejo cheio R$  149.90 (2.1x) | varejo promo min R$   79.90 (1.1x)
+calca bel              atac R$   94.00 | varejo cheio R$  249.90 (2.7x) | varejo promo min R$  179.90 (1.9x)  [atac em sale]
+calca clara            atac R$   99.00 | varejo cheio R$  299.90 (3.0x) | varejo promo min R$  179.90 (1.8x)  [atac em sale]
+calca day              atac R$  119.90 | varejo cheio R$  259.90 (2.2x) | varejo promo min R$  179.90 (1.5x)
+calca fe               atac R$   94.00 | varejo cheio R$  259.90 (2.8x) | varejo promo min R$  179.90 (1.9x)  [atac em sale]
+calca georgia          atac R$   94.00 | varejo cheio R$  319.90 (3.4x) | varejo promo min R$  269.90 (2.9x)  [atac em sale]
+calca gloria           atac R$  119.90 | varejo cheio R$  289.90 (2.4x) | varejo promo min R$   79.90 (0.7x)
+calca helena           atac R$  119.00 | varejo cheio R$  249.90 (2.1x) | varejo promo min R$  179.90 (1.5x)
+calca maira            atac R$   99.00 | varejo cheio R$  349.90 (3.5x) | varejo promo min R$  199.90 (2.0x)  [atac em sale]
+calca moletom          atac R$   45.00 | varejo cheio R$  279.90 (6.2x) | varejo promo min R$   89.90 (2.0x)  [atac em sale]
+calca regina           atac R$  126.90 | varejo cheio R$  279.90 (2.2x) | varejo promo min R$  279.90 (2.2x)
+calca rose             atac R$  119.90 | varejo cheio R$  259.90 (2.2x) | varejo promo min R$  199.90 (1.7x)
+camisa bruna           atac R$  119.90 | varejo cheio R$  259.90 (2.2x) | varejo promo min R$  179.90 (1.5x)
+camisa ellen           atac R$  229.90 | varejo cheio R$  499.90 (2.2x) | varejo promo min R$  189.90 (0.8x)
+camisa linen           atac R$   99.00 | varejo cheio R$  229.90 (2.3x) | varejo promo min R$  119.90 (1.2x)  [atac em sale]
+camisa rose            atac R$  119.90 | varejo cheio R$  259.90 (2.2x) | varejo promo min R$  179.90 (1.5x)
+colete regina          atac R$   79.90 | varejo cheio R$  179.90 (2.3x) | varejo promo min R$  179.90 (2.3x)
+jaqueta clarice        atac R$  119.90 | varejo cheio R$  259.90 (2.2x) | varejo promo min R$  259.90 (2.2x)
+regata bruna           atac R$   59.90 | varejo cheio R$  139.90 (2.3x) | varejo promo min R$   99.90 (1.7x)
+regata olivia          atac R$   45.00 | varejo cheio R$  139.90 (3.1x) | varejo promo min R$  139.90 (3.1x)  [atac em sale]
+saia alice             atac R$  119.90 | varejo cheio R$  259.90 (2.2x) | varejo promo min R$  179.90 (1.5x)
+shorts clarice         atac R$   69.90 | sem par no varejo
+shorts gloria          atac R$   79.90 | varejo cheio R$  179.90 (2.3x) | varejo promo min R$  179.90 (2.3x)
+shorts regina          atac R$   79.90 | varejo cheio R$  179.90 (2.3x) | varejo promo min R$  179.90 (2.3x)
+vestido alice          atac R$  129.90 | varejo cheio R$  269.90 (2.1x) | varejo promo min R$  209.90 (1.6x)
+vestido bruna          atac R$   94.00 | varejo cheio R$  279.90 (3.0x) | varejo promo min R$  179.90 (1.9x)  [atac em sale]
+vestido clarice        atac R$   99.90 | varejo cheio R$  219.90 (2.2x) | varejo promo min R$  219.90 (2.2x)
+vestido cora           atac R$  119.90 | varejo cheio R$  279.90 (2.3x) | varejo promo min R$  229.90 (1.9x)
+vestido day            atac R$  119.90 | varejo cheio R$  259.90 (2.2x) | varejo promo min R$  179.90 (1.5x)
+vestido georgia        atac R$   99.00 | varejo cheio R$  319.90 (3.2x) | varejo promo min R$  269.90 (2.7x)  [atac em sale]
+vestido kelly          atac R$  129.90 | varejo cheio R$  279.90 (2.2x) | varejo promo min R$  199.90 (1.5x)
+vestido luna           atac R$   55.00 | varejo cheio R$  249.90 (4.5x) | varejo promo min R$  149.90 (2.7x)  [atac em sale]
+vestido rebeca         atac R$  126.90 | varejo cheio R$  279.90 (2.2x) | varejo promo min R$  279.90 (2.2x)

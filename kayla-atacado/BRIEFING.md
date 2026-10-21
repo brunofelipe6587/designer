@@ -154,3 +154,31 @@ Leitura:
   - Nenhum quantifica a **margem**.
   - O V3 manda "falar com a gente", em vez de levar à compra sozinha no site.
   - O V5 ("até 60% + 20% OFF, a partir de 39,90") atrai também a consumidora final, que não consegue comprar.
+
+## Preços de atacado (levantados logado no site em 21/10/2026)
+
+O login foi aceito na hora ("Login efetuado com sucesso") e os preços apareceram em seguida.
+No carrinho há uma barra de progresso **"Pedido mínimo: 6 peças – Faltam X peças"**. O mínimo real é **6**, então o "12" do FAQ está desatualizado.
+A comparação completa está em `dados/atacado-vs-varejo.txt`.
+A gravação de tela do fluxo logado (enviada pelo cliente) **não foi versionada**, porque mostra o CNPJ do login.
+Antes de usar em anúncio, é preciso borrar o campo de login.
+
+| Peça | Atacado | Varejo Kayla (preço cheio) | Multiplicador |
+|---|---|---|---|
+| Regata Bruna 42–54 | R$ 59,90 | R$ 139,90 | 2,3× |
+| Blusa Maria 42–54 | R$ 59,90 | R$ 139,90 | 2,3× |
+| Blusa Eve 42–54 | R$ 79,90 | R$ 219,90 | 2,8× |
+| Vestido Clarice | R$ 99,90 | R$ 219,90 | 2,2× |
+| Vestido Rebeca | R$ 126,90 | R$ 279,90 | 2,2× |
+| Calça Day / Rose | R$ 119,90 | R$ 259,90 | 2,2× |
+| Vestido Georgia (sale) | R$ 99,00 | R$ 319,90 | 3,2× |
+| Calça Maira (sale) | R$ 99,00 | R$ 349,90 | 3,5× |
+
+- **Lançamentos:** de R$ 59,90 a R$ 129,90 (Camisa Ellen R$ 229,90). O preço cheio do varejo é cerca de **2,2×** o atacado.
+- **Sale do atacado:** peças de R$ 45 a R$ 99, com o varejo cheio entre **2,7× e 4,5×**.
+- PIX dá cerca de 5% de desconto (Blusa Eve: R$ 75,91; Regata Bruna: R$ 56,91).
+- **Exemplo de pedido mínimo:** 2 Blusas Eve + 2 Regatas Bruna + 2 Blusas Maria.
+  - Custo: **R$ 399,40** (R$ 379,43 no PIX).
+  - Valor no preço cheio do varejo Kayla: **R$ 999,40**, ou seja, cerca de R$ 600 de diferença bruta.
+- **Atenção:** a referência é o preço cheio da loja de varejo da própria marca, que hoje está em promoção (Blusa Eve a R$ 169,90).
+  Nos criativos, falar em "a Kayla vende por R$ 219,90 na loja dela", e não prometer lucro.

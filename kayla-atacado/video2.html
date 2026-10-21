@@ -1,0 +1,169 @@
+<!doctype html>
+<html lang="pt-br">
+<head>
+<meta charset="utf-8">
+<title>Kayla Atacado 2 Passo a passo</title>
+<link href="fonts/fonts.css" rel="stylesheet">
+<style>html, body { margin: 0; background: #000; } canvas { display: block; }</style>
+</head>
+<body>
+<canvas id="c" width="1080" height="1920"></canvas>
+<script>
+// Creative 2 — "Passo a passo": the real wholesale site on a phone, six steps from CNPJ sign-up to checkout, so the click
+// that arrives already knows what happens. No voice; the reel's own music, step changes on its strong beats.
+// Evergreen: no season, no collection names. Type copies the brand's reel captions (Oswald, Playfair, Montserrat).
+const W = 1080, H = 1920, DUR = 19.6;
+const ctx = document.getElementById('c').getContext('2d');
+const C = { beige: '#E7DDD3', beige2: '#D8CABD', ink: '#211C19', cream: '#F7E8DA', mute: '#6E625A', line: 'rgba(33,28,25,0.22)' };
+const SERIF = '"Playfair Display", serif', COND = 'Oswald, sans-serif', SANS = 'Montserrat, sans-serif';
+const clamp = (x, a = 0, b = 1) => Math.min(b, Math.max(a, x));
+const lerp = (a, b, t) => a + (b - a) * t;
+const eout = t => 1 - Math.pow(1 - t, 3);
+const eio = t => t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
+const prog = (t, a, b) => clamp((t - a) / (b - a));
+
+// step changes sit on the music's strong onsets (2.60, 4.97, 6.90, 8.82, 12.70, 15.00; 10.75 is one bar after 8.82)
+const B = [2.60, 4.97, 6.90, 8.82, 10.75, 12.70];
+const CARD = 15.0;
+// [title, screen(t, local time) -> [source, seconds], highlight band on the screen or null]
+const STEPS = [
+  ['Cadastre seu CNPJ', (l) => l < 0.8 ? ['tela', 1.0 + l] : ['cad', 0], (l) => l > 1.15 ? [0.268, 0.352, eout(prog(l, 1.15, 1.45))] : null],
+  ['Aprovação automática', (l) => l < 0.5 ? ['tela', 55.6 + l * 0.5] : ['tela', 61.0 + (l - 0.5)], null],
+  ['Preço de atacado liberado', (l) => ['tela', l < 0.5 ? 81.5 : 83.0], (l) => l >= 0.5 ? [0.486, 0.542, eout(prog(l, 0.65, 0.95))] : null],
+  ['Escolha cores e tamanhos', (l) => ['tela', 93.0 + l * 1.6], null],
+  ['Pedido mínimo: 6 peças', (l) => ['tela', l < 0.7 ? 104.5 : l < 1.4 ? 135.0 : 165.0], (l) => l < 1.4 ? [0.825, 0.868, eout(prog(l, 0.15, 0.4))] : null],
+  ['Finalize: 3x ou PIX', () => ['tela', 174.0], (l) => [0.288, 0.334, eout(prog(l, 0.35, 0.65))]],
+];
+
+// ---------- sources ----------
+const cache = new Map();
+function frame(dir, n, max) {
+  n = clamp(n, 1, max); const k = dir + n;
+  if (!cache.has(k)) { const im = new Image(); im.src = `frames/${dir}/${String(n).padStart(5, '0')}.jpg`; cache.set(k, im.decode().then(() => im)); if (cache.size > 60) cache.delete(cache.keys().next().value); }
+  return cache.get(k);
+}
+const tela = s => frame('tela', Math.floor(s * 30) + 1, 5656);
+const IMG = {};
+const OFF = Object.assign(document.createElement('canvas'), { width: 1080, height: 820 });
+const load = (n, s) => new Promise((ok, er) => { const i = new Image(); i.onload = () => { IMG[n] = i; ok(); }; i.onerror = er; i.src = s; });
+
+// ---------- helpers ----------
+function cover(img, x, y, w, h, fx = 0.5, fy = 0.5, zoom = 1) {
+  const r = Math.max(w / img.width, h / img.height) * zoom, sw = w / r, sh = h / r;
+  ctx.drawImage(img, (img.width - sw) * fx, (img.height - sh) * fy, sw, sh, x, y, w, h);
+}
+function studio() {
+  const g = ctx.createRadialGradient(540, 760, 120, 540, 960, 1250);
+  g.addColorStop(0, '#EEE5DC'); g.addColorStop(1, C.beige2);
+  ctx.fillStyle = g; ctx.fillRect(0, 0, W, H);
+}
+function typed(str, t, at, dur) { return str.slice(0, Math.floor(clamp((t - at) / dur) * str.length + 0.0001)); }
+function shadowText(fn) { ctx.save(); ctx.shadowColor = 'rgba(0,0,0,0.28)'; ctx.shadowBlur = 18; ctx.shadowOffsetY = 3; fn(); ctx.restore(); }
+function logo(x, y, w, a = 1) { ctx.save(); ctx.globalAlpha *= a; ctx.drawImage(IMG.logo, x - w / 2, y, w, w * 76 / 196); ctx.restore(); }
+function phone(img, cx, cy, sw, hl) {
+  const sh = sw * 1280 / 576, bz = 18, r = 64;
+  ctx.save();
+  ctx.shadowColor = 'rgba(40,25,15,0.35)'; ctx.shadowBlur = 60; ctx.shadowOffsetY = 26;
+  ctx.fillStyle = '#141211'; ctx.beginPath(); ctx.roundRect(cx - sw / 2 - bz, cy - sh / 2 - bz, sw + 2 * bz, sh + 2 * bz, r); ctx.fill();
+  ctx.shadowColor = 'transparent';
+  ctx.beginPath(); ctx.roundRect(cx - sw / 2, cy - sh / 2, sw, sh, r - bz); ctx.clip();
+  ctx.drawImage(img, cx - sw / 2, cy - sh / 2, sw, sh);
+  if (hl) { // outline a band of the screen (fractions of screen height)
+    const [y0, y1, p] = hl, yy = cy - sh / 2 + sh * y0, hh = sh * (y1 - y0);
+    ctx.strokeStyle = `rgba(33,28,25,${p})`; ctx.lineWidth = 6; ctx.beginPath(); ctx.roundRect(cx - sw / 2 + 10, yy - 6, sw - 20, hh + 12, 14); ctx.stroke();
+  }
+  ctx.restore();
+}
+
+// ---------- scenes ----------
+function hook(t) {
+  cover(IMG.hook, 0, 0, W, H, 0.5, 0.2, 1.04 + 0.04 * prog(t, 0, B[0]));
+  const g = ctx.createLinearGradient(0, 0, 0, 1100); g.addColorStop(0, 'rgba(30,20,15,0.5)'); g.addColorStop(1, 'rgba(30,20,15,0)');
+  ctx.fillStyle = g; ctx.fillRect(0, 0, W, 1100);
+  ctx.textAlign = 'center'; ctx.textBaseline = 'alphabetic';
+  shadowText(() => {
+    ctx.fillStyle = C.cream; ctx.font = `700 196px ${COND}`; ctx.letterSpacing = '4px';
+    ctx.fillText(typed('LOJISTA', t, 0.05, 0.4), 540, 400);
+    ctx.letterSpacing = '0px'; ctx.fillStyle = '#fff'; ctx.font = `400 76px ${SERIF}`;
+    ctx.fillText(typed('com CNPJ ativo?', t, 0.5, 0.45), 540, 505);
+  });
+  // the brand's own callout: thin box + stem + dot (as in Fran's reel)
+  const bx = eout(prog(t, 1.05, 1.35)), stem = eout(prog(t, 1.25, 1.55));
+  if (bx > 0) {
+    ctx.save(); ctx.strokeStyle = 'rgba(255,255,255,0.95)'; ctx.lineWidth = 3;
+    const w = 660 * bx, h = 150; ctx.strokeRect(540 - w / 2, 600, w, h);
+    ctx.beginPath(); ctx.moveTo(540, 750); ctx.lineTo(540, 750 + 150 * stem); ctx.stroke();
+    if (stem >= 1) { ctx.fillStyle = '#fff'; ctx.beginPath(); ctx.arc(540, 912, 13, 0, Math.PI * 2); ctx.fill(); }
+    ctx.fillStyle = '#fff'; ctx.font = `500 50px ${SANS}`; ctx.textAlign = 'center';
+    ctx.fillText(typed('Como comprar KAYLA', t, 1.3, 0.4), 540, 665); ctx.fillText(typed('no ATACADO', t, 1.7, 0.25), 540, 728);
+    ctx.restore();
+  }
+}
+async function steps(t) {
+  studio(); logo(540, 82, 200, 0.9);
+  let k = 0; for (let i = 0; i < 6; i++) if (t >= B[i]) k = i;
+  const l = t - B[k], [title, scr, hlf] = STEPS[k];
+  const [src, s] = scr(l), img = src === 'cad' ? IMG.cad : await tela(s);
+  const rise = eout(prog(t, B[0], B[0] + 0.45));
+  phone(img, 540, lerp(1500, 1170, rise), 580, hlf ? hlf(l) : null);
+  // caption: step counter, title, progress dots
+  const a = eout(prog(l, 0, 0.3)), dy = (1 - a) * 22;
+  ctx.save(); ctx.globalAlpha *= a; ctx.textAlign = 'center';
+  ctx.fillStyle = C.mute; ctx.font = `600 30px ${SANS}`; ctx.letterSpacing = '7px'; ctx.fillText(`PASSO ${k + 1} DE 6`, 543.5, 228 + dy);
+  ctx.letterSpacing = '0px'; ctx.fillStyle = C.ink; ctx.font = `400 72px ${SERIF}`; ctx.fillText(title, 540, 318 + dy);
+  ctx.restore();
+  for (let i = 0; i < 6; i++) {
+    const x = 540 + (i - 2.5) * 34, on = i <= k;
+    ctx.fillStyle = on ? C.ink : C.line; ctx.beginPath(); ctx.arc(x, 372, i === k ? 8 : 6, 0, Math.PI * 2); ctx.fill();
+  }
+}
+function card(t) {
+  studio();
+  const z = 1.02 + 0.02 * prog(t, CARD, DUR);
+  // photo fades into the studio background through an alpha mask (no seam)
+  const oc = OFF.getContext('2d'); oc.globalCompositeOperation = 'source-over'; oc.clearRect(0, 0, W, 820);
+  { const im = IMG.card, r = Math.max(W / im.width, 820 / im.height) * z, sw = W / r, sh = 820 / r; oc.drawImage(im, (im.width - sw) * 0.5, (im.height - sh) * 0.1, sw, sh, 0, 0, W, 820); }
+  const g = oc.createLinearGradient(0, 440, 0, 780); g.addColorStop(0, 'rgba(0,0,0,0)'); g.addColorStop(0.6, 'rgba(0,0,0,0.75)'); g.addColorStop(1, 'rgba(0,0,0,1)');
+  oc.globalCompositeOperation = 'destination-out'; oc.fillStyle = g; oc.fillRect(0, 440, W, 380);
+  ctx.drawImage(OFF, 0, 0);
+  logo(540, 815, 270);
+  ctx.textAlign = 'center'; ctx.fillStyle = C.ink; ctx.font = `500 74px ${SERIF}`; ctx.fillText('Peças que giram.', 540, 1035);
+  ctx.font = `italic 400 74px ${SERIF}`; ctx.fillText('Margem que vale.', 540, 1118);
+  ctx.fillStyle = C.line; ctx.fillRect(390, 1158, 300, 2);
+  const rows = [['1', 'Cadastre seu CNPJ ativo no site'], ['2', 'Aprovação automática'], ['3', 'Compre a partir de 6 peças']];
+  rows.forEach(([n, s], i) => {
+    const ra = eout(prog(t, CARD + 0.5 + i * 0.3, CARD + 1.0 + i * 0.3)), y = 1255 + i * 96;
+    ctx.save(); ctx.globalAlpha *= ra; ctx.translate((1 - ra) * 24, 0);
+    ctx.strokeStyle = C.ink; ctx.lineWidth = 2.5; ctx.beginPath(); ctx.arc(170, y - 16, 34, 0, Math.PI * 2); ctx.stroke();
+    ctx.fillStyle = C.ink; ctx.textAlign = 'center'; ctx.font = `500 38px ${SERIF}`; ctx.fillText(n, 170, y - 3);
+    ctx.textAlign = 'left'; ctx.font = `500 42px ${SANS}`; ctx.fillText(s, 236, y);
+    ctx.restore();
+  });
+  ctx.textAlign = 'center'; ctx.fillStyle = C.mute; ctx.font = `600 27px ${SANS}`; ctx.letterSpacing = '5px';
+  ctx.fillText('GRADE 42 AO 54 · ENVIAMOS PARA TODO O BRASIL', 542, 1580); ctx.letterSpacing = '0px';
+  const b = eout(prog(t, CARD + 1.4, CARD + 1.9));
+  ctx.save(); ctx.globalAlpha *= b; ctx.translate(540, 1700);
+  ctx.fillStyle = C.ink; ctx.beginPath(); ctx.roundRect(-400, -62, 800, 124, 62); ctx.fill();
+  ctx.fillStyle = '#fff'; ctx.font = `600 38px ${SANS}`; ctx.letterSpacing = '3px'; ctx.textBaseline = 'middle'; ctx.fillText('VER PREÇOS DE ATACADO', 0, 3);
+  ctx.restore();
+  ctx.save(); ctx.globalAlpha *= b; ctx.fillStyle = C.mute; ctx.font = `500 30px ${SANS}`; ctx.textAlign = 'center'; ctx.fillText('kaylaatacado.com.br', 540, 1810); ctx.restore();
+}
+
+async function render(t) {
+  ctx.setTransform(1, 0, 0, 1, 0, 0); ctx.globalAlpha = 1;
+  if (t < B[0]) return hook(t);
+  if (t < CARD) return steps(t);
+  if (t < CARD + 0.6) { await steps(t); ctx.save(); ctx.globalAlpha = eio((t - CARD) / 0.6); card(t); ctx.restore(); return; }
+  card(t);
+}
+
+window.ready = (async () => {
+  await Promise.all([load('logo', 'src/logo-kayla.svg'), load('hook', 'src/p-rebeca2.jpg'), load('card', 'src/p-clarice.jpg'), load('cad', 'src/tela_cadastro_2x.jpg')]);
+  for (const f of [`700 40px Oswald`, `400 40px "Playfair Display"`, `500 40px "Playfair Display"`, `italic 400 40px "Playfair Display"`, `500 40px Montserrat`, `600 40px Montserrat`]) await document.fonts.load(f);
+  await document.fonts.ready;
+  await render(0); return true;
+})();
+window.renderAt = t => render(t);
+</script>
+</body>
+</html>

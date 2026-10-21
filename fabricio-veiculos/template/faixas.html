@@ -187,7 +187,7 @@ function storiesSeg(kind, d) {
   }
   if (kind === 'ano') return `<div class="seg">${ICONS.calendar(112)}<div class="txt tx-shadow"><div class="lbl">ANO</div><div class="v1">${esc(d.ano)}</div></div></div>`;
   if (kind === 'modelo') {
-    let [a, b] = lines(d.modelo).map(up);
+    let [a, b] = lines(d.modelo_stories ?? d.modelo).map(up);
     // modelo em uma linha só ("CORSA CLASSIC"): primeira palavra grande, resto menor, como na S10
     if (!b && a.includes(' ')) { const i = a.indexOf(' '); [a, b] = [a.slice(0, i), a.slice(i + 1)]; }
     const top = d.marca ? up(d.marca) : null;

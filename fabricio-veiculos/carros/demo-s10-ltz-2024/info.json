@@ -1,0 +1,11 @@
+{
+  "localizacao": ["Juazeiro", "do Norte - CE"],
+  "marca": "Chevrolet",
+  "modelo": ["S10", "LTZ 2.8 TB"],
+  "ano": "2024",
+  "valor": "204.990",
+  "centavos": "90",
+  "entrada": "50 mil",
+  "ordem_feed": ["localizacao", "ano", "modelo"],
+  "nome_arquivo": "S10_LTZ_2024"
+}

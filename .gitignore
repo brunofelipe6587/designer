@@ -31,3 +31,5 @@ hgg-sabotage/build/grid_*.png
 hgg-sabotage/build/final*_tiles.png
 hgg-sabotage/out/*_silent.mp4
 hgg-sabotage/build/sb*.png
+fabricio-veiculos/out/*/*.mp4
+fabricio-veiculos/carros/demo-*/bruto.mp4

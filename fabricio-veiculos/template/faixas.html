@@ -1,0 +1,260 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<title>Faixas Fabrício Veículos</title>
+<link rel="stylesheet" href="../fonts/fonts.css">
+<style>
+  :root {
+    --red: #f40000;
+    --red-dark: #8a0000;
+    --white: #ffffff;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html, body { background: transparent; }
+  body { font-family: 'Barlow Condensed', sans-serif; color: var(--white); overflow: hidden; }
+  .stage { position: relative; width: 1080px; overflow: hidden; }
+  .stage.feed { height: 1350px; }
+  .stage.stories { height: 1920px; }
+  svg.icon { display: block; flex: none; }
+  .tx-shadow { text-shadow: 0 3px 6px rgba(0,0,0,.55); }
+
+  /* ---------- FEED: painel lateral ---------- */
+  .panel { position: absolute; left: 0; top: 0; width: 320px; height: 1350px; }
+  .panel .bg {
+    position: absolute; inset: 0 8px 0 0;
+    background:
+      linear-gradient(128deg, rgba(255,255,255,.13) 0%, rgba(255,255,255,.04) 14%, rgba(0,0,0,0) 15%),
+      linear-gradient(180deg, #1a1a1a 0%, #050505 35%, #000 70%, #0b0b0b 100%);
+  }
+  .panel .border {
+    position: absolute; top: 0; bottom: 0; right: 0; width: 8px;
+    background: linear-gradient(180deg, #ff1a1a, #e00000 50%, #ff1a1a);
+    box-shadow: 0 0 10px rgba(255,0,0,.45);
+  }
+  .panel .col { position: absolute; left: 14px; right: 16px; top: 0; bottom: 0; display: flex; flex-direction: column; }
+  .panel .logo { flex: none; height: 222px; display: flex; align-items: center; justify-content: center; padding-top: 6px; }
+  .panel .logo img { width: 298px; }
+  .sep {
+    flex: none; height: 6px; border-radius: 3px;
+    background: linear-gradient(90deg, #b80000 0%, #ff1010 30%, #ff1010 80%, #b80000 100%);
+    box-shadow: 0 0 8px rgba(255,0,0,.4), 0 2px 0 rgba(0,0,0,.6);
+  }
+  .item { flex: 1 1 0; display: flex; align-items: center; gap: 12px; min-height: 0; padding: 0 0 0 4px; }
+  .item .txt { flex: 1; min-width: 0; display: flex; flex-direction: column; }
+  .item .lbl { font-weight: 500; font-style: italic; font-size: 32px; line-height: 1.05; letter-spacing: .2px; white-space: nowrap; }
+  .item .v1 { font-weight: 800; font-style: italic; font-size: 54px; line-height: .98; white-space: nowrap; }
+  .item .v2 { font-weight: 800; font-style: italic; font-size: 42px; line-height: 1.02; white-space: nowrap; }
+  .item.big .v1 { font-size: 84px; line-height: .95; }
+  .item.mod .v1 { font-size: 76px; line-height: .95; }
+  .item .unit { font-size: .45em; font-weight: 800; margin-left: 2px; }
+
+  .valor { flex: none; position: relative; height: 196px; margin: 12px 0 12px -14px; }
+  .valor .shape { position: absolute; left: 0; top: 0; width: 392px; height: 196px; overflow: visible; }
+  .valor .content { position: absolute; left: 16px; top: 14px; width: 352px; }
+  .valor .row1 { display: flex; align-items: center; gap: 16px; height: 78px; }
+  .valor .row1 .lbl { font-weight: 500; font-style: italic; font-size: 40px; }
+  .valor .price { display: inline-flex; align-items: baseline; white-space: nowrap; margin-top: 2px; }
+  .valor .rs { font-weight: 800; font-style: italic; font-size: 52px; margin-right: 8px; }
+  .valor .num { font-weight: 800; font-style: italic; font-size: 92px; line-height: .9; letter-spacing: -1px; }
+  .valor .cents { font-weight: 800; font-style: italic; font-size: 38px; align-self: flex-start; margin-top: 6px; margin-left: 2px; }
+
+  .item.entrada .v1 { font-size: 66px; }
+  .item.entrada .v1 .rs { font-size: .62em; margin-right: 6px; }
+  .stripes { flex: none; height: 120px; position: relative; margin: 10px -16px 0 -14px; }
+
+  /* ---------- STORIES: faixa horizontal ---------- */
+  .band { position: absolute; left: 50%; width: 2000px; height: 250px; transform-origin: 0 0; }
+  .band .shape { position: absolute; inset: 0; }
+  .band .segs { position: absolute; left: 92px; right: 92px; top: 18px; bottom: 18px; display: flex; }
+  .seg { position: relative; display: flex; align-items: center; justify-content: center; gap: 12px; padding: 0 14px; white-space: nowrap; }
+  .seg + .seg::before {
+    content: ''; position: absolute; left: -5px; top: -6px; bottom: -6px; width: 10px;
+    background: var(--red); transform: skewX(-4deg); box-shadow: 0 0 6px rgba(255,0,0,.5);
+  }
+  .seg .txt { display: flex; flex-direction: column; justify-content: center; }
+  .seg .lbl { font-family: 'Barlow', sans-serif; font-weight: 800; font-style: italic; font-size: 40px; line-height: 1; letter-spacing: -1px; }
+  .seg .v1 { font-weight: 900; font-style: italic; font-size: 110px; line-height: .86; letter-spacing: -3px; }
+  .seg .v2 { font-weight: 900; font-style: italic; font-size: 74px; line-height: .92; }
+  .seg .vs { font-weight: 800; font-style: italic; font-size: 50px; line-height: 1; letter-spacing: -.5px; }
+  .seg.loc .v1, .seg.loc .v2 { font-size: 82px; line-height: .88; letter-spacing: -1.5px; }
+  .seg.mod .txt { align-items: center; }
+  .seg .price { display: flex; align-items: baseline; }
+  .seg .price .rs { font-size: 80px; font-weight: 900; font-style: italic; margin-right: 6px; letter-spacing: -2px; }
+  .seg .price .num { font-size: 112px; }
+  .seg .price .cents { font-size: 46px; font-weight: 900; font-style: italic; align-self: flex-start; margin-top: 2px; letter-spacing: -1px; }
+  .seg.ent .lbl { font-size: 32px; line-height: 1.0; }
+  .seg.ent .v1 { font-size: 92px; }
+  .seg.ent .v1 .rs { font-size: .7em; margin-right: 6px; }
+</style>
+</head>
+<body>
+<div id="root"></div>
+<script>
+// ---------- ícones (SVG, vermelho) ----------
+const RED = '#f40000';
+const ICONS = {
+  pin: (h) => `<svg class="icon" width="${h * .72}" height="${h}" viewBox="0 0 72 100"><path d="M36 2C17.2 2 3 16.4 3 34.6 3 58 36 98 36 98s33-40 33-63.4C69 16.4 54.8 2 36 2z" fill="${RED}"/><circle cx="36" cy="34" r="12.5" fill="#000"/></svg>`,
+  calendar: (h) => `<svg class="icon" width="${h * 1.05}" height="${h}" viewBox="0 0 105 100"><rect x="6" y="14" width="93" height="80" rx="12" fill="none" stroke="${RED}" stroke-width="8"/><rect x="6" y="14" width="93" height="20" rx="10" fill="${RED}"/><rect x="25" y="3" width="10" height="22" rx="5" fill="${RED}" stroke="#000" stroke-width="3"/><rect x="70" y="3" width="10" height="22" rx="5" fill="${RED}" stroke="#000" stroke-width="3"/>${[0,1,2,3,4].map(c => [0,1,2].map(r => `<rect x="${19 + c * 14.5}" y="${44 + r * 14.5}" width="9" height="9" rx="1.5" fill="${RED}"/>`).join('')).join('')}</svg>`,
+  car: (h) => `<svg class="icon" width="${h * 1.25}" height="${h}" viewBox="0 0 125 100"><path d="M31 20h63c4 0 7 2 9 6l9 21h5c3 0 5 2 5 5s-2 4-5 4h-2c2 3 3 6 3 9v18c0 3-2 5-5 5H99c-3 0-5-2-5-5v-5H31v5c0 3-2 5-5 5H12c-3 0-5-2-5-5V65c0-3 1-6 3-9H8c-3 0-5-1-5-4s2-5 5-5h5l9-21c2-4 5-6 9-6z" fill="none" stroke="${RED}" stroke-width="8" stroke-linejoin="round"/><path d="M35 30h55l6 16H29z" fill="none" stroke="${RED}" stroke-width="6" stroke-linejoin="round"/><circle cx="29" cy="65" r="7" fill="${RED}"/><circle cx="96" cy="65" r="7" fill="${RED}"/><rect x="47" y="61" width="31" height="8" rx="4" fill="${RED}"/></svg>`,
+  speedo: (h) => `<svg class="icon" width="${h * 1.15}" height="${h}" viewBox="0 0 115 100"><path d="M14 88A50 50 0 1 1 101 88" fill="none" stroke="${RED}" stroke-width="9" stroke-linecap="round"/>${Array.from({length: 9}, (_, i) => { const a = Math.PI * (1.15 + i * 0.0875 * 8 / 8 * 1.0) ; const ang = (-215 + i * 31.25) * Math.PI / 180; const x1 = 57.5 + Math.cos(ang) * 38, y1 = 58 + Math.sin(ang) * 38, x2 = 57.5 + Math.cos(ang) * 30, y2 = 58 + Math.sin(ang) * 30; return `<line x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}" stroke="${RED}" stroke-width="5" stroke-linecap="round"/>`; }).join('')}<path d="M54 62L80 26 61 66z" fill="${RED}"/><circle cx="57.5" cy="64" r="9" fill="${RED}"/></svg>`,
+  tagCircle: (h, ring = '#000', fill = 'none', tag = '#000') => `<svg class="icon" width="${h}" height="${h}" viewBox="0 0 100 100"><circle cx="50" cy="50" r="44" fill="${fill}" stroke="${ring}" stroke-width="7"/><g transform="rotate(-45 50 50)"><path d="M38 30h24l10 20-10 20H38c-3 0-5-2-5-5V35c0-3 2-5 5-5z" fill="${tag}"/><circle cx="62" cy="50" r="4.5" fill="${fill === 'none' ? '#c00000' : fill}"/></g></svg>`,
+  moneyCircle: (h) => `<svg class="icon" width="${h}" height="${h}" viewBox="0 0 100 100"><circle cx="50" cy="50" r="46" fill="${RED}"/><circle cx="50" cy="50" r="38" fill="none" stroke="#000" stroke-width="5"/><g transform="rotate(-25 50 50)"><rect x="30" y="22" width="40" height="56" rx="6" fill="#000"/><text x="50" y="62" text-anchor="middle" font-family="Barlow Condensed" font-weight="900" font-size="34" fill="${RED}">$</text></g></svg>`,
+  chevrolet: (h) => `<svg class="icon" width="${h * 2.2}" height="${h}" viewBox="0 0 132 60"><path d="M12 19H50L54 5H86L82 19H128L120 41H82L78 55H46L50 41H4z" fill="none" stroke="${RED}" stroke-width="5" stroke-linejoin="round"/><path d="M19 25H55L59 11H80L76 25H119L115 35H77L73 49H52L56 35H15z" fill="none" stroke="${RED}" stroke-width="2.5" opacity=".9"/></svg>`,
+  bag: (h) => `<svg class="icon" width="${h * .95}" height="${h}" viewBox="0 0 95 100"><path d="M30 6c5 4 10 4 17 0 7 4 12 4 18 0l-6 16H36z" fill="${RED}"/><rect x="33" y="22" width="29" height="8" rx="3" fill="${RED}"/><path d="M36 32h23c17 10 31 28 31 45 0 13-10 20-24 20H29C15 97 5 90 5 77c0-17 14-35 31-45z" fill="${RED}"/><text x="47.5" y="84" text-anchor="middle" font-family="Barlow Condensed" font-weight="900" font-size="50" fill="#fff">$</text></svg>`,
+};
+
+const esc = (s) => String(s ?? '').replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+const lines = (v) => (Array.isArray(v) ? v : String(v ?? '').split('\n')).filter((s) => s !== '');
+const up = (s) => String(s).toUpperCase();
+
+// Reduz a fonte de cada linha até caber na largura disponível.
+function fitWidth(el, maxW, minScale = 0.55) {
+  const base = parseFloat(getComputedStyle(el).fontSize);
+  let s = 1;
+  while (el.scrollWidth > maxW && s > minScale) { s -= 0.02; el.style.fontSize = (base * s) + 'px'; }
+}
+
+// ---------- FEED ----------
+function feedItem(kind, d) {
+  if (kind === 'localizacao') {
+    const [a, b] = lines(d.localizacao).map(up);
+    return `<div class="item loc"><div style="width:84px;display:flex;justify-content:center">${ICONS.pin(96)}</div><div class="txt tx-shadow"><div class="lbl">LOCALIZAÇÃO</div><div class="v1 fit">${esc(a)}</div>${b ? `<div class="v1 fit">${esc(b)}</div>` : ''}</div></div>`;
+  }
+  if (kind === 'modelo') {
+    const [a, b] = lines(d.modelo).map(up);
+    return `<div class="item mod">${ICONS.car(84)}<div class="txt tx-shadow"><div class="lbl">MODELO</div><div class="v1 fit">${esc(a)}</div>${b ? `<div class="v2 fit">${esc(b)}</div>` : ''}</div></div>`;
+  }
+  if (kind === 'ano') {
+    return `<div class="item big">${ICONS.calendar(98)}<div class="txt tx-shadow"><div class="lbl">ANO</div><div class="v1 fit">${esc(d.ano)}</div></div></div>`;
+  }
+  if (kind === 'km') {
+    return `<div class="item">${ICONS.speedo(90)}<div class="txt tx-shadow"><div class="lbl">KM</div><div class="v1 fit" style="font-size:66px">${esc(d.km)}<span class="unit">KM</span></div></div></div>`;
+  }
+  return '';
+}
+
+function feedValor(d) {
+  return `<div class="valor">
+    <svg class="shape" viewBox="0 0 392 196">
+      <defs>
+        <linearGradient id="vg" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ff2424"/><stop offset=".5" stop-color="#e00000"/><stop offset="1" stop-color="#7a0000"/></linearGradient>
+        <linearGradient id="vh" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#000" stop-opacity=".0"/><stop offset=".7" stop-color="#000" stop-opacity=".0"/><stop offset="1" stop-color="#000" stop-opacity=".35"/></linearGradient>
+      </defs>
+      <path d="M0 0H322L392 98 322 196H0z" fill="url(#vg)"/>
+      <path d="M0 0H322L392 98 322 196H0z" fill="url(#vh)"/>
+      <path d="M0 3H320L388 98 320 193H0" fill="none" stroke="#ff4a4a" stroke-width="3" opacity=".8"/>
+    </svg>
+    <div class="content tx-shadow">
+      <div class="row1">${ICONS.tagCircle(74, '#000', 'none', '#000')}<div class="lbl">VALOR</div></div>
+      <div class="price fit-price"><span class="rs">R$</span><span class="num">${esc(d.valor)},</span><span class="cents">${esc(d.centavos ?? '00')}</span></div>
+    </div>
+  </div>`;
+}
+
+function feedEntrada(d) {
+  const ls = lines(d.entrada_label ?? ['ENTRADA', 'A PARTIR DE']).map(up);
+  return `<div class="item entrada">${ICONS.bag(92)}<div class="txt tx-shadow" style="align-items:flex-end;padding-right:2px"><div style="align-self:stretch;padding-left:4px">${ls.map((l) => `<div class="lbl">${esc(l)}</div>`).join('')}</div><div class="v1 fit"><span class="rs">R$</span>${esc(up(d.entrada))}</div></div></div>`;
+}
+
+function renderFeed(d) {
+  const order = d.ordem_feed ?? ['localizacao', 'modelo', 'ano', 'km'];
+  const items = order.filter((k) => d[k]).map((k) => feedItem(k, d));
+  const html = `<div class="stage feed"><div class="panel">
+    <div class="bg"></div><div class="border"></div>
+    <div class="col">
+      <div class="logo"><img src="../assets/logo_fabricio.png"></div>
+      <div class="sep"></div>
+      ${items.map((it) => it + '<div class="sep"></div>').join('')}
+      ${feedValor(d)}
+      ${d.entrada ? '<div class="sep"></div>' + feedEntrada(d) : ''}
+      <div class="sep"></div>
+      <svg class="stripes" viewBox="0 0 312 120" preserveAspectRatio="none">
+        <defs><linearGradient id="sg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#ff1a1a"/><stop offset="1" stop-color="#b00000"/></linearGradient></defs>
+        <path d="M0 76L74 0H112L0 116z" fill="url(#sg)"/>
+        <path d="M0 120L118 0H140L22 120z" fill="url(#sg)" opacity=".9"/>
+      </svg>
+    </div>
+  </div></div>`;
+  return html;
+}
+
+// ---------- STORIES ----------
+function storiesSeg(kind, d) {
+  if (kind === 'localizacao') {
+    const [a, b] = lines(d.localizacao).map(up);
+    return `<div class="seg loc">${ICONS.pin(118)}<div class="txt tx-shadow"><div class="lbl">LOCALIZAÇÃO</div><div class="v1">${esc(a)}</div>${b ? `<div class="v2">${esc(b)}</div>` : ''}</div></div>`;
+  }
+  if (kind === 'ano') return `<div class="seg">${ICONS.calendar(112)}<div class="txt tx-shadow"><div class="lbl">ANO</div><div class="v1">${esc(d.ano)}</div></div></div>`;
+  if (kind === 'modelo') {
+    const [a, b] = lines(d.modelo).map(up);
+    const top = d.marca ? up(d.marca) : null;
+    const icon = String(d.marca || '').toLowerCase().includes('chevrolet') ? ICONS.chevrolet(52) : ICONS.car(96);
+    return `<div class="seg mod">${icon}<div class="txt tx-shadow">${top ? `<div class="lbl">${esc(top)}</div>` : ''}<div class="v1">${esc(a)}</div>${b ? `<div class="vs">${esc(b)}</div>` : ''}</div></div>`;
+  }
+  if (kind === 'km') return `<div class="seg">${ICONS.speedo(104)}<div class="txt tx-shadow"><div class="lbl">KM</div><div class="v1">${esc(d.km)}<span class="vs" style="font-size:44px">KM</span></div></div></div>`;
+  if (kind === 'valor') return `<div class="seg">${ICONS.moneyCircle(118)}<div class="txt tx-shadow"><div class="lbl">VALOR</div><div class="v1 price"><span class="rs">R$</span><span class="num">${esc(d.valor)},</span><span class="cents">${esc(d.centavos ?? '00')}</span></div></div></div>`;
+  if (kind === 'entrada') {
+    const ls = lines(d.entrada_label ?? ['ENTRADA', 'A PARTIR DE']).map(up);
+    return `<div class="seg ent">${ICONS.bag(104)}<div class="txt tx-shadow">${ls.map((l) => `<div class="lbl">${esc(l)}</div>`).join('')}<div class="v1"><span class="rs">R$</span>${esc(up(d.entrada))}</div></div></div>`;
+  }
+  return '';
+}
+
+function renderStories(d) {
+  const order = d.ordem_stories ?? ['localizacao', 'ano', 'modelo', 'valor', 'entrada'];
+  const segs = order.filter((k) => d[k]).map((k) => storiesSeg(k, d)).join('');
+  return `<div class="stage stories"><div class="band" id="band">
+    <svg class="shape" viewBox="0 0 2000 250">
+      <path d="M100 4H1900L1996 125 1900 246H100L4 125z" fill="#000"/>
+      <path d="M106 14H1894L1983 125 1894 236H106L17 125z" fill="none" stroke="${RED}" stroke-width="13" stroke-linejoin="miter"/>
+      <path d="M106 14H1894L1983 125 1894 236H106L17 125z" fill="none" stroke="#ff5a5a" stroke-width="2" opacity=".6"/>
+    </svg>
+    <div class="segs" id="segs">${segs}</div>
+  </div></div>`;
+}
+
+// Distribui os segmentos na faixa: escala para caber e reparte a sobra.
+function layoutBand(d) {
+  const band = document.getElementById('band'), segs = document.getElementById('segs');
+  const avail = segs.clientWidth;
+  const kids = [...segs.children];
+  kids.forEach((k) => { k.style.flex = 'none'; });
+  const natural = kids.reduce((s, k) => s + k.getBoundingClientRect().width, 0);
+  // encolhe o conteúdo de todos os segmentos por igual quando não cabe
+  if (natural > avail) kids.forEach((k) => { k.style.zoom = avail / natural; });
+  kids.forEach((k) => { k.style.flex = '1 1 auto'; });
+  // posição: largura 936px (86,7% da tela), centro em ~62% da altura (área segura)
+  const W = d.stories_largura ?? 936, scale = W / 2000;
+  const cy = d.stories_centro_y ?? 1190;
+  band.style.transform = `translate(${-W / 2}px, ${cy - 125 * scale}px) scale(${scale})`;
+  band.style.top = '0px';
+}
+
+// Preço do feed: encolhe R$, número e centavos juntos até caber dentro da seta.
+function fitPrice(el, maxW) {
+  const parts = [...el.children].map((c) => [c, parseFloat(getComputedStyle(c).fontSize)]);
+  let s = 1;
+  while (el.getBoundingClientRect().width > maxW && s > 0.6) { s -= 0.02; parts.forEach(([c, f]) => { c.style.fontSize = (f * s) + 'px'; }); }
+}
+
+window.render = async (mode, d) => {
+  document.getElementById('root').innerHTML = mode === 'feed' ? renderFeed(d) : renderStories(d);
+  await document.fonts.ready;
+  await Promise.all([...document.images].map((im) => im.complete ? 0 : new Promise((r) => { im.onload = im.onerror = r; })));
+  if (mode === 'feed') {
+    document.querySelectorAll('.panel .item .txt').forEach((t) => {
+      const els = [...t.querySelectorAll('.fit')];
+      els.forEach((el) => fitWidth(el, t.clientWidth));
+      // linhas da localização ficam do mesmo tamanho (a menor escala vale para as duas)
+      if (t.closest('.item.loc')) { const m = Math.min(...els.map((e) => parseFloat(e.style.fontSize || getComputedStyle(e).fontSize))); els.forEach((e) => { e.style.fontSize = m + 'px'; }); }
+    });
+    document.querySelectorAll('.fit-price').forEach((el) => fitPrice(el, 340));
+  } else {
+    layoutBand(d);
+  }
+  return true;
+};
+</script>
+</body>
+</html>

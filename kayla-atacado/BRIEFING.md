@@ -121,3 +121,36 @@ O atacado começa em R$ 49,00. Isso dá base para um ângulo de margem, mas aind
 - [ ] Confirmar o pedido mínimo (6 ou 12) e se a aprovação é mesmo automática.
 - [ ] Tabela de preços de atacado, ou alguns exemplos de atacado comparados com o varejo.
 - [ ] Anúncios que já geraram vendas: criativo, copy e métricas.
+
+## Criativos do cliente que geraram vendas (enviados em 21/10/2026)
+
+| # | Duração | Formato | Texto na tela / fala | Áudio |
+|---|---|---|---|---|
+| V1 | 15s | Mosaico 2×3 alternando vídeo de estúdio (modelo plus, poá azul e bege) e cards "CADASTRE-SE ATACADO" | "NEW COLLECTION", "NEW DROP", "SIGNATURE III" | música |
+| V2 | 24s | Modelo de estúdio (loira, **não plus size**) de blazer e capri cinza | Fixo no topo: "A CURADORIA QUE SUA LOJA PRECISA. PEDIDO MÍNIMO 6 PEÇAS"; lateral "KAYLA ATACADO" | música |
+| V3 | 47s | **Fran (diretora criativa e fundadora) falando para a câmera** no showroom | "Como comprar KAYLA no ATACADO", "FRAN diretora criativa", "GRADE 42 AO 54", "Enviamos para todo o BRASIL", "Pedido mínimo 6 peças variadas" | fala (abaixo) |
+| V4 | 34s | Fran mostrando a blusa de poá e as variantes de cor, com legenda | Fixo: "LOJISTA – Explore nosso catálogo e tenha o melhor da moda na sua loja – Cadastre-se" | fala |
+| V5 | 40s | Fran passeando pelas araras do showroom | Selo: "LOJISTA: até 60% + 20% OFF em todo o site! Pedido mínimo 6 peças"; "Peças a partir de 39,90 – Cupom QUERO20" | fala |
+
+Falas transcritas:
+- **V3:** "Quer se tornar uma revendedora Kayla e você não sabe como? É muito fácil: é só fazer o cadastro com nosso SAC ou
+  diretamente no nosso site de atacado. Eu sou a Fran, diretora criativa da Kayla, e trabalhamos com moda plus size do
+  tamanho 42 ao 54. As peças da Kayla são pensadas com caimento e uma modelagem perfeita para a mulher plus size. A gente
+  tem um mix de produto incrível e um perfeito match do tecido com o modelo. E quais são as formas de pagamento? Você pode
+  parcelar no cartão em até 3x e também tem desconto no PIX. Para se tornar uma revendedora Kayla é só clicar aqui no link
+  e falar com a gente."
+- **V4:** "A blusa tendência chegou aqui na Kayla, que é o poá. A estampa de poá é atemporal, você consegue usar sempre, não
+  importa a estação. A gente trouxe essa blusa com amarração na parte da frente, botões funcionais, e olha as variantes:
+  bege com poá verde oliva, off e preto. Ela fica solta no corpo e o tecido tem uma qualidade altíssima. Gente, essa blusa
+  não tem muitas peças, então corre pro site e garante a sua."
+- **V5:** "Gente, o site inteiro está com 20% off. Olha quanta coisa lá no site com esse super desconto…" (o restante é ambiente).
+
+Leitura:
+- **Funcionou:** o rosto da fundadora no showroom (3 de 5 criativos), a palavra "LOJISTA" e "pedido mínimo 6 peças" na
+  tela o tempo todo, oferta concreta (39,90 e cupom) e estética de coleção (V1 e V2).
+- **Falta:**
+  - Nenhum criativo fala em **CNPJ** nem em **aprovação automática**.
+  - Nenhum mostra o caminho cadastro → preço liberado → compra.
+  - Nenhum quantifica a **margem**.
+  - O V3 manda "falar com a gente", em vez de levar à compra sozinha no site.
+  - O V5 ("até 60% + 20% OFF, a partir de 39,90") atrai também a consumidora final, que não consegue comprar.

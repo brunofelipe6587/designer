@@ -4,7 +4,7 @@
 set -e
 cd "$(dirname "$0")"
 SRC=brutos/reel-vitrine-da-semana_720p.mp4
-DUR=19.6
+DUR=27.4
 ffmpeg -y -loglevel error -i $SRC -vn -af "atrim=0:$DUR,asetpts=PTS-STARTPTS,afade=t=in:d=0.04,afade=t=out:st=$(python3 -c "print($DUR-1.8)"):d=1.75,apad=whole_dur=$DUR" -ar 48000 -ac 2 build/music2.wav
 M=$(ffmpeg -hide_banner -i build/music2.wav -af loudnorm=I=-16:TP=-2:LRA=11:print_format=json -f null - 2>&1 | python3 -c "import sys,json; t=sys.stdin.read(); j=json.loads(t[t.rindex('{'):]); print(j['input_i'],j['input_tp'],j['input_lra'],j['input_thresh'])")
 read II TP LRA TH <<< "$M"

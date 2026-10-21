@@ -1,9 +1,9 @@
 // Creative 3 — "A conta da lojista": wholesale prices of three best sellers, then the 6-piece minimum order added up.
 // Version A (window.VERSION = 'a') sets each price beside the brand's own retail price (kaylastore.com.br, full price);
-// version B shows wholesale prices only. Prices as of 21/10/2026. No voice; the brand's reel music; beats as in creative 2.
+// version B shows wholesale prices only. Prices as of 21/10/2026. No voice; the brand's reel music, as in creative 2.
 // Evergreen: no season, no collection or product names (garment type only).
 const V = window.VERSION || 'a';
-const W = 1080, H = 1920, DUR = 19.6;
+const W = 1080, H = 1920, DUR = 27.4;
 const ctx = document.getElementById('c').getContext('2d');
 const C = { beige2: '#D8CABD', ink: '#211C19', cream: '#F7E8DA', mute: '#6E625A', line: 'rgba(33,28,25,0.22)', green: '#3E6B4A' };
 const SERIF = '"Playfair Display", serif', COND = 'Oswald, sans-serif', SANS = 'Montserrat, sans-serif';
@@ -15,8 +15,9 @@ const eback = t => { const c1 = 1.5, c3 = c1 + 1; return 1 + c3 * Math.pow(t - 1
 const prog = (t, a, b) => clamp((t - a) / (b - a));
 const brl = v => 'R$ ' + v.toFixed(2).replace('.', ',');
 
-const B = [2.60, 4.97, 6.90, 8.82, 12.70]; // hook | 3 products | the math | site
-const CARD = 15.0;
+// paced for reading: 8 beats per scene (16 for the math), beat 0.395 s, so changes land on the music
+const BEAT = 0.395, B = [8, 16, 24, 32, 48].map(k => k * BEAT); // hook | 3 products | the math | site
+const CARD = 56 * BEAT;
 const PRODUCTS = [ // garment, wholesale, wholesale via PIX (as the site shows it), retail full price at the brand's own store
   { img: 'eve', type: 'BLUSA', w: 79.90, pix: 75.91, r: 219.90, fy: 0.16 },
   { img: 'bruna2', type: 'REGATA', w: 59.90, pix: 56.91, r: 139.90, fy: 0.12 },
@@ -81,31 +82,31 @@ function hook(t) {
   ctx.textAlign = 'center';
   shadowText(() => {
     ctx.fillStyle = C.cream; ctx.font = `700 196px ${COND}`; ctx.letterSpacing = '4px';
-    ctx.fillText(typed('LOJISTA', t, 0.05, 0.4), 540, 400);
+    ctx.fillText(typed('LOJISTA', t, 0.05, 0.5), 540, 400);
     ctx.letterSpacing = '0px'; ctx.fillStyle = '#fff'; ctx.font = `400 76px ${SERIF}`;
-    ctx.fillText(typed('quanto custa começar?', t, 0.5, 0.6), 540, 505);
+    ctx.fillText(typed('quanto custa começar?', t, 0.65, 0.75), 540, 505);
   });
-  const bx = eout(prog(t, 1.2, 1.5)), stem = eout(prog(t, 1.4, 1.7));
+  const bx = eout(prog(t, 1.5, 1.85)), stem = eout(prog(t, 1.75, 2.1));
   if (bx > 0) { // the brand's callout: thin box + stem + dot
     ctx.save(); ctx.strokeStyle = 'rgba(255,255,255,0.95)'; ctx.lineWidth = 3;
     const w = 640 * bx; ctx.strokeRect(540 - w / 2, 600, w, 110);
     ctx.beginPath(); ctx.moveTo(540, 710); ctx.lineTo(540, 710 + 140 * stem); ctx.stroke();
     if (stem >= 1) { ctx.fillStyle = '#fff'; ctx.beginPath(); ctx.arc(540, 862, 13, 0, Math.PI * 2); ctx.fill(); }
-    ctx.fillStyle = '#fff'; ctx.font = `500 50px ${SANS}`; ctx.fillText(typed('Faça a conta com a gente', t, 1.45, 0.5), 540, 672);
+    ctx.fillStyle = '#fff'; ctx.font = `500 50px ${SANS}`; ctx.fillText(typed('Faça a conta com a gente', t, 1.8, 0.65), 540, 672);
     ctx.restore();
   }
 }
 function product(t, k) {
   const p = PRODUCTS[k], at = B[k], l = t - at;
   studio();
-  topPhoto(IMG[p.img], 1300, p.fy, 1.03 + 0.04 * prog(t, at, at + 2.2), 940);
-  const a = eout(prog(l, 0.05, 0.35));
+  topPhoto(IMG[p.img], 1300, p.fy, 1.03 + 0.04 * prog(t, at, at + 3.4), 940);
+  const a = eout(prog(l, 0.1, 0.5));
   ctx.save(); ctx.globalAlpha *= a;
   label(`${p.type} · GRADE 42 AO 54`, 540, 1340);
   ctx.restore();
   if (V === 'a') {
     // two columns: wholesale (big, ink) → the brand's retail price (lighter)
-    const a1 = eout(prog(l, 0.2, 0.5)), a2 = eout(prog(l, 0.75, 1.05));
+    const a1 = eout(prog(l, 0.35, 0.75)), a2 = eout(prog(l, 1.15, 1.55));
     ctx.save(); ctx.globalAlpha *= a1; ctx.translate(0, (1 - a1) * 26);
     label('NO ATACADO', 275, 1460, C.mute, 26); ctx.fillStyle = C.ink; ctx.font = `700 112px ${COND}`; ctx.textAlign = 'center'; ctx.fillText(brl(p.w), 275, 1595);
     ctx.restore();
@@ -113,11 +114,11 @@ function product(t, k) {
     ctx.fillStyle = C.mute; ctx.font = `400 64px ${SERIF}`; ctx.textAlign = 'center'; ctx.fillText('→', 548, 1566);
     label('NA LOJA KAYLA', 815, 1460, C.mute, 26); ctx.fillStyle = C.mute; ctx.font = `500 92px ${COND}`; ctx.fillText(brl(p.r), 815, 1590);
     ctx.restore();
-    const a3 = eout(prog(l, 1.15, 1.45));
+    const a3 = eout(prog(l, 1.85, 2.25));
     ctx.save(); ctx.globalAlpha *= a3; ctx.fillStyle = C.ink; ctx.font = `italic 400 50px ${SERIF}`; ctx.textAlign = 'center';
     ctx.fillText('a mesma peça no varejo da marca', 540, 1720); ctx.restore();
   } else {
-    const a1 = eout(prog(l, 0.2, 0.5)), a2 = eout(prog(l, 0.8, 1.1));
+    const a1 = eout(prog(l, 0.35, 0.75)), a2 = eout(prog(l, 1.3, 1.7));
     ctx.save(); ctx.globalAlpha *= a1; ctx.translate(0, (1 - a1) * 26);
     label('NO ATACADO', 540, 1460, C.mute, 28); ctx.fillStyle = C.ink; ctx.font = `700 160px ${COND}`; ctx.textAlign = 'center'; ctx.fillText(brl(p.w), 540, 1640);
     ctx.restore();
@@ -128,7 +129,7 @@ function product(t, k) {
 function math(t) {
   const at = B[3], l = t - at;
   studio(); logo(540, 70, 170, 0.85);
-  const a = eout(prog(l, 0, 0.3));
+  const a = eout(prog(l, 0, 0.4));
   ctx.save(); ctx.globalAlpha *= a; ctx.textAlign = 'center';
   ctx.fillStyle = C.ink; ctx.font = `400 64px ${SERIF}`; ctx.fillText('Seu pedido mínimo:', 540, 250);
   ctx.font = `700 120px ${COND}`; ctx.letterSpacing = '3px'; ctx.fillText('6 PEÇAS', 540, 380); ctx.letterSpacing = '0px';
@@ -136,7 +137,7 @@ function math(t) {
   // 3×2 grid of the pieces, popping in one by one
   const tw = 270, th = 340, gx = 34, gy = 74, x0 = 540 - (3 * tw + 2 * gx) / 2, y0 = 450;
   GRID.forEach(([n, price], i) => {
-    const p = eback(prog(l, 0.3 + i * 0.16, 0.6 + i * 0.16)); if (p <= 0) return;
+    const p = eback(prog(l, 0.5 + i * 0.3, 0.9 + i * 0.3)); if (p <= 0) return;
     const x = x0 + (i % 3) * (tw + gx), y = y0 + Math.floor(i / 3) * (th + gy);
     ctx.save(); ctx.translate(x + tw / 2, y + th / 2); ctx.scale(p, p);
     ctx.shadowColor = 'rgba(40,25,15,0.25)'; ctx.shadowBlur = 24; ctx.shadowOffsetY = 10;
@@ -149,15 +150,15 @@ function math(t) {
     ctx.fillText(brl(price), x + tw / 2, y + th + 48); ctx.restore();
   });
   // totals, counting up
-  const c1 = prog(l, 1.35, 1.95), c2 = prog(l, 2.15, 2.75);
+  const c1 = prog(l, 2.6, 3.5), c2 = prog(l, 4.0, 4.9);
   if (c1 > 0) {
-    ctx.save(); ctx.globalAlpha *= eout(prog(l, 1.35, 1.6)); ctx.textAlign = 'center';
+    ctx.save(); ctx.globalAlpha *= eout(prog(l, 2.6, 2.95)); ctx.textAlign = 'center';
     label('VOCÊ INVESTE', 540, 1395, C.mute, 28);
     ctx.fillStyle = C.ink; ctx.font = `700 140px ${COND}`; ctx.fillText(brl(TOTAL_W * eout(c1)), 540, 1545);
     ctx.restore();
   }
   if (c2 > 0) {
-    ctx.save(); ctx.globalAlpha *= eout(prog(l, 2.15, 2.4)); ctx.textAlign = 'center';
+    ctx.save(); ctx.globalAlpha *= eout(prog(l, 4.0, 4.35)); ctx.textAlign = 'center';
     if (V === 'a') {
       ctx.fillStyle = C.ink; ctx.font = `italic 400 52px ${SERIF}`; ctx.fillText('na loja Kayla, essas 6 peças somam', 540, 1650);
       ctx.fillStyle = C.green; ctx.font = `700 110px ${COND}`; ctx.fillText(brl(TOTAL_R * eout(c2)), 540, 1785);
@@ -171,12 +172,12 @@ function math(t) {
 async function site(t) {
   const at = B[4], l = t - at;
   studio(); logo(540, 82, 200, 0.9);
-  const a = eout(prog(l, 0, 0.3)), dy = (1 - a) * 22;
+  const a = eout(prog(l, 0, 0.4)), dy = (1 - a) * 22;
   ctx.save(); ctx.globalAlpha *= a; ctx.textAlign = 'center';
   label('TODOS OS PREÇOS NO SITE', 540, 228 + dy, C.mute, 30);
   ctx.fillStyle = C.ink; ctx.font = `400 72px ${SERIF}`; ctx.fillText('Cadastre seu CNPJ', 540, 318 + dy);
   ctx.restore();
-  phone(await tela(69.8 + l * 0.15), 540, lerp(1500, 1170, eout(prog(l, 0, 0.45))), 580);
+  phone(await tela(69.8 + l * 0.12), 540, lerp(1500, 1170, eout(prog(l, 0, 0.6))), 580);
 }
 function card(t) {
   studio();
@@ -187,7 +188,7 @@ function card(t) {
   ctx.fillStyle = C.line; ctx.fillRect(390, 1158, 300, 2);
   const rows = [['1', 'Cadastre seu CNPJ ativo no site'], ['2', 'Aprovação automática'], ['3', 'Compre a partir de 6 peças']];
   rows.forEach(([n, s], i) => {
-    const ra = eout(prog(t, CARD + 0.5 + i * 0.3, CARD + 1.0 + i * 0.3)), y = 1255 + i * 96;
+    const ra = eout(prog(t, CARD + 0.6 + i * 0.45, CARD + 1.2 + i * 0.45)), y = 1255 + i * 96;
     ctx.save(); ctx.globalAlpha *= ra; ctx.translate((1 - ra) * 24, 0);
     ctx.strokeStyle = C.ink; ctx.lineWidth = 2.5; ctx.beginPath(); ctx.arc(170, y - 16, 34, 0, Math.PI * 2); ctx.stroke();
     ctx.fillStyle = C.ink; ctx.textAlign = 'center'; ctx.font = `500 38px ${SERIF}`; ctx.fillText(n, 170, y - 3);
@@ -196,7 +197,7 @@ function card(t) {
   });
   ctx.textAlign = 'center'; ctx.fillStyle = C.mute; ctx.font = `600 27px ${SANS}`; ctx.letterSpacing = '5px';
   ctx.fillText('GRADE 42 AO 54 · ENVIAMOS PARA TODO O BRASIL', 542, 1580); ctx.letterSpacing = '0px';
-  const b = eout(prog(t, CARD + 1.4, CARD + 1.9));
+  const b = eout(prog(t, CARD + 2.1, CARD + 2.6));
   ctx.save(); ctx.globalAlpha *= b; ctx.translate(540, 1700);
   ctx.fillStyle = C.ink; ctx.beginPath(); ctx.roundRect(-400, -62, 800, 124, 62); ctx.fill();
   ctx.fillStyle = '#fff'; ctx.font = `600 38px ${SANS}`; ctx.letterSpacing = '3px'; ctx.textBaseline = 'middle'; ctx.fillText('VER PREÇOS DE ATACADO', 0, 3);
@@ -213,7 +214,7 @@ async function scene(t) {
 }
 async function render(t) {
   ctx.setTransform(1, 0, 0, 1, 0, 0); ctx.globalAlpha = 1; ctx.textBaseline = 'alphabetic';
-  if (t >= CARD && t < CARD + 0.6) { await site(t); ctx.save(); ctx.globalAlpha = eio((t - CARD) / 0.6); card(t); ctx.restore(); return; }
+  if (t >= CARD && t < CARD + 0.8) { await site(t); ctx.save(); ctx.globalAlpha = eio((t - CARD) / 0.8); card(t); ctx.restore(); return; }
   await scene(t);
 }
 

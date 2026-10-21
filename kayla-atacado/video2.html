@@ -10,9 +10,9 @@
 <canvas id="c" width="1080" height="1920"></canvas>
 <script>
 // Creative 2 — "Passo a passo": the real wholesale site on a phone, six steps from CNPJ sign-up to checkout, so the click
-// that arrives already knows what happens. No voice; the reel's own music, step changes on its strong beats.
+// that arrives already knows what happens. No voice; the reel's own music. Paced for reading, scene changes on the beat.
 // Evergreen: no season, no collection names. Type copies the brand's reel captions (Oswald, Playfair, Montserrat).
-const W = 1080, H = 1920, DUR = 19.6;
+const W = 1080, H = 1920, DUR = 27.4;
 const ctx = document.getElementById('c').getContext('2d');
 const C = { beige: '#E7DDD3', beige2: '#D8CABD', ink: '#211C19', cream: '#F7E8DA', mute: '#6E625A', line: 'rgba(33,28,25,0.22)' };
 const SERIF = '"Playfair Display", serif', COND = 'Oswald, sans-serif', SANS = 'Montserrat, sans-serif';
@@ -22,17 +22,17 @@ const eout = t => 1 - Math.pow(1 - t, 3);
 const eio = t => t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
 const prog = (t, a, b) => clamp((t - a) / (b - a));
 
-// step changes sit on the music's strong onsets (2.60, 4.97, 6.90, 8.82, 12.70, 15.00; 10.75 is one bar after 8.82)
-const B = [2.60, 4.97, 6.90, 8.82, 10.75, 12.70];
-const CARD = 15.0;
+// paced for reading: every scene lasts 8 beats of the music (beat 0.395 s), so changes still land on the beat
+const BEAT = 0.395, B = [8, 16, 24, 32, 40, 48].map(k => k * BEAT);
+const CARD = 56 * BEAT;
 // [title, screen(t, local time) -> [source, seconds], highlight band on the screen or null]
 const STEPS = [
-  ['Cadastre seu CNPJ', (l) => l < 0.8 ? ['tela', 1.0 + l] : ['cad', 0], (l) => l > 1.15 ? [0.268, 0.352, eout(prog(l, 1.15, 1.45))] : null],
-  ['Aprovação automática', (l) => l < 0.5 ? ['tela', 55.6 + l * 0.5] : ['tela', 61.0 + (l - 0.5)], null],
-  ['Preço de atacado liberado', (l) => ['tela', l < 0.5 ? 81.5 : 83.0], (l) => l >= 0.5 ? [0.486, 0.542, eout(prog(l, 0.65, 0.95))] : null],
-  ['Escolha cores e tamanhos', (l) => ['tela', 93.0 + l * 1.6], null],
-  ['Pedido mínimo: 6 peças', (l) => ['tela', l < 0.7 ? 104.5 : l < 1.4 ? 135.0 : 165.0], (l) => l < 1.4 ? [0.825, 0.868, eout(prog(l, 0.15, 0.4))] : null],
-  ['Finalize: 3x ou PIX', () => ['tela', 174.0], (l) => [0.288, 0.334, eout(prog(l, 0.35, 0.65))]],
+  ['Cadastre seu CNPJ', (l) => l < 1.2 ? ['tela', 1.0 + l * 0.8] : ['cad', 0], (l) => l > 1.6 ? [0.268, 0.352, eout(prog(l, 1.6, 1.95))] : null],
+  ['Aprovação automática', (l) => l < 0.9 ? ['tela', 55.6 + l * 0.4] : ['tela', 61.0 + (l - 0.9) * 0.6], null],
+  ['Preço de atacado liberado', (l) => ['tela', l < 0.9 ? 81.5 : 83.0], (l) => l >= 0.9 ? [0.486, 0.542, eout(prog(l, 1.1, 1.45))] : null],
+  ['Escolha cores e tamanhos', (l) => ['tela', 93.0 + l * 1.0], null],
+  ['Pedido mínimo: 6 peças', (l) => ['tela', l < 1.1 ? 104.5 : l < 2.2 ? 135.0 : 165.0], (l) => l < 2.2 ? [0.825, 0.868, eout(prog(l, 0.3, 0.6))] : null],
+  ['Finalize: 3x ou PIX', () => ['tela', 174.0], (l) => [0.288, 0.334, eout(prog(l, 0.6, 0.95))]],
 ];
 
 // ---------- sources ----------
@@ -83,19 +83,19 @@ function hook(t) {
   ctx.textAlign = 'center'; ctx.textBaseline = 'alphabetic';
   shadowText(() => {
     ctx.fillStyle = C.cream; ctx.font = `700 196px ${COND}`; ctx.letterSpacing = '4px';
-    ctx.fillText(typed('LOJISTA', t, 0.05, 0.4), 540, 400);
+    ctx.fillText(typed('LOJISTA', t, 0.05, 0.5), 540, 400);
     ctx.letterSpacing = '0px'; ctx.fillStyle = '#fff'; ctx.font = `400 76px ${SERIF}`;
-    ctx.fillText(typed('com CNPJ ativo?', t, 0.5, 0.45), 540, 505);
+    ctx.fillText(typed('com CNPJ ativo?', t, 0.65, 0.6), 540, 505);
   });
   // the brand's own callout: thin box + stem + dot (as in Fran's reel)
-  const bx = eout(prog(t, 1.05, 1.35)), stem = eout(prog(t, 1.25, 1.55));
+  const bx = eout(prog(t, 1.35, 1.7)), stem = eout(prog(t, 1.6, 1.95));
   if (bx > 0) {
     ctx.save(); ctx.strokeStyle = 'rgba(255,255,255,0.95)'; ctx.lineWidth = 3;
     const w = 660 * bx, h = 150; ctx.strokeRect(540 - w / 2, 600, w, h);
     ctx.beginPath(); ctx.moveTo(540, 750); ctx.lineTo(540, 750 + 150 * stem); ctx.stroke();
     if (stem >= 1) { ctx.fillStyle = '#fff'; ctx.beginPath(); ctx.arc(540, 912, 13, 0, Math.PI * 2); ctx.fill(); }
     ctx.fillStyle = '#fff'; ctx.font = `500 50px ${SANS}`; ctx.textAlign = 'center';
-    ctx.fillText(typed('Como comprar KAYLA', t, 1.3, 0.4), 540, 665); ctx.fillText(typed('no ATACADO', t, 1.7, 0.25), 540, 728);
+    ctx.fillText(typed('Como comprar KAYLA', t, 1.6, 0.5), 540, 665); ctx.fillText(typed('no ATACADO', t, 2.1, 0.3), 540, 728);
     ctx.restore();
   }
 }
@@ -104,10 +104,10 @@ async function steps(t) {
   let k = 0; for (let i = 0; i < 6; i++) if (t >= B[i]) k = i;
   const l = t - B[k], [title, scr, hlf] = STEPS[k];
   const [src, s] = scr(l), img = src === 'cad' ? IMG.cad : await tela(s);
-  const rise = eout(prog(t, B[0], B[0] + 0.45));
+  const rise = eout(prog(t, B[0], B[0] + 0.6));
   phone(img, 540, lerp(1500, 1170, rise), 580, hlf ? hlf(l) : null);
   // caption: step counter, title, progress dots
-  const a = eout(prog(l, 0, 0.3)), dy = (1 - a) * 22;
+  const a = eout(prog(l, 0, 0.4)), dy = (1 - a) * 22;
   ctx.save(); ctx.globalAlpha *= a; ctx.textAlign = 'center';
   ctx.fillStyle = C.mute; ctx.font = `600 30px ${SANS}`; ctx.letterSpacing = '7px'; ctx.fillText(`PASSO ${k + 1} DE 6`, 543.5, 228 + dy);
   ctx.letterSpacing = '0px'; ctx.fillStyle = C.ink; ctx.font = `400 72px ${SERIF}`; ctx.fillText(title, 540, 318 + dy);
@@ -132,7 +132,7 @@ function card(t) {
   ctx.fillStyle = C.line; ctx.fillRect(390, 1158, 300, 2);
   const rows = [['1', 'Cadastre seu CNPJ ativo no site'], ['2', 'Aprovação automática'], ['3', 'Compre a partir de 6 peças']];
   rows.forEach(([n, s], i) => {
-    const ra = eout(prog(t, CARD + 0.5 + i * 0.3, CARD + 1.0 + i * 0.3)), y = 1255 + i * 96;
+    const ra = eout(prog(t, CARD + 0.6 + i * 0.45, CARD + 1.2 + i * 0.45)), y = 1255 + i * 96;
     ctx.save(); ctx.globalAlpha *= ra; ctx.translate((1 - ra) * 24, 0);
     ctx.strokeStyle = C.ink; ctx.lineWidth = 2.5; ctx.beginPath(); ctx.arc(170, y - 16, 34, 0, Math.PI * 2); ctx.stroke();
     ctx.fillStyle = C.ink; ctx.textAlign = 'center'; ctx.font = `500 38px ${SERIF}`; ctx.fillText(n, 170, y - 3);
@@ -141,7 +141,7 @@ function card(t) {
   });
   ctx.textAlign = 'center'; ctx.fillStyle = C.mute; ctx.font = `600 27px ${SANS}`; ctx.letterSpacing = '5px';
   ctx.fillText('GRADE 42 AO 54 · ENVIAMOS PARA TODO O BRASIL', 542, 1580); ctx.letterSpacing = '0px';
-  const b = eout(prog(t, CARD + 1.4, CARD + 1.9));
+  const b = eout(prog(t, CARD + 2.1, CARD + 2.6));
   ctx.save(); ctx.globalAlpha *= b; ctx.translate(540, 1700);
   ctx.fillStyle = C.ink; ctx.beginPath(); ctx.roundRect(-400, -62, 800, 124, 62); ctx.fill();
   ctx.fillStyle = '#fff'; ctx.font = `600 38px ${SANS}`; ctx.letterSpacing = '3px'; ctx.textBaseline = 'middle'; ctx.fillText('VER PREÇOS DE ATACADO', 0, 3);
@@ -153,7 +153,7 @@ async function render(t) {
   ctx.setTransform(1, 0, 0, 1, 0, 0); ctx.globalAlpha = 1;
   if (t < B[0]) return hook(t);
   if (t < CARD) return steps(t);
-  if (t < CARD + 0.6) { await steps(t); ctx.save(); ctx.globalAlpha = eio((t - CARD) / 0.6); card(t); ctx.restore(); return; }
+  if (t < CARD + 0.8) { await steps(t); ctx.save(); ctx.globalAlpha = eio((t - CARD) / 0.8); card(t); ctx.restore(); return; }
   card(t);
 }
 

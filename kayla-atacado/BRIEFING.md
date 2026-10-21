@@ -68,6 +68,34 @@ O atacado começa em R$ 49,00. Isso dá base para um ângulo de margem, mas aind
 | Troca | 30 dias corridos em Trocas e Devoluções. 7 dias úteis no FAQ. |
 | Cadastro | O botão "Cadastre-se para ver o preço" abre a tela de **login**, e o lojista ainda precisa clicar em "Criar conta". A tela não tem nenhum argumento de venda (margem, mínimo, aprovação). |
 
+## Instagram @kayla.atacado (prints enviados em 21/10/2026, em `ref/ig-*.webp`)
+
+- **Números:** 320 posts, 3.970 seguidores e 151 seguindo. Nome "KAYLA STORE ATACADO", categoria Vestuário (marca).
+- **Bio:** "✨Vendas no atacado e Private label / Grupo exclusivo para revendedores @kaylastore__ /
+  Faça o seu pedido no link abaixo…". O link é linktr.ee/kaylaatacado, ou seja, um clique a mais até o site.
+  A bio não fala em CNPJ, mínimo de 6 peças, aprovação na hora nem margem. **Private label** é uma oferta que não aparece no site.
+- **Destaques:** Medidas Mo…, MEDIDAS, LOJA e um por região (📍SUDESTE, SUL, NORTE, NORDESTE).
+  Os destaques por região servem de prova social: há revendedoras no país inteiro.
+- **Fixados:**
+  1. Creator falando para a câmera, com o texto "GRADE 42 AO 54".
+  2. Mulher plus size mostrando o celular com a home do site ("Peças que giram. Margem que vale."), legenda "através do site Kayla atacado".
+  3. Arte "ATACADO Kayla" com logo script.
+- **Formatos do feed:**
+  - Fotos de estúdio com fundo rosé, com modelos recorrentes.
+  - Lifestyle externo (café com cachorro).
+  - Carrossel editorial com fundo branco ("Parece Repetitivo – composições de looks").
+  - Reels em formato UGC: "Tendência x Surto coletivo", "BORA ABRIR ESSE PACOTE COMIGO?" (unboxing),
+    "Pov: foi aqui que pediram malha kayla?", lojista homem com "Chegou a Coleção nova da Kayla…" e "Vitrine da semana" com manequins na loja.
+- **Views dos Reels:** de 1,8 mil a 5,1 mil, com 3.970 seguidores, ou seja, o alcance passa a base.
+  - Top 1: lifestyle no café, 5.139.
+  - Top 2: "Pov malha kayla", 3.935.
+  - Top 3: camisa listrada com calça preta, 3.886.
+  - Top 4: regata azul de malha, 3.651.
+  - Top 5: blusa azul com calça off-white, 3.454.
+- **Leitura:** o conteúdo é quase todo de produto e com cara de varejo. Falta o argumento de negócio para a lojista
+  (margem, giro, mínimo, aprovação). Os formatos que já existem servem de base para anúncio: UGC talking head,
+  tela do site no celular, unboxing do pacote e vitrine da loja.
+
 ## Anúncios na Biblioteca da Meta (só os títulos; os criativos não abriram sem login)
 
 - Páginas: **kayla.atacado**, **KaylaStore** (que mistura varejo e atacado) e **Kayla.oficial**. São cerca de 44 anúncios no total.
@@ -87,7 +115,9 @@ O atacado começa em R$ 49,00. Isso dá base para um ângulo de margem, mas aind
 
 ## Pendências
 
-- [ ] Prints do Instagram @kayla.atacado: bio, grade, destaques e Reels de maior alcance.
+- [x] Prints do Instagram @kayla.atacado: bio, grade, destaques e Reels de maior alcance.
+- [ ] Entender a oferta de Private label (mínimo, prazo, se entra nos anúncios).
+- [ ] Ver se o link da bio pode ir direto para o cadastro (hoje passa pelo Linktree).
 - [ ] Confirmar o pedido mínimo (6 ou 12) e se a aprovação é mesmo automática.
 - [ ] Tabela de preços de atacado, ou alguns exemplos de atacado comparados com o varejo.
 - [ ] Anúncios que já geraram vendas: criativo, copy e métricas.

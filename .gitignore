@@ -31,3 +31,14 @@ hgg-sabotage/build/grid_*.png
 hgg-sabotage/build/final*_tiles.png
 hgg-sabotage/out/*_silent.mp4
 hgg-sabotage/build/sb*.png
+kayla-atacado/frames/
+kayla-atacado/build/still_*.png
+kayla-atacado/build/*_2x.png
+kayla-atacado/build/ref_*.png
+kayla-atacado/build/fonttest.*
+kayla-atacado/build/tela_pick.png
+kayla-atacado/build/contact_src.png
+kayla-atacado/out/*_silent.mp4
+kayla-atacado/build/review*.png
+kayla-atacado/build/*.log
+kayla-atacado/build/shot.mjs

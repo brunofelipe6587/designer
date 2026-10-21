@@ -82,9 +82,9 @@ function hook(t) {
   ctx.textAlign = 'center';
   shadowText(() => {
     ctx.fillStyle = C.cream; ctx.font = `700 196px ${COND}`; ctx.letterSpacing = '4px';
-    ctx.fillText(typed('LOJISTA', t, 0.05, 0.5), 540, 400);
+    ctx.fillText('LOJISTA', 540, 400); // on screen from frame 0: segments the audience and stops the scroll
     ctx.letterSpacing = '0px'; ctx.fillStyle = '#fff'; ctx.font = `400 76px ${SERIF}`;
-    ctx.fillText(typed('quanto custa começar?', t, 0.65, 0.75), 540, 505);
+    ctx.fillText(typed('quanto custa começar?', t, 0.15, 0.7), 540, 505);
   });
   const bx = eout(prog(t, 1.5, 1.85)), stem = eout(prog(t, 1.75, 2.1));
   if (bx > 0) { // the brand's callout: thin box + stem + dot

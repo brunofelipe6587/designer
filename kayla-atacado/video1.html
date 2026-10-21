@@ -197,9 +197,9 @@ async function render(t) {
     ctx.fillStyle = g; ctx.fillRect(0, 0, W, 760);
     shadowText(() => {
       ctx.fillStyle = C.cream; ctx.font = `700 196px ${COND}`; ctx.letterSpacing = '4px';
-      ctx.fillText(typed('LOJISTA', t, 0.05, 0.45), 540, 470);
+      ctx.fillText('LOJISTA', 540, 470); // on screen from frame 0: segments the audience and stops the scroll
       ctx.letterSpacing = '0px'; ctx.fillStyle = '#fff'; ctx.font = `400 76px ${SERIF}`;
-      ctx.fillText(typed('com CNPJ ativo?', t, 0.6, 0.55), 540, 575);
+      ctx.fillText(typed('com CNPJ ativo?', t, 0.15, 0.5), 540, 575);
     });
     ctx.restore();
   }

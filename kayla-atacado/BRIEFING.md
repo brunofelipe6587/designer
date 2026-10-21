@@ -182,3 +182,12 @@ Antes de usar em anúncio, é preciso borrar o campo de login.
   - Valor no preço cheio do varejo Kayla: **R$ 999,40**, ou seja, cerca de R$ 600 de diferença bruta.
 - **Atenção:** a referência é o preço cheio da loja de varejo da própria marca, que hoje está em promoção (Blusa Eve a R$ 169,90).
   Nos criativos, falar em "a Kayla vende por R$ 219,90 na loja dela", e não prometer lucro.
+
+## Regra para todos os criativos (definida com o Bruno em 21/10/2026)
+
+- **Segmentar no primeiro segundo:** todo criativo abre falando com o lojista ("LOJISTA" + CNPJ/condição),
+  para qualificar a sessão e parar o scroll. A palavra "LOJISTA" já aparece inteira no **quadro zero**
+  (miniatura do anúncio e primeira imagem no feed), sem animação de digitação.
+- Nada sazonal e nenhum nome de coleção. Peças bonitas podem aparecer, identificadas só pelo tipo (blusa, regata…).
+- Vídeos que explicam (passo a passo, conta) têm ritmo de leitura: cerca de 3 segundos por informação.
+- Nos cortes de fala da Fran, nada de transição em cima do rosto dela: o corte fica escondido por uma foto de peça ou do site.

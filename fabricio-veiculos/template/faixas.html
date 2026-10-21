@@ -247,7 +247,7 @@ window.render = async (mode, d) => {
   if (mode === 'feed') {
     document.querySelectorAll('.panel .item .txt').forEach((t) => {
       const els = [...t.querySelectorAll('.fit')];
-      els.forEach((el) => fitWidth(el, t.clientWidth));
+      els.forEach((el) => fitWidth(el, t.clientWidth, 0.35));
       // linhas da localização ficam do mesmo tamanho (a menor escala vale para as duas)
       if (t.closest('.item.loc')) { const m = Math.min(...els.map((e) => parseFloat(e.style.fontSize || getComputedStyle(e).fontSize))); els.forEach((e) => { e.style.fontSize = m + 'px'; }); }
     });

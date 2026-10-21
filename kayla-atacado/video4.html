@@ -8,20 +8,13 @@
 </head>
 <body>
 <canvas id="c" width="1080" height="1920"></canvas>
+<script src="common.js"></script>
 <script>
 // Creative 4 — "A loja existe": the brand's real store and showroom in Brás (SP) from its own store-window reel, for the
 // shop owner who wants to know who is behind the site. Shop-owner call-out from frame 0, reading pace (8 beats per
 // scene), the reel's own music. Evergreen: the "vitrine da semana" title and the tank-and-shorts shots are left out.
-const W = 1080, H = 1920, DUR = 21.7;
-const ctx = document.getElementById('c').getContext('2d');
-const C = { beige2: '#D8CABD', ink: '#211C19', cream: '#F7E8DA', mute: '#6E625A', line: 'rgba(33,28,25,0.22)' };
-const SERIF = '"Playfair Display", serif', COND = 'Oswald, sans-serif', SANS = 'Montserrat, sans-serif';
-const clamp = (x, a = 0, b = 1) => Math.min(b, Math.max(a, x));
-const lerp = (a, b, t) => a + (b - a) * t;
-const eout = t => 1 - Math.pow(1 - t, 3);
-const eio = t => t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
-const prog = (t, a, b) => clamp((t - a) / (b - a));
-
+// Text inside the Reels/Stories safe zone (common.js); footage bleeds to the edges.
+const DUR = 21.7;
 const BEAT = 0.395, B = [0, 8, 16, 24, 32].map(k => k * BEAT); // hook, 3 store shots, site
 const CARD = 40 * BEAT;
 // store-window reel shots: [source start, source end] — each is stretched over its 8-beat scene
@@ -37,141 +30,47 @@ const CAPS = [
   ['PRODUÇÃO PRÓPRIA', 'Direto da fábrica', 'para a sua loja'],
   ['LOJA FÍSICA NO BRÁS · SP', 'e atacado online', 'para todo o Brasil'],
 ];
-
-// ---------- sources ----------
-const cache = new Map();
-function frame(dir, n, max) {
-  n = clamp(n, 1, max); const k = dir + n;
-  if (!cache.has(k)) { const im = new Image(); im.src = `frames/${dir}/${String(n).padStart(5, '0')}.jpg`; cache.set(k, im.decode().then(() => im)); if (cache.size > 60) cache.delete(cache.keys().next().value); }
-  return cache.get(k);
-}
 const vit = s => frame('vitrine', Math.floor(s * 30) + 1, 823);
-const tela = s => frame('tela', Math.floor(s * 30) + 1, 5656);
-const IMG = {};
-const OFF = Object.assign(document.createElement('canvas'), { width: 1080, height: 820 });
-const load = (n, s) => new Promise((ok, er) => { const i = new Image(); i.onload = () => { IMG[n] = i; ok(); }; i.onerror = er; i.src = s; });
 
-// ---------- helpers ----------
-function cover(img, x, y, w, h, fx = 0.5, fy = 0.5, zoom = 1, c = ctx) {
-  const r = Math.max(w / img.width, h / img.height) * zoom, sw = w / r, sh = h / r;
-  c.drawImage(img, (img.width - sw) * fx, (img.height - sh) * fy, sw, sh, x, y, w, h);
-}
-function studio() {
-  const g = ctx.createRadialGradient(540, 760, 120, 540, 960, 1250);
-  g.addColorStop(0, '#EEE5DC'); g.addColorStop(1, C.beige2);
-  ctx.fillStyle = g; ctx.fillRect(0, 0, W, H);
-}
-function typed(str, t, at, dur) { return str.slice(0, Math.floor(clamp((t - at) / dur) * str.length + 0.0001)); }
-function shadowText(fn) { ctx.save(); ctx.shadowColor = 'rgba(0,0,0,0.35)'; ctx.shadowBlur = 18; ctx.shadowOffsetY = 3; fn(); ctx.restore(); }
-function logo(x, y, w, a = 1) { ctx.save(); ctx.globalAlpha *= a; ctx.drawImage(IMG.logo, x - w / 2, y, w, w * 76 / 196); ctx.restore(); }
-function label(str, x, y, color, size = 28) {
-  ctx.save(); ctx.fillStyle = color; ctx.font = `600 ${size}px ${SANS}`; ctx.letterSpacing = '6px'; ctx.textAlign = 'center';
-  ctx.fillText(str, x + 3, y); ctx.restore();
-}
-function phone(img, cx, cy, sw) {
-  const sh = sw * 1280 / 576, bz = 18, r = 64;
-  ctx.save();
-  ctx.shadowColor = 'rgba(40,25,15,0.35)'; ctx.shadowBlur = 60; ctx.shadowOffsetY = 26;
-  ctx.fillStyle = '#141211'; ctx.beginPath(); ctx.roundRect(cx - sw / 2 - bz, cy - sh / 2 - bz, sw + 2 * bz, sh + 2 * bz, r); ctx.fill();
-  ctx.shadowColor = 'transparent';
-  ctx.beginPath(); ctx.roundRect(cx - sw / 2, cy - sh / 2, sw, sh, r - bz); ctx.clip();
-  ctx.drawImage(img, cx - sw / 2, cy - sh / 2, sw, sh);
-  ctx.restore();
-}
 async function shot(k, t) { // a store shot stretched over its scene, with a slow push-in
   const [s0, s1] = SHOTS[k], t0 = B[k], t1 = B[k + 1], p = prog(t, t0, t1);
-  const img = await vit(lerp(s0, s1, p));
-  cover(img, 0, 0, W, H, 0.5, 0.5, 1.0 + 0.04 * p);
+  cover(await vit(lerp(s0, s1, p)), 0, 0, W, H, 0.5, 0.5, 1.0 + 0.04 * p);
 }
-
-// ---------- scenes ----------
 async function hook(t) {
   await shot(0, t);
-  const g = ctx.createLinearGradient(0, 0, 0, 1100); g.addColorStop(0, 'rgba(30,20,15,0.55)'); g.addColorStop(1, 'rgba(30,20,15,0)');
-  ctx.fillStyle = g; ctx.fillRect(0, 0, W, 1100);
-  ctx.textAlign = 'center';
-  shadowText(() => {
-    ctx.fillStyle = C.cream; ctx.font = `700 196px ${COND}`; ctx.letterSpacing = '4px';
-    ctx.fillText('LOJISTA', 540, 400); // on screen from frame 0: segments the audience and stops the scroll
-    ctx.letterSpacing = '0px'; ctx.fillStyle = '#fff'; ctx.font = `400 64px ${SERIF}`;
-    ctx.fillText(typed('compre direto de quem produz', t, 0.15, 0.8), 540, 505);
-  });
-  const bx = eout(prog(t, 1.2, 1.55)), stem = eout(prog(t, 1.45, 1.8));
-  if (bx > 0) { // the brand's callout: thin box + stem + dot
-    ctx.save(); ctx.strokeStyle = 'rgba(255,255,255,0.95)'; ctx.lineWidth = 3;
-    const w = 700 * bx; ctx.strokeRect(540 - w / 2, 600, w, 110);
-    ctx.beginPath(); ctx.moveTo(540, 710); ctx.lineTo(540, 710 + 140 * stem); ctx.stroke();
-    if (stem >= 1) { ctx.fillStyle = '#fff'; ctx.beginPath(); ctx.arc(540, 862, 13, 0, Math.PI * 2); ctx.fill(); }
-    shadowText(() => { ctx.fillStyle = '#fff'; ctx.font = `500 48px ${SANS}`; ctx.fillText(typed('Loja e showroom no Brás · SP', t, 1.5, 0.7), 540, 672); });
-    ctx.restore();
-  }
+  hookText(t, 'compre direto de quem produz', 'Loja e showroom no Brás · SP');
 }
 async function store(k, t) {
   await shot(k, t);
   const l = t - B[k], [lab, l1, l2] = CAPS[k];
-  const g = ctx.createLinearGradient(0, 1150, 0, 1920); g.addColorStop(0, 'rgba(20,14,10,0)'); g.addColorStop(1, 'rgba(20,14,10,0.62)');
-  ctx.fillStyle = g; ctx.fillRect(0, 1150, W, 770);
+  scrim(860, 1330, 0.6);
   const a1 = eout(prog(l, 0.15, 0.55)), a2 = eout(prog(l, 0.45, 0.9));
-  ctx.save(); ctx.globalAlpha *= a1; shadowText(() => label(lab, 540, 1545, C.cream, 30)); ctx.restore();
-  ctx.save(); ctx.globalAlpha *= a2; ctx.translate(0, (1 - a2) * 24); ctx.textAlign = 'center';
-  shadowText(() => { ctx.fillStyle = '#fff'; ctx.font = `400 74px ${SERIF}`; ctx.fillText(l1, 540, 1650); ctx.fillText(l2, 540, 1742); });
+  ctx.save(); ctx.globalAlpha *= a1; shadowText(() => label(lab, 540, 1035, C.cream, 30)); ctx.restore();
+  ctx.save(); ctx.globalAlpha *= a2; ctx.translate(0, (1 - a2) * 22); ctx.textAlign = 'center';
+  shadowText(() => { ctx.fillStyle = '#fff'; ctx.font = `400 74px ${SERIF}`; ctx.fillText(l1, 540, 1135); ctx.fillText(l2, 540, 1222); });
   ctx.restore();
 }
 async function site(t) {
   const l = t - B[4];
-  studio(); logo(540, 82, 200, 0.9);
-  const a = eout(prog(l, 0, 0.4)), dy = (1 - a) * 22;
-  ctx.save(); ctx.globalAlpha *= a; ctx.textAlign = 'center';
-  label('APROVAÇÃO AUTOMÁTICA', 540, 228 + dy, C.mute, 30);
-  ctx.fillStyle = C.ink; ctx.font = `400 72px ${SERIF}`; ctx.fillText('Cadastre seu CNPJ', 540, 318 + dy);
-  ctx.restore();
-  const img = l < 1.5 ? IMG.cad : await tela(69.8 + (l - 1.5) * 0.12); // sign-up form, then prices unlocked
-  phone(img, 540, lerp(1500, 1170, eout(prog(l, 0, 0.6))), 580);
-}
-function card(t) {
   studio();
-  // storefront photo fades into the studio background through an alpha mask (no seam)
-  const oc = OFF.getContext('2d'); oc.globalCompositeOperation = 'source-over'; oc.clearRect(0, 0, W, 820);
-  cover(IMG.card, 0, 0, W, 820, 0.5, 0.35, 1.02 + 0.02 * prog(t, CARD, DUR), oc);
-  const g = oc.createLinearGradient(0, 440, 0, 780); g.addColorStop(0, 'rgba(0,0,0,0)'); g.addColorStop(0.6, 'rgba(0,0,0,0.75)'); g.addColorStop(1, 'rgba(0,0,0,1)');
-  oc.globalCompositeOperation = 'destination-out'; oc.fillStyle = g; oc.fillRect(0, 440, W, 380);
-  ctx.drawImage(OFF, 0, 0);
-  logo(540, 815, 270);
-  ctx.textAlign = 'center'; ctx.fillStyle = C.ink; ctx.font = `500 74px ${SERIF}`; ctx.fillText('Peças que giram.', 540, 1035);
-  ctx.font = `italic 400 74px ${SERIF}`; ctx.fillText('Margem que vale.', 540, 1118);
-  ctx.fillStyle = C.line; ctx.fillRect(390, 1158, 300, 2);
-  const rows = [['1', 'Cadastre seu CNPJ ativo no site'], ['2', 'Aprovação automática'], ['3', 'Compre a partir de 6 peças']];
-  rows.forEach(([n, s], i) => {
-    const ra = eout(prog(t, CARD + 0.6 + i * 0.45, CARD + 1.2 + i * 0.45)), y = 1255 + i * 96;
-    ctx.save(); ctx.globalAlpha *= ra; ctx.translate((1 - ra) * 24, 0);
-    ctx.strokeStyle = C.ink; ctx.lineWidth = 2.5; ctx.beginPath(); ctx.arc(170, y - 16, 34, 0, Math.PI * 2); ctx.stroke();
-    ctx.fillStyle = C.ink; ctx.textAlign = 'center'; ctx.font = `500 38px ${SERIF}`; ctx.fillText(n, 170, y - 3);
-    ctx.textAlign = 'left'; ctx.font = `500 42px ${SANS}`; ctx.fillText(s, 236, y);
-    ctx.restore();
-  });
-  ctx.textAlign = 'center'; ctx.fillStyle = C.mute; ctx.font = `600 27px ${SANS}`; ctx.letterSpacing = '5px';
-  ctx.fillText('GRADE 42 AO 54 · ENVIAMOS PARA TODO O BRASIL', 542, 1580); ctx.letterSpacing = '0px';
-  const b = eout(prog(t, CARD + 2.1, CARD + 2.6));
-  ctx.save(); ctx.globalAlpha *= b; ctx.translate(540, 1700);
-  ctx.fillStyle = C.ink; ctx.beginPath(); ctx.roundRect(-400, -62, 800, 124, 62); ctx.fill();
-  ctx.fillStyle = '#fff'; ctx.font = `600 38px ${SANS}`; ctx.letterSpacing = '3px'; ctx.textBaseline = 'middle'; ctx.fillText('VER PREÇOS DE ATACADO', 0, 3);
-  ctx.restore();
-  ctx.save(); ctx.globalAlpha *= b; ctx.fillStyle = C.mute; ctx.font = `500 30px ${SANS}`; ctx.textAlign = 'center'; ctx.fillText('kaylaatacado.com.br', 540, 1810); ctx.restore();
+  const img = l < 1.5 ? IMG.cad : await tela(69.8 + (l - 1.5) * 0.12); // sign-up form, then prices unlocked
+  phoneWindow(img, l < 1.5 ? 0.38 : 0.36, l < 1.5 && l > 0.5 ? [0.268, 0.352, eout(prog(l, 0.5, 0.85))] : null, eout(prog(l, 0, 0.6)));
+  stepCaption('APROVAÇÃO AUTOMÁTICA', 'Cadastre seu CNPJ', l);
 }
 
 async function render(t) {
   ctx.setTransform(1, 0, 0, 1, 0, 0); ctx.globalAlpha = 1; ctx.textBaseline = 'alphabetic';
-  if (t < B[1]) return hook(t);
-  if (t < B[4]) { const k = t < B[2] ? 1 : t < B[3] ? 2 : 3; return store(k, t); }
-  if (t < CARD) return site(t);
-  if (t < CARD + 0.8) { await site(t); ctx.save(); ctx.globalAlpha = eio((t - CARD) / 0.8); card(t); ctx.restore(); return; }
-  card(t);
+  if (t < B[1]) await hook(t);
+  else if (t < B[4]) { const k = t < B[2] ? 1 : t < B[3] ? 2 : 3; await store(k, t); }
+  else if (t < CARD) await site(t);
+  else if (t < CARD + 0.8) { await site(t); ctx.save(); ctx.globalAlpha = eio((t - CARD) / 0.8); endCard(t, CARD, DUR - CARD, IMG.card, 0.35); ctx.restore(); }
+  else endCard(t, CARD, DUR - CARD, IMG.card, 0.35);
+  safeGuides();
 }
 
 window.ready = (async () => {
   await Promise.all([load('logo', 'src/logo-kayla.svg'), load('cad', 'src/tela_cadastro_2x.jpg'), load('card', 'src/vitrine-fachada.jpg')]);
-  for (const f of [`700 40px Oswald`, `400 40px "Playfair Display"`, `500 40px "Playfair Display"`, `italic 400 40px "Playfair Display"`, `500 40px Montserrat`, `600 40px Montserrat`]) await document.fonts.load(f);
-  await document.fonts.ready;
+  await loadFonts();
   await render(0); return true;
 })();
 window.renderAt = t => render(t);

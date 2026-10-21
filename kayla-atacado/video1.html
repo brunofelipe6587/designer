@@ -8,21 +8,15 @@
 </head>
 <body>
 <canvas id="c" width="1080" height="1920"></canvas>
+<script src="common.js"></script>
 <script>
 // Creative 1 — "Fran 2.0": Fran's own reel re-cut for qualified resellers. Hook for shop owners with an active CNPJ,
 // studio photos over every cut in her speech, cart with the 6-piece minimum, the site steps on a phone under her closing line,
-// and a 3-step end card.
-// Evergreen on purpose: no season, no collection names. Her burned-in captions are kept; new type copies their style.
-const W = 1080, H = 1920, DUR = 33.0;
-const ctx = document.getElementById('c').getContext('2d');
-const C = { beige: '#E7DDD3', beige2: '#D8CABD', ink: '#211C19', cream: '#F7E8DA', mute: '#6E625A', line: 'rgba(33,28,25,0.22)' };
-const SERIF = '"Playfair Display", serif', COND = 'Oswald, sans-serif', SANS = 'Montserrat, sans-serif';
-const clamp = (x, a = 0, b = 1) => Math.min(b, Math.max(a, x));
-const lerp = (a, b, t) => a + (b - a) * t;
-const eout = t => 1 - Math.pow(1 - t, 3);
-const eio = t => t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
-const prog = (t, a, b) => clamp((t - a) / (b - a));
-
+// and a 3-step end card. Evergreen on purpose: no season, no collection names.
+// Safe zone (common.js): her reel's captions are burned in low in the frame, outside the Reels/Stories safe zone, so her
+// footage is shown down to y 1240 and melts into the studio background there; the same captions are re-set, in the
+// same style and timing, inside the safe zone.
+const DUR = 33.0;
 // Edit decision list: [output start, source start, source end] in Fran's reel. build_audio1.sh cuts the voice with the same list.
 // The call to action closes the piece so her last line ends on a full sentence ("…no nosso site de atacado.").
 const EDL = [
@@ -39,77 +33,50 @@ const EDL = [
 const S = { ins: 3.85, insEnd: 4.70, cuts: 11.30, cap: 13.99, back: 17.29, pay: 18.64, payEnd: 23.89, steps: 25.79, card: 30.33 };
 const XF = 0.25; // short dissolve between different scenes only
 
-// ---------- frame sources ----------
-const cache = new Map();
-function frame(dir, n, max) {
-  n = clamp(n, 1, max); const k = dir + n;
-  if (!cache.has(k)) { const im = new Image(); im.src = `frames/${dir}/${String(n).padStart(5, '0')}.jpg`; cache.set(k, im.decode().then(() => im)); if (cache.size > 60) cache.delete(cache.keys().next().value); }
-  return cache.get(k);
-}
 function franSrc(t) { let s = 0; for (const [o, a] of EDL) if (t >= o) s = a + (t - o); return s; }
 const fran = t => frame('fran', Math.floor(franSrc(t) * 30) + 1, 1406);
-const franAt = s => frame('fran', Math.floor(s * 30) + 1, 1406);
-const tela = s => frame('tela', Math.floor(s * 30) + 1, 5656);
-async function franPlain(t) { ctx.drawImage(await fran(t), 0, 0, W, H); }
-
-const IMG = {};
-const OFF = Object.assign(document.createElement('canvas'), { width: 1080, height: 820 });
-const load = (n, s) => new Promise((ok, er) => { const i = new Image(); i.onload = () => { IMG[n] = i; ok(); }; i.onerror = er; i.src = s; });
-
-// ---------- helpers ----------
-function cover(img, x, y, w, h, fx = 0.5, fy = 0.5, zoom = 1) {
-  const r = Math.max(w / img.width, h / img.height) * zoom, sw = w / r, sh = h / r;
-  ctx.drawImage(img, (img.width - sw) * fx, (img.height - sh) * fy, sw, sh, x, y, w, h);
-}
-function studio() {
-  const g = ctx.createRadialGradient(540, 760, 120, 540, 960, 1250);
-  g.addColorStop(0, '#EEE5DC'); g.addColorStop(1, C.beige2);
-  ctx.fillStyle = g; ctx.fillRect(0, 0, W, H);
-}
-// typewriter reveal like the brand's reels: characters appear over `dur`
-function typed(str, t, at, dur) { return str.slice(0, Math.floor(clamp((t - at) / dur) * str.length + 0.0001)); }
-function shadowText(fn) { ctx.save(); ctx.shadowColor = 'rgba(0,0,0,0.28)'; ctx.shadowBlur = 18; ctx.shadowOffsetY = 3; fn(); ctx.restore(); }
-function phone(img, cx, cy, sw, a, hl, dim = true) {
-  const sh = sw * 1280 / 576, bz = 18, r = 64;
-  ctx.save(); ctx.globalAlpha = a;
-  ctx.shadowColor = 'rgba(40,25,15,0.35)'; ctx.shadowBlur = 60; ctx.shadowOffsetY = 26;
-  ctx.fillStyle = '#141211'; ctx.beginPath(); ctx.roundRect(cx - sw / 2 - bz, cy - sh / 2 - bz, sw + 2 * bz, sh + 2 * bz, r); ctx.fill();
-  ctx.shadowColor = 'transparent';
-  ctx.save(); ctx.beginPath(); ctx.roundRect(cx - sw / 2, cy - sh / 2, sw, sh, r - bz); ctx.clip();
-  if (img) ctx.drawImage(img, cx - sw / 2, cy - sh / 2, sw, sh);
-  if (hl) { // highlight a band of the screen (fractions of screen height)
-    const [y0, y1, p] = hl, yy = cy - sh / 2 + sh * y0, hh = sh * (y1 - y0);
-    if (dim) { ctx.fillStyle = `rgba(33,28,25,${0.42 * p})`; ctx.fillRect(cx - sw / 2, cy - sh / 2, sw, yy - (cy - sh / 2)); ctx.fillRect(cx - sw / 2, yy + hh, sw, cy + sh / 2 - yy - hh); }
-    ctx.strokeStyle = dim ? `rgba(247,232,218,${p})` : `rgba(33,28,25,${p})`; ctx.lineWidth = 6; ctx.beginPath(); ctx.roundRect(cx - sw / 2 + 10, yy - 6, sw - 20, hh + 12, 14); ctx.stroke();
-  }
-  ctx.restore(); ctx.restore();
-}
-function stepCaption(label, title, t, at, y = 238) {
-  const a = eout(prog(t, at, at + 0.3)), dy = (1 - a) * 24;
-  ctx.save(); ctx.globalAlpha = a; ctx.textAlign = 'center'; ctx.textBaseline = 'alphabetic';
-  ctx.fillStyle = C.mute; ctx.font = `600 30px ${SANS}`; ctx.letterSpacing = '7px'; ctx.fillText(label, 540 + 3.5, y + dy);
-  ctx.letterSpacing = '0px'; ctx.fillStyle = C.ink; ctx.font = `400 74px ${SERIF}`; ctx.fillText(title, 540, y + 96 + dy);
-  ctx.restore();
-}
-function logo(x, y, w, a = 1) { ctx.save(); ctx.globalAlpha = a; ctx.drawImage(IMG.logo, x - w / 2, y, w, w * 76 / 196); ctx.restore(); }
 
 // ---------- scenes ----------
+async function drawFran(t) {
+  studio();
+  fadePhoto(await fran(t), 1320, 0, 1, 1240);
+  // her reel's captions, re-set inside the safe zone at the moments they appeared in the original
+  ctx.save(); ctx.textAlign = 'center';
+  const cap = (fn, a) => { if (a > 0) { ctx.save(); ctx.globalAlpha *= a; shadowText(fn); ctx.restore(); } };
+  if (t >= 2.7 && t < S.ins) { // callout: thin box + stem + dot
+    const bx = eout(prog(t, 2.7, 3.0)), stem = eout(prog(t, 2.9, 3.2));
+    scrim(980, 1290, 0.45);
+    ctx.save(); ctx.strokeStyle = 'rgba(255,255,255,0.95)'; ctx.lineWidth = 3;
+    const w = 700 * bx; ctx.strokeRect(540 - w / 2, 1010, w, 130);
+    ctx.beginPath(); ctx.moveTo(540, 1140); ctx.lineTo(540, 1140 + 70 * stem); ctx.stroke();
+    if (stem >= 1) { ctx.fillStyle = '#fff'; ctx.beginPath(); ctx.arc(540, 1222, 12, 0, Math.PI * 2); ctx.fill(); }
+    ctx.restore();
+    cap(() => { ctx.fillStyle = '#fff'; ctx.font = `500 46px ${SANS}`; ctx.fillText(typed('Como comprar KAYLA', t, 2.85, 0.4), 540, 1066); ctx.fillText(typed('no ATACADO', t, 3.25, 0.3), 540, 1120); }, 1);
+  }
+  if (t >= 5.0 && t < 7.2) { scrim(1040, 1290, 0.45); cap(() => { ctx.fillStyle = '#fff'; ctx.font = `400 46px ${SERIF}`; ctx.fillText(typed('FRAN', t, 5.0, 0.25), 540, 1150); ctx.font = `400 54px ${SERIF}`; ctx.fillText(typed('diretora criativa', t, 5.25, 0.5), 540, 1215); }, 1 - prog(t, 7.0, 7.2)); }
+  if (t >= 8.0 && t < S.cuts) { scrim(980, 1300, 0.45); cap(() => { ctx.fillStyle = C.cream; ctx.font = `700 118px ${COND}`; ctx.letterSpacing = '2px'; ctx.fillText(typed('GRADE', t, 8.0, 0.3), 541, 1112); ctx.fillText(typed('42 AO 54', t, 8.3, 0.4), 541, 1228); }, 1); }
+  if (t >= 23.95 && t < S.steps) { scrim(1020, 1300, 0.45); cap(() => { ctx.fillStyle = '#fff'; ctx.font = `400 62px ${SERIF}`; ctx.fillText(typed('Pedido mínimo', t, 23.95, 0.4), 540, 1148); ctx.fillText(typed('6 peças variadas', t, 24.35, 0.5), 540, 1224); }, 1); }
+  ctx.restore();
+}
+const STEPS = [ // closing line: the site on the phone — [start, screen(local) -> seconds, focus, label, title, highlight]
+  [S.steps, (l) => 1.5 + l, 0.45, 'PASSO 1 DE 3', 'Cadastro com CNPJ', null],
+  [S.steps + 1.8, (l) => l < 0.45 ? 55.6 + l * 0.5 : 61.0 + (l - 0.45), 0.27, 'PASSO 2 DE 3', 'Aprovação automática', null],
+  [S.steps + 3.1, (l) => 63.0 + l, 0.62, 'PASSO 3 DE 3', 'Preço de atacado na hora', (l) => [0.765, 0.835, eout(prog(l, 0.35, 0.6))]],
+];
 async function drawSteps(t) {
-  studio(); logo(540, 92, 210, 0.9);
-  const STEPS = [[S.steps, 1.5, 'PASSO 1', 'Cadastro com CNPJ'], [S.steps + 1.8, 55.55, 'PASSO 2', 'Aprovação automática'], [S.steps + 3.1, 63.0, 'PASSO 3', 'Preço de atacado na hora']];
+  studio();
   let k = 0; for (let i = 0; i < 3; i++) if (t >= STEPS[i][0]) k = i;
-  const [at, src, lab, title] = STEPS[k];
-  const s2 = k === 1 ? (t - at < 0.45 ? 55.6 + (t - at) * 0.5 : 61.0 + (t - at - 0.45)) : src + (t - at);
-  const hl = k === 2 ? [0.765, 0.835, eout(prog(t, at + 0.35, at + 0.6))] : null;
-  phone(await tela(s2), 540, lerp(1300, 1135, eout(prog(t, S.steps, S.steps + 0.6))), 560, 1, hl, false);
-  stepCaption(lab, title, t, k === 0 ? S.steps + 0.15 : at);
+  const [at, scr, foc, lab, title, hl] = STEPS[k], l = t - at;
+  const f = k > 0 ? lerp(STEPS[k - 1][2], foc, eio(prog(l, 0, 0.5))) : foc;
+  phoneWindow(await tela(scr(l)), f, hl ? hl(l) : null, eout(prog(t, S.steps, S.steps + 0.6)));
+  stepCaption(lab, title, l, [k, 3]);
 }
 async function drawPay(t) {
-  studio(); logo(540, 92, 210, 0.9);
+  studio();
   const hlp = eout(prog(t, 21.6, 22.0));
-  phone(await tela(134.0 + (t - S.pay) * 0.6), 540, lerp(1300, 1135, eout(prog(t, S.pay, S.pay + 0.6))), 560, 1, [0.825, 0.868, hlp]);
-  if (t < 21.44) stepCaption('PAGAMENTO', 'Até 3x sem juros', t, S.pay + 0.2);
-  else stepCaption('PAGAMENTO', 'Desconto no PIX', t, 21.44);
+  phoneWindow(await tela(134.0 + (t - S.pay) * 0.6), 0.68, [0.825, 0.868, hlp], eout(prog(t, S.pay, S.pay + 0.6)));
+  if (t < 21.44) stepCaption('PAGAMENTO', 'Até 3x sem juros', t - S.pay - 0.2);
+  else stepCaption('PAGAMENTO', 'Desconto no PIX', t - 21.44);
 }
 const RUN = [['rebeca', 0.5, 0.18], ['eve', 0.5, 0.2], ['clarice', 0.5, 0.2], ['p4', 0.5, 0.2], ['iris', 0.5, 0.2]];
 function photoRun(t, t0, t1, list) { // equal slots, short dissolve between photos, slow push-in
@@ -124,42 +91,12 @@ async function drawCuts(t) {
   photoRun(t, S.cuts, S.back, RUN);
   const a = eout(prog(t, S.cap, S.cap + 0.4));
   ctx.save(); ctx.globalAlpha *= a; ctx.textAlign = 'center';
-  shadowText(() => { ctx.fillStyle = '#fff'; ctx.font = `400 70px ${SERIF}`; ctx.fillText('Modelagem pensada', 540, 1560); ctx.fillText('para o corpo plus', 540, 1648); });
+  scrim(980, 1300, 0.5);
+  shadowText(() => { ctx.fillStyle = '#fff'; ctx.font = `400 70px ${SERIF}`; ctx.fillText('Modelagem pensada', 540, 1140); ctx.fillText('para o corpo plus', 540, 1226); });
   ctx.restore();
 }
 function drawInsert(t) { cover(IMG.p3, 0, 0, W, H, 0.5, 0.2, 1.03 + 0.03 * prog(t, S.ins, S.insEnd)); }
-function drawCard(t) {
-  studio();
-  const z = 1.02 + 0.02 * prog(t, S.card, DUR);
-  // photo fades into the studio background through an alpha mask (no seam)
-  const oc = OFF.getContext('2d'); oc.globalCompositeOperation = 'source-over'; oc.clearRect(0, 0, W, 820);
-  { const r = Math.max(W / IMG.rose.width, 820 / IMG.rose.height) * z, sw = W / r, sh = 820 / r; oc.drawImage(IMG.rose, (IMG.rose.width - sw) * 0.5, (IMG.rose.height - sh) * 0.12, sw, sh, 0, 0, W, 820); }
-  const g = oc.createLinearGradient(0, 440, 0, 780); g.addColorStop(0, 'rgba(0,0,0,0)'); g.addColorStop(0.6, 'rgba(0,0,0,0.75)'); g.addColorStop(1, 'rgba(0,0,0,1)');
-  oc.globalCompositeOperation = 'destination-out'; oc.fillStyle = g; oc.fillRect(0, 440, W, 380);
-  ctx.drawImage(OFF, 0, 0);
-  logo(540, 815, 270);
-  ctx.textAlign = 'center'; ctx.fillStyle = C.ink; ctx.font = `500 74px ${SERIF}`; ctx.fillText('Peças que giram.', 540, 1035);
-  ctx.font = `italic 400 74px ${SERIF}`; ctx.fillText('Margem que vale.', 540, 1118);
-  ctx.fillStyle = C.line; ctx.fillRect(390, 1158, 300, 2);
-  const rows = [['1', 'Cadastre seu CNPJ ativo no site'], ['2', 'Aprovação automática'], ['3', 'Compre a partir de 6 peças']];
-  rows.forEach(([n, s], i) => {
-    const ra = eout(prog(t, S.card + 0.5 + i * 0.3, S.card + 1.0 + i * 0.3)), y = 1255 + i * 96;
-    ctx.save(); ctx.globalAlpha *= ra; ctx.translate((1 - ra) * 24, 0);
-    ctx.strokeStyle = C.ink; ctx.lineWidth = 2.5; ctx.beginPath(); ctx.arc(170, y - 16, 34, 0, Math.PI * 2); ctx.stroke();
-    ctx.fillStyle = C.ink; ctx.textAlign = 'center'; ctx.font = `500 38px ${SERIF}`; ctx.fillText(n, 170, y - 3);
-    ctx.textAlign = 'left'; ctx.font = `500 42px ${SANS}`; ctx.fillText(s, 236, y);
-    ctx.restore();
-  });
-  ctx.textAlign = 'center'; ctx.fillStyle = C.mute; ctx.font = `600 27px ${SANS}`; ctx.letterSpacing = '5px';
-  ctx.fillText('GRADE 42 AO 54 · ENVIAMOS PARA TODO O BRASIL', 542, 1580); ctx.letterSpacing = '0px';
-  const b = eout(prog(t, S.card + 1.4, S.card + 1.9));
-  ctx.save(); ctx.globalAlpha *= b; ctx.translate(540, 1700);
-  ctx.fillStyle = C.ink; ctx.beginPath(); ctx.roundRect(-400, -62, 800, 124, 62); ctx.fill();
-  ctx.fillStyle = '#fff'; ctx.font = `600 38px ${SANS}`; ctx.letterSpacing = '3px'; ctx.textBaseline = 'middle'; ctx.fillText('VER PREÇOS DE ATACADO', 0, 3);
-  ctx.restore();
-  ctx.save(); ctx.globalAlpha *= b; ctx.fillStyle = C.mute; ctx.font = `500 30px ${SANS}`; ctx.textAlign = 'center'; ctx.fillText('kaylaatacado.com.br', 540, 1810); ctx.restore();
-}
-// draws one scene; `scene(t)` picks which is on screen, `layer` blends the incoming one over the outgoing one
+
 function sceneAt(t) {
   if (t >= S.card) return 'card';
   if (t >= S.steps) return 'steps';
@@ -169,15 +106,15 @@ function sceneAt(t) {
   return 'fran';
 }
 async function drawScene(n, t) {
-  if (n === 'fran') return franPlain(t);
+  if (n === 'fran') return drawFran(t);
   if (n === 'insert') return drawInsert(t);
   if (n === 'cuts') return drawCuts(t);
   if (n === 'pay') return drawPay(t);
   if (n === 'steps') return drawSteps(t);
-  return drawCard(t);
+  return endCard(t, S.card, DUR - S.card, IMG.rose, 0.12);
 }
 async function render(t) {
-  ctx.setTransform(1, 0, 0, 1, 0, 0); ctx.globalAlpha = 1;
+  ctx.setTransform(1, 0, 0, 1, 0, 0); ctx.globalAlpha = 1; ctx.textBaseline = 'alphabetic';
   const cur = sceneAt(t);
   // the most recent scene change at or before t; the outgoing scene keeps playing underneath while the new one fades in
   const changes = [S.ins, S.insEnd, S.cuts, S.back, S.pay, S.payEnd, S.steps, S.card].filter(c => c <= t);
@@ -188,27 +125,14 @@ async function render(t) {
     await drawScene(prev, t);
     ctx.save(); ctx.globalAlpha = eio((t - st) / xf); await drawScene(cur, t); ctx.restore();
   } else await drawScene(cur, t);
-
-  // hook: who this is for (0–4s)
-  if (t < 4.02) {
-    const out = 1 - prog(t, 3.6, 3.85);
-    ctx.save(); ctx.globalAlpha = out; ctx.textAlign = 'center'; ctx.textBaseline = 'alphabetic';
-    const g = ctx.createLinearGradient(0, 160, 0, 720); g.addColorStop(0, 'rgba(30,20,15,0.38)'); g.addColorStop(1, 'rgba(30,20,15,0)');
-    ctx.fillStyle = g; ctx.fillRect(0, 0, W, 760);
-    shadowText(() => {
-      ctx.fillStyle = C.cream; ctx.font = `700 196px ${COND}`; ctx.letterSpacing = '4px';
-      ctx.fillText('LOJISTA', 540, 470); // on screen from frame 0: segments the audience and stops the scroll
-      ctx.letterSpacing = '0px'; ctx.fillStyle = '#fff'; ctx.font = `400 76px ${SERIF}`;
-      ctx.fillText(typed('com CNPJ ativo?', t, 0.15, 0.5), 540, 575);
-    });
-    ctx.restore();
-  }
+  // hook: who this is for — "LOJISTA" from frame 0, above her head, inside the safe zone
+  if (t < S.ins) hookText(t, 'com CNPJ ativo?', null, { lojista: 430, line2: 520 });
+  safeGuides();
 }
 
 window.ready = (async () => {
   await Promise.all([load('logo', 'src/logo-kayla.svg'), load('rebeca', 'src/p-rebeca.jpg'), load('eve', 'src/p-eve.jpg'), load('p4', 'src/p-p4.jpg'), load('p3', 'src/p-p3.jpg'), load('rose', 'src/p-rose.jpg'), load('iris', 'src/p-iris.jpg'), load('clarice', 'src/p-clarice.jpg')]);
-  for (const f of [`700 40px Oswald`, `400 40px "Playfair Display"`, `500 40px "Playfair Display"`, `500 40px Montserrat`, `600 40px Montserrat`]) await document.fonts.load(f);
-  await document.fonts.ready;
+  await loadFonts();
   await render(0); return true;
 })();
 window.renderAt = t => render(t);

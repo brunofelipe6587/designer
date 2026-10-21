@@ -9,7 +9,7 @@ const fs = require('fs');
   const [mode, ...rest] = process.argv.slice(2);
   const browser = await chromium.launch({ executablePath: '/opt/pw-browsers/chromium-1194/chrome-linux/chrome', args: ['--allow-file-access-from-files'] });
   const page = await browser.newPage({ viewport: { width: 1080, height: 1920 }, deviceScaleFactor: 1 });
-  await page.goto('file://' + path.join(__dirname, process.env.PAGE || 'video1.html'));
+  await page.goto('file://' + path.join(__dirname, process.env.PAGE || 'video1.html') + (process.env.GUIDES ? '?safe' : ''));
   await page.evaluate(() => window.ready);
   const canvas = await page.$('#c') || await page.$('#stage');
   const DUR = parseFloat(process.env.DUR || '33.0');

@@ -12,7 +12,7 @@ const fs = require('fs');
   await page.goto('file://' + path.join(__dirname, process.env.PAGE || 'video1.html'));
   await page.evaluate(() => window.ready);
   const canvas = await page.$('#c') || await page.$('#stage');
-  const DUR = parseFloat(process.env.DUR || '33.4');
+  const DUR = parseFloat(process.env.DUR || '33.0');
 
   if (mode === 'stills') {
     for (const t of rest) {

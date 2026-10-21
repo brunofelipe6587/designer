@@ -10,9 +10,10 @@
 <canvas id="c" width="1080" height="1920"></canvas>
 <script>
 // Creative 1 — "Fran 2.0": Fran's own reel re-cut for qualified resellers. Hook for shop owners with an active CNPJ,
-// studio cutaways, cart with the 6-piece minimum, the site steps on a phone under her closing line, and a 3-step end card.
+// studio photos over every cut in her speech, cart with the 6-piece minimum, the site steps on a phone under her closing line,
+// and a 3-step end card.
 // Evergreen on purpose: no season, no collection names. Her burned-in captions are kept; new type copies their style.
-const W = 1080, H = 1920, DUR = 33.4;
+const W = 1080, H = 1920, DUR = 33.0;
 const ctx = document.getElementById('c').getContext('2d');
 const C = { beige: '#E7DDD3', beige2: '#D8CABD', ink: '#211C19', cream: '#F7E8DA', mute: '#6E625A', line: 'rgba(33,28,25,0.22)' };
 const SERIF = '"Playfair Display", serif', COND = 'Oswald, sans-serif', SANS = 'Montserrat, sans-serif';
@@ -32,10 +33,11 @@ const EDL = [
   [23.89, 41.84, 43.74],// "Para se tornar uma revendedora Kayla"
   [25.79, 4.45, 5.42],  // "é muito fácil,"
   [26.76, 6.12, 7.66],  // "é só fazer o cadastro"
-  [28.30, 9.72, 11.75], // "diretamente no nosso site de atacado."
+  [28.30, 9.72, 11.98], // "diretamente no nosso site de atacado." (audio tail fades out)
 ];
-const S = { cut1: 13.99, cut2: 15.09, cut3: 16.19, back: 17.29, pay: 18.64, payEnd: 23.89, steps: 25.79, card: 30.33 };
-const XF = 0.4; // dissolve length between scenes
+// Fran-to-Fran cuts are never shown on her face: a studio photo covers each one (insert at 4.02, photo run from 11.30).
+const S = { ins: 3.85, insEnd: 4.70, cuts: 11.30, cap: 13.99, back: 17.29, pay: 18.64, payEnd: 23.89, steps: 25.79, card: 30.33 };
+const XF = 0.25; // short dissolve between different scenes only
 
 // ---------- frame sources ----------
 const cache = new Map();
@@ -47,15 +49,8 @@ function frame(dir, n, max) {
 function franSrc(t) { let s = 0; for (const [o, a] of EDL) if (t >= o) s = a + (t - o); return s; }
 const fran = t => frame('fran', Math.floor(franSrc(t) * 30) + 1, 1406);
 const franAt = s => frame('fran', Math.floor(s * 30) + 1, 1406);
-// Fran on screen with a dissolve from the previous segment (its frames keep running under the fade)
-async function franWithDissolve(t) {
-  ctx.drawImage(await fran(t), 0, 0, W, H);
-  for (let i = 1; i < EDL.length; i++) {
-    const [o] = EDL[i], [, , pe] = EDL[i - 1];
-    if (t >= o && t < o + XF && i <= 2) { ctx.save(); ctx.globalAlpha = 1 - eio((t - o) / XF); ctx.drawImage(await franAt(pe + (t - o)), 0, 0, W, H); ctx.restore(); }
-  }
-}
 const tela = s => frame('tela', Math.floor(s * 30) + 1, 5656);
+async function franPlain(t) { ctx.drawImage(await fran(t), 0, 0, W, H); }
 
 const IMG = {};
 const OFF = Object.assign(document.createElement('canvas'), { width: 1080, height: 820 });
@@ -116,19 +111,23 @@ async function drawPay(t) {
   if (t < 21.44) stepCaption('PAGAMENTO', 'Até 3x sem juros', t, S.pay + 0.2);
   else stepCaption('PAGAMENTO', 'Desconto no PIX', t, 21.44);
 }
-async function drawCuts(t) {
-  const shots = [[S.cut1, 'rebeca', 0.5, 0.18], [S.cut2, 'clarice', 0.5, 0.2], [S.cut3, 'iris', 0.5, 0.2]];
-  for (let i = 0; i < 3; i++) {
-    const [at, n, fx, fy] = shots[i], next = i < 2 ? shots[i + 1][0] : S.back + XF;
-    if (t < at || t >= next + XF) continue;
-    const a = i === 0 ? 1 : eio(clamp((t - at) / XF));
-    ctx.save(); ctx.globalAlpha = a; cover(IMG[n], 0, 0, W, H, fx, fy, 1.04 + 0.05 * prog(t, at, at + 1.5)); ctx.restore();
+const RUN = [['rebeca', 0.5, 0.18], ['eve', 0.5, 0.2], ['clarice', 0.5, 0.2], ['p4', 0.5, 0.2], ['iris', 0.5, 0.2]];
+function photoRun(t, t0, t1, list) { // equal slots, short dissolve between photos, slow push-in
+  const n = list.length, d = (t1 - t0) / n;
+  for (let i = 0; i < n; i++) {
+    const at = t0 + i * d; if (t < at || t >= at + d + XF) continue;
+    const [nm, fx, fy] = list[i], a = i === 0 ? 1 : eio(clamp((t - at) / XF));
+    ctx.save(); ctx.globalAlpha *= a; cover(IMG[nm], 0, 0, W, H, fx, fy, 1.03 + 0.05 * prog(t, at, at + d + XF)); ctx.restore();
   }
-  const a = eout(prog(t, S.cut1 + 0.2, S.cut1 + 0.6));
-  ctx.save(); ctx.globalAlpha = a; ctx.textAlign = 'center';
+}
+async function drawCuts(t) {
+  photoRun(t, S.cuts, S.back, RUN);
+  const a = eout(prog(t, S.cap, S.cap + 0.4));
+  ctx.save(); ctx.globalAlpha *= a; ctx.textAlign = 'center';
   shadowText(() => { ctx.fillStyle = '#fff'; ctx.font = `400 70px ${SERIF}`; ctx.fillText('Modelagem pensada', 540, 1560); ctx.fillText('para o corpo plus', 540, 1648); });
   ctx.restore();
 }
+function drawInsert(t) { cover(IMG.p3, 0, 0, W, H, 0.5, 0.2, 1.03 + 0.03 * prog(t, S.ins, S.insEnd)); }
 function drawCard(t) {
   studio();
   const z = 1.02 + 0.02 * prog(t, S.card, DUR);
@@ -165,11 +164,13 @@ function sceneAt(t) {
   if (t >= S.card) return 'card';
   if (t >= S.steps) return 'steps';
   if (t >= S.pay && t < S.payEnd) return 'pay';
-  if (t >= S.cut1 && t < S.back) return 'cuts';
+  if (t >= S.cuts && t < S.back) return 'cuts';
+  if (t >= S.ins && t < S.insEnd) return 'insert';
   return 'fran';
 }
 async function drawScene(n, t) {
-  if (n === 'fran') return franWithDissolve(t);
+  if (n === 'fran') return franPlain(t);
+  if (n === 'insert') return drawInsert(t);
   if (n === 'cuts') return drawCuts(t);
   if (n === 'pay') return drawPay(t);
   if (n === 'steps') return drawSteps(t);
@@ -177,19 +178,20 @@ async function drawScene(n, t) {
 }
 async function render(t) {
   ctx.setTransform(1, 0, 0, 1, 0, 0); ctx.globalAlpha = 1;
-  const cur = sceneAt(t), starts = { cuts: S.cut1, pay: S.pay, steps: S.steps, card: S.card, fran: null };
-  // scene changes dissolve: the outgoing scene keeps playing underneath for XF seconds
-  let st = starts[cur]; if (cur === 'fran') st = (t >= S.back && t < S.back + XF) ? S.back : (t >= S.payEnd && t < S.payEnd + XF) ? S.payEnd : null;
-  const xf = cur === 'card' ? 0.6 : XF;
-  if (st !== null && t < st + xf) {
-    const prev = sceneAt(st - 0.001);
+  const cur = sceneAt(t);
+  // the most recent scene change at or before t; the outgoing scene keeps playing underneath while the new one fades in
+  const changes = [S.ins, S.insEnd, S.cuts, S.back, S.pay, S.payEnd, S.steps, S.card].filter(c => c <= t);
+  const st = changes.length ? Math.max(...changes) : null;
+  const xf = cur === 'card' ? 0.6 : XF, prev = st !== null ? sceneAt(st - 0.001) : null;
+  // anything that involves Fran is a clean cut (no ghosting of her face); other scene changes dissolve
+  if (st !== null && t < st + xf && cur !== 'fran' && prev !== 'fran') {
     await drawScene(prev, t);
     ctx.save(); ctx.globalAlpha = eio((t - st) / xf); await drawScene(cur, t); ctx.restore();
   } else await drawScene(cur, t);
 
   // hook: who this is for (0–4s)
   if (t < 4.02) {
-    const out = 1 - prog(t, 3.7, 4.02);
+    const out = 1 - prog(t, 3.6, 3.85);
     ctx.save(); ctx.globalAlpha = out; ctx.textAlign = 'center'; ctx.textBaseline = 'alphabetic';
     const g = ctx.createLinearGradient(0, 160, 0, 720); g.addColorStop(0, 'rgba(30,20,15,0.38)'); g.addColorStop(1, 'rgba(30,20,15,0)');
     ctx.fillStyle = g; ctx.fillRect(0, 0, W, 760);
@@ -204,7 +206,7 @@ async function render(t) {
 }
 
 window.ready = (async () => {
-  await Promise.all([load('logo', 'src/logo-kayla.svg'), load('rebeca', 'src/p-rebeca.jpg'), load('rose', 'src/p-rose.jpg'), load('iris', 'src/p-iris.jpg'), load('clarice', 'src/p-clarice.jpg')]);
+  await Promise.all([load('logo', 'src/logo-kayla.svg'), load('rebeca', 'src/p-rebeca.jpg'), load('eve', 'src/p-eve.jpg'), load('p4', 'src/p-p4.jpg'), load('p3', 'src/p-p3.jpg'), load('rose', 'src/p-rose.jpg'), load('iris', 'src/p-iris.jpg'), load('clarice', 'src/p-clarice.jpg')]);
   for (const f of [`700 40px Oswald`, `400 40px "Playfair Display"`, `500 40px "Playfair Display"`, `500 40px Montserrat`, `600 40px Montserrat`]) await document.fonts.load(f);
   await document.fonts.ready;
   await render(0); return true;

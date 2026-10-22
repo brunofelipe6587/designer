@@ -1,0 +1,94 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<title>Tour Fabrício Veículos</title>
+<link rel="stylesheet" href="../fonts/fonts.css">
+<style>
+  :root { --red: #f40000; }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html, body { background: transparent; }
+  body { font-family: 'Barlow Condensed', sans-serif; color: #fff; overflow: hidden; }
+  .stage { position: relative; width: 1080px; overflow: hidden; }
+  .stage.feed { height: 1350px; }
+  .stage.stories { height: 1920px; }
+  .sh { text-shadow: 0 4px 10px rgba(0,0,0,.65), 0 0 2px rgba(0,0,0,.8); }
+
+  /* etiqueta do capítulo */
+  .chap { position: absolute; display: flex; align-items: stretch; filter: drop-shadow(0 6px 10px rgba(0,0,0,.5)); }
+  .chap .name { background: linear-gradient(180deg, #ff2020, #c80000); padding: 6px 30px 4px 26px; transform: skewX(-12deg); }
+  .chap .name span { display: block; transform: skewX(12deg); font-weight: 900; font-style: italic; font-size: 56px; line-height: 1; letter-spacing: .5px; }
+  .chap .idx { background: #000; border: 3px solid var(--red); border-left: 0; padding: 6px 18px 4px 16px; transform: skewX(-12deg); margin-left: -2px; }
+  .chap .idx span { display: block; transform: skewX(12deg); font-weight: 800; font-style: italic; font-size: 40px; line-height: 1.2; }
+
+  /* gancho dos primeiros segundos */
+  .hook { position: absolute; display: flex; flex-direction: column; align-items: flex-start; }
+  .hook .tag { background: #000; border: 3px solid var(--red); padding: 4px 18px 2px; transform: skewX(-12deg); margin-bottom: 14px; }
+  .hook .tag span { display: block; transform: skewX(12deg); font-weight: 800; font-style: italic; font-size: 38px; line-height: 1.1; letter-spacing: 1px; }
+  .hook .l { font-weight: 900; font-style: italic; line-height: .92; letter-spacing: -1px; }
+  .hook .hl { background: linear-gradient(180deg, #ff2020, #c80000); padding: 2px 22px 0 16px; transform: skewX(-12deg); margin-top: 10px; box-shadow: 0 8px 18px rgba(0,0,0,.45); }
+  .hook .hl span { display: block; transform: skewX(12deg); }
+
+  /* tela final */
+  .end { position: absolute; background: rgba(0,0,0,.74); display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; }
+  .end .kicker { font-weight: 800; font-style: italic; font-size: 44px; color: #ff2a2a; letter-spacing: 2px; }
+  .end .big { font-weight: 900; font-style: italic; line-height: .9; letter-spacing: -1px; margin-top: 10px; }
+  .end .btn { margin-top: 34px; background: linear-gradient(180deg, #ff2020, #c80000); transform: skewX(-12deg); padding: 10px 40px 6px; box-shadow: 0 10px 24px rgba(0,0,0,.5); }
+  .end .btn span { display: block; transform: skewX(12deg); font-weight: 900; font-style: italic; font-size: 60px; line-height: 1; }
+  .end .sub { margin-top: 28px; font-weight: 600; font-style: italic; font-size: 44px; line-height: 1.15; color: #f2f2f2; }
+  .end .arrows { margin-top: 26px; }
+</style>
+</head>
+<body>
+<div id="root"></div>
+<script>
+const esc = (s) => String(s ?? '').replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+const up = (s) => String(s ?? '').toUpperCase();
+
+// Áreas livres para texto: no feed, a coluna do vídeo (o painel ocupa a esquerda);
+// no stories, abaixo dos 14% do topo e acima da faixa de informações.
+const AREA = {
+  feed: { x: 344, y: 40, w: 704, cx: 312, cw: 768, h: 1350 },
+  stories: { x: 64, y: 300, w: 952, cx: 0, cw: 1080, h: 1920 },
+};
+
+const arrows = `<svg class="arrows" width="120" height="90" viewBox="0 0 120 90"><path d="M10 6L60 40 110 6" fill="none" stroke="#f40000" stroke-width="14" stroke-linecap="round" stroke-linejoin="round"/><path d="M10 46L60 80 110 46" fill="none" stroke="#fff" stroke-width="14" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
+
+function chap(mode, d) {
+  const a = AREA[mode];
+  return `<div class="chap" style="left:${a.x}px;top:${a.y}px"><div class="name"><span>${esc(up(d.label))}</span></div><div class="idx"><span>${d.n}/${d.total}</span></div></div>`;
+}
+
+function hook(mode, d) {
+  const a = AREA[mode];
+  const size = mode === 'feed' ? 92 : 112;
+  const [l1, l2] = d.linhas;
+  return `<div class="hook" style="left:${a.x}px;top:${a.y}px;width:${a.w}px">
+    <div class="tag"><span>${esc(up(d.tag))}</span></div>
+    <div class="l sh" style="font-size:${size}px">${esc(up(l1))}</div>
+    <div class="hl l" style="font-size:${size}px"><span>${esc(up(l2))}</span></div>
+  </div>`;
+}
+
+function end(mode, d) {
+  const a = AREA[mode];
+  const top = mode === 'feed' ? 0 : 0, height = mode === 'feed' ? 1350 : 1110;
+  const big = mode === 'feed' ? 104 : 128;
+  return `<div class="end" style="left:${a.cx}px;width:${a.cw}px;top:${top}px;height:${height}px;${mode === 'stories' ? 'padding-top:240px' : ''}">
+    <div class="kicker">${esc(up(d.kicker))}</div>
+    <div class="big sh" style="font-size:${big}px">${d.titulo.map((l) => esc(up(l))).join('<br>')}</div>
+    <div class="btn"><span>${esc(up(d.botao))}</span></div>
+    <div class="sub">${d.sub.map(esc).join('<br>')}</div>
+    ${arrows}
+  </div>${mode === 'stories' ? '<div style="position:absolute;left:0;right:0;top:1110px;bottom:0;background:rgba(0,0,0,.74)"></div>' : ''}`;
+}
+
+window.render = async (kind, mode, d) => {
+  const body = { chap, hook, end }[kind](mode, d);
+  document.getElementById('root').innerHTML = `<div class="stage ${mode}">${body}</div>`;
+  await document.fonts.ready;
+  return true;
+};
+</script>
+</body>
+</html>

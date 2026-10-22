@@ -1,14 +1,87 @@
 {
-  "localizacao": ["Juazeiro", "do Norte - CE"],
+  "localizacao": [
+    "Juazeiro",
+    "do Norte - CE"
+  ],
   "marca": "Fiat",
-  "modelo": ["Fiat Palio", "Attractive 1.0"],
-  "modelo_stories": ["Palio", "Attractive 1.0"],
+  "modelo": [
+    "Fiat Palio",
+    "Attractive 1.0"
+  ],
+  "modelo_stories": [
+    "Palio",
+    "Attractive 1.0"
+  ],
   "ano": "2015",
   "km": "120.000",
   "valor": "43.990",
   "centavos": "00",
   "entrada": "15 mil",
-  "ordem_feed": ["localizacao", "modelo", "ano", "km"],
+  "ordem_feed": [
+    "localizacao",
+    "modelo",
+    "ano",
+    "km"
+  ],
   "nome_arquivo": "Palio_Attractive_2015",
-  "prova_t": 1.0
+  "prova_t": 1.0,
+  "tour": {
+    "cortes": [
+      [
+        0.3,
+        3.9,
+        "Frente"
+      ],
+      [
+        7.5,
+        9.9,
+        "Lateral"
+      ],
+      [
+        12.5,
+        16.4,
+        "Painel"
+      ],
+      [
+        17.5,
+        20.4,
+        "Bancos"
+      ],
+      [
+        36.5,
+        39.5,
+        "Banco traseiro"
+      ],
+      [
+        41.5,
+        44.9,
+        "Traseira"
+      ],
+      [
+        67,
+        70.5,
+        null
+      ]
+    ],
+    "gancho": {
+      "tag": "Tour completo",
+      "linhas": [
+        "Veja cada detalhe",
+        "antes de chamar"
+      ],
+      "duracao": 2.8
+    },
+    "final": {
+      "kicker": "Gostou do Palio?",
+      "titulo": [
+        "Chama no",
+        "WhatsApp"
+      ],
+      "botao": "Enviar mensagem",
+      "sub": [
+        "Toque no botão e simule",
+        "sua entrada a partir de R$ 15 mil"
+      ]
+    }
+  }
 }

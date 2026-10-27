@@ -31,3 +31,8 @@ hgg-sabotage/build/grid_*.png
 hgg-sabotage/build/final*_tiles.png
 hgg-sabotage/out/*_silent.mp4
 hgg-sabotage/build/sb*.png
+fagner-davi/frames/
+fagner-davi/audio/
+fagner-davi/build/*.png
+fagner-davi/build/render.log
+fagner-davi/out/*_silent.mp4

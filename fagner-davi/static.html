@@ -1,0 +1,198 @@
+<!doctype html>
+<html lang="pt-br">
+<head>
+<meta charset="utf-8">
+<title>Fagner Davi Estático VIP</title>
+<style>
+@font-face{font-family:'Montserrat';font-weight:100 900;font-style:normal;src:url('fonts/Montserrat-var.woff2') format('woff2');font-display:block}
+@font-face{font-family:'Anton';font-weight:400;font-style:normal;src:url('fonts/Anton-Regular.woff2') format('woff2');font-display:block}
+html, body { margin: 0; background: #000; } canvas { display: block; }
+</style>
+</head>
+<body>
+<canvas id="c"></canvas>
+<script>
+// Static ads for the Grupo VIP Black Friday capture — feed 4:5 (1080x1350) and story 9:16 (1080x1920).
+// Palette follows the brand's own Black Friday warm-up post ("ESQUENTA": black & white, condensed type) plus the
+// sand tone of the store's BOISE tees. Products are real: BOISE tees from the store table, imported perfumes from the feed.
+// ?fmt=feed|story   &guides=1 draws the safe zones (review only, never for upload)
+const q = new URLSearchParams(location.search);
+const FMT = q.get('fmt') || 'feed', GUIDES = q.get('guides') === '1';
+const W = 1080, H = FMT === 'story' ? 1920 : 1350;
+const c = document.getElementById('c'); c.width = W; c.height = H;
+const ctx = c.getContext('2d');
+const BLK = '#0B0B0B', OFF = '#F4F0E8', SAND = '#D8B47E', WA = '#25D366';
+// story: Meta keeps ~14% top / ~20% bottom under the profile row and the CTA; feed: plain margins
+const SAFE = FMT === 'story' ? { top: 270, bottom: 1920 - 380, side: 64 } : { top: 56, bottom: 1350 - 56, side: 60 };
+
+// baselines / centers in px; band = [top, height], perf = [top, width]
+const L = FMT === 'story' ? {
+  brand: 318, black: 470, blackPx: 150, off: 690, offPx: 240, sub: 790,
+  band: [895, 330], perf: [950, 800], tag: 925, checks: 1410, cta: 1484,
+} : {
+  brand: 76, black: 200, blackPx: 118, off: 412, offPx: 184, sub: 476,
+  band: [590, 300], perf: [645, 740], tag: 612, checks: 1084, cta: 1186,
+};
+
+const load = src => new Promise((res, rej) => { const i = new Image(); i.onload = () => res(i); i.onerror = rej; i.src = src; });
+
+function font(w, px, fam = 'Montserrat') { ctx.font = `${w} ${px}px ${fam}`; }
+function box(x, y, w, h, r, fill) { ctx.fillStyle = fill; ctx.beginPath(); ctx.roundRect(x, y, w, h, r); ctx.fill(); }
+function fitText(txt, maxW, px, w, fam) { font(w, px, fam); const m = ctx.measureText(txt).width; return m > maxW ? Math.floor(px * maxW / m) : px; }
+function diamond(cx, cy, w, col) {
+  const h = w * 0.78;
+  ctx.save(); ctx.strokeStyle = col; ctx.lineWidth = w * 0.08; ctx.lineJoin = 'round';
+  ctx.beginPath();
+  ctx.moveTo(cx - w / 2, cy - h * 0.18); ctx.lineTo(cx - w * 0.28, cy - h / 2); ctx.lineTo(cx + w * 0.28, cy - h / 2);
+  ctx.lineTo(cx + w / 2, cy - h * 0.18); ctx.lineTo(cx, cy + h / 2); ctx.closePath(); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(cx - w / 2, cy - h * 0.18); ctx.lineTo(cx + w / 2, cy - h * 0.18);
+  ctx.moveTo(cx - w * 0.14, cy - h * 0.18); ctx.lineTo(cx, cy + h / 2); ctx.lineTo(cx + w * 0.14, cy - h * 0.18); ctx.stroke();
+  ctx.restore();
+}
+function waIcon(cx, cy, r, bg) {
+  ctx.save();
+  if (bg) { ctx.fillStyle = bg; ctx.beginPath(); ctx.arc(cx, cy, r, 0, Math.PI * 2); ctx.fill(); }
+  ctx.strokeStyle = '#fff'; ctx.lineWidth = r * 0.12; ctx.lineJoin = 'round';
+  ctx.beginPath(); ctx.arc(cx, cy, r * 0.56, Math.PI * 0.72, Math.PI * 2.62); ctx.lineTo(cx - r * 0.66, cy + r * 0.62); ctx.closePath(); ctx.stroke();
+  ctx.fillStyle = '#fff'; ctx.save(); ctx.translate(cx, cy); ctx.rotate(-0.6);
+  ctx.beginPath(); ctx.roundRect(-r * 0.09, -r * 0.3, r * 0.18, r * 0.6, r * 0.09); ctx.fill();
+  ctx.beginPath(); ctx.roundRect(-r * 0.2, -r * 0.34, r * 0.4, r * 0.15, r * 0.07); ctx.fill();
+  ctx.beginPath(); ctx.roundRect(-r * 0.2, r * 0.19, r * 0.4, r * 0.15, r * 0.07); ctx.fill();
+  ctx.restore(); ctx.restore();
+}
+function check(cx, cy, r) {
+  ctx.fillStyle = SAND; ctx.beginPath(); ctx.arc(cx, cy, r, 0, Math.PI * 2); ctx.fill();
+  ctx.strokeStyle = BLK; ctx.lineWidth = r * 0.26; ctx.lineCap = 'round'; ctx.lineJoin = 'round';
+  ctx.beginPath(); ctx.moveTo(cx - r * 0.45, cy + r * 0.02); ctx.lineTo(cx - r * 0.12, cy + r * 0.36); ctx.lineTo(cx + r * 0.48, cy - r * 0.34); ctx.stroke();
+}
+
+function background() {
+  ctx.fillStyle = BLK; ctx.fillRect(0, 0, W, H);
+  // soft spotlight behind the products
+  const cy = L.perf[0] + 120;
+  const g = ctx.createRadialGradient(W / 2, cy, 40, W / 2, cy, 760);
+  g.addColorStop(0, 'rgba(216,180,126,0.20)'); g.addColorStop(0.5, 'rgba(216,180,126,0.06)'); g.addColorStop(1, 'rgba(0,0,0,0)');
+  ctx.fillStyle = g; ctx.fillRect(0, 0, W, H);
+  // fine film grain so the black doesn't band
+  const img = ctx.getImageData(0, 0, W, H), d = img.data;
+  let s = 7; const rnd = () => (s = (s * 16807) % 2147483647) / 2147483647;
+  for (let i = 0; i < d.length; i += 4) { const n = (rnd() - 0.5) * 10; d[i] += n; d[i + 1] += n; d[i + 2] += n; }
+  ctx.putImageData(img, 0, 0);
+}
+
+function headline() {
+  ctx.textAlign = 'center'; ctx.textBaseline = 'alphabetic';
+  // brand
+  font(700, 34); ctx.letterSpacing = '8px';
+  const bw = ctx.measureText('FAGNER DAVI').width;
+  diamond(W / 2 - bw / 2 - 34, L.brand - 12, 40, OFF);
+  ctx.fillStyle = OFF; ctx.fillText('FAGNER DAVI', W / 2 + 22, L.brand);
+  ctx.letterSpacing = '0px';
+  // BLACK FRIDAY
+  let px = fitText('BLACK FRIDAY', W - 2 * SAFE.side, L.blackPx, 400, 'Anton');
+  font(400, px, 'Anton'); ctx.fillStyle = OFF; ctx.fillText('BLACK FRIDAY', W / 2, L.black);
+  // ATÉ 50% OFF — "50%" in sand
+  const a = 'ATÉ ', b = '50%', o = ' OFF';
+  px = L.offPx; font(400, px, 'Anton');
+  let tw = ctx.measureText(a + b + o).width;
+  const maxW = (W - 2 * SAFE.side) * 0.95;
+  if (tw > maxW) { px = Math.floor(px * maxW / tw); font(400, px, 'Anton'); tw = ctx.measureText(a + b + o).width; }
+  let x = W / 2 - tw / 2; ctx.textAlign = 'left';
+  ctx.fillStyle = OFF; ctx.fillText(a, x, L.off); x += ctx.measureText(a).width;
+  ctx.fillStyle = SAND; ctx.fillText(b, x, L.off); x += ctx.measureText(b).width;
+  ctx.fillStyle = OFF; ctx.fillText(o, x, L.off);
+  // explanation line: what it is and where
+  ctx.textAlign = 'center';
+  const s1 = 'As melhores ofertas saem primeiro no', s2 = 'GRUPO VIP DO WHATSAPP';
+  font(500, 38); ctx.fillStyle = 'rgba(244,240,232,0.85)'; ctx.fillText(s1, W / 2, L.sub);
+  font(800, 44); const w2 = ctx.measureText(s2).width + 120;
+  box(W / 2 - w2 / 2, L.sub + 22, w2, 76, 38, OFF);
+  waIcon(W / 2 - w2 / 2 + 44, L.sub + 60, 26, WA);
+  ctx.fillStyle = BLK; ctx.fillText(s2, W / 2 + 26, L.sub + 76);
+}
+
+function products(tees, perf) {
+  // BOISE tees band: full-bleed photo strip, faded into the black at the edges
+  const [by, bh] = L.band;
+  const sw = tees.width, sh = Math.round(sw * bh / W);
+  const sy = Math.round((tees.height - sh) * 0.35);
+  const off = document.createElement('canvas'); off.width = W; off.height = bh;
+  const o = off.getContext('2d');
+  o.filter = 'saturate(0.9) brightness(0.82)';
+  o.drawImage(tees, 0, sy, sw, sh, 0, 0, W, bh);
+  o.filter = 'none'; o.globalCompositeOperation = 'destination-in';
+  let g = o.createLinearGradient(0, 0, 0, bh);
+  g.addColorStop(0, 'rgba(0,0,0,0)'); g.addColorStop(0.22, 'rgba(0,0,0,1)'); g.addColorStop(0.7, 'rgba(0,0,0,1)'); g.addColorStop(1, 'rgba(0,0,0,0)');
+  o.fillStyle = g; o.fillRect(0, 0, W, bh);
+  ctx.drawImage(off, 0, by);
+  // perfumes in front, grounded with a contact shadow and a faint reflection
+  const [py, pw] = L.perf;
+  const ph = pw * perf.height / perf.width, px = (W - pw) / 2;
+  const floor = py + ph * 0.985;
+  ctx.save();
+  const sg = ctx.createRadialGradient(W / 2, floor, 10, W / 2, floor, pw * 0.55);
+  sg.addColorStop(0, 'rgba(0,0,0,0.75)'); sg.addColorStop(1, 'rgba(0,0,0,0)');
+  ctx.translate(0, floor); ctx.scale(1, 0.12); ctx.translate(0, -floor);
+  ctx.fillStyle = sg; ctx.fillRect(0, floor - pw, W, pw * 2);
+  ctx.restore();
+  ctx.save(); ctx.globalAlpha = 0.16; ctx.translate(0, floor * 2); ctx.scale(1, -1);
+  ctx.drawImage(perf, px, py, pw, ph); ctx.restore();
+  // fade the reflection out
+  g = ctx.createLinearGradient(0, floor, 0, floor + ph * 0.35);
+  g.addColorStop(0, 'rgba(11,11,11,0.2)'); g.addColorStop(1, 'rgba(11,11,11,1)');
+  ctx.fillStyle = g; ctx.fillRect(0, floor, W, ph * 0.4);
+  ctx.drawImage(perf, px, py, pw, ph);
+  // category tag (what the store sells)
+  font(700, 26); ctx.letterSpacing = '4px';
+  const t = 'MODA MASCULINA · PERFUMES IMPORTADOS';
+  const tw = ctx.measureText(t).width + 56;
+  box(W / 2 - tw / 2, L.tag - 26, tw, 52, 26, 'rgba(11,11,11,0.78)');
+  ctx.fillStyle = OFF; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillText(t, W / 2 + 2, L.tag + 1);
+  ctx.letterSpacing = '0px'; ctx.textBaseline = 'alphabetic';
+}
+
+function checksAndCta() {
+  ctx.textBaseline = 'middle';
+  const items = ['Acesso antecipado', 'Condições nunca vistas'];
+  font(700, 34);
+  const ws = items.map(s => ctx.measureText(s).width + 64);
+  const gap = 44, total = ws.reduce((a, b) => a + b) + gap;
+  let x = W / 2 - total / 2;
+  items.forEach((s, i) => {
+    check(x + 20, L.checks, 20);
+    ctx.fillStyle = OFF; ctx.textAlign = 'left'; ctx.fillText(s, x + 52, L.checks + 2);
+    x += ws[i] + gap;
+  });
+  // CTA
+  font(800, 50); const label = 'ENTRAR NO GRUPO VIP';
+  const bw = ctx.measureText(label).width + 236, bh = 112;
+  ctx.save(); ctx.shadowColor = 'rgba(37,211,102,0.45)'; ctx.shadowBlur = 40;
+  box(W / 2 - bw / 2, L.cta - bh / 2, bw, bh, bh / 2, WA); ctx.restore();
+  waIcon(W / 2 - bw / 2 + 66, L.cta, 34, '#1DA851');
+  ctx.fillStyle = '#fff'; ctx.textAlign = 'left'; ctx.fillText(label, W / 2 - bw / 2 + 122, L.cta + 3);
+  // arrow
+  const ax = W / 2 + bw / 2 - 62, ay = L.cta;
+  ctx.strokeStyle = '#fff'; ctx.lineWidth = 7; ctx.lineCap = 'round'; ctx.lineJoin = 'round';
+  ctx.beginPath(); ctx.moveTo(ax - 16, ay); ctx.lineTo(ax + 14, ay); ctx.moveTo(ax + 2, ay - 13); ctx.lineTo(ax + 15, ay); ctx.lineTo(ax + 2, ay + 13); ctx.stroke();
+  ctx.textBaseline = 'alphabetic';
+}
+
+function guides() {
+  ctx.save();
+  ctx.fillStyle = 'rgba(255,0,80,0.22)';
+  ctx.fillRect(0, 0, W, SAFE.top); ctx.fillRect(0, SAFE.bottom, W, H - SAFE.bottom);
+  ctx.fillRect(0, SAFE.top, SAFE.side, SAFE.bottom - SAFE.top); ctx.fillRect(W - SAFE.side, SAFE.top, SAFE.side, SAFE.bottom - SAFE.top);
+  ctx.strokeStyle = 'rgba(255,0,80,0.9)'; ctx.setLineDash([14, 10]); ctx.lineWidth = 3;
+  ctx.strokeRect(SAFE.side, SAFE.top, W - 2 * SAFE.side, SAFE.bottom - SAFE.top);
+  ctx.restore();
+}
+
+window.ready = (async () => {
+  await document.fonts.load('400 100px Anton'); await document.fonts.load('800 40px Montserrat'); await document.fonts.load('500 40px Montserrat');
+  const [tees, perf] = await Promise.all([load('static/cut/shirts_crop.png'), load('static/cut/perfumes_cut.png')]);
+  background(); products(tees, perf); headline(); checksAndCta();
+  if (GUIDES) guides();
+})();
+</script>
+</body>
+</html>

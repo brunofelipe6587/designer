@@ -36,3 +36,8 @@ fagner-davi/audio/
 fagner-davi/build/*.png
 fagner-davi/build/render.log
 fagner-davi/out/*_silent.mp4
+fagner-davi/static/catalog/
+fagner-davi/static/ig/
+fagner-davi/static/cut/*_crop.png
+fagner-davi/static/cut/cap_cut.png
+!fagner-davi/static/cut/shirts_crop.png

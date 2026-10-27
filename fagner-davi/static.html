@@ -13,32 +13,35 @@ html, body { margin: 0; background: #000; } canvas { display: block; }
 <canvas id="c"></canvas>
 <script>
 // Static ads for the Grupo VIP Black Friday capture — feed 4:5 (1080x1350) and story 9:16 (1080x1920).
-// Palette follows the brand's own Black Friday warm-up post ("ESQUENTA": black & white, condensed type) plus the
-// sand tone of the store's BOISE tees. Products are real: BOISE tees from the store table, imported perfumes from the feed.
+// Typographic column on the left, model on the right (Adobe Stock 482748750, free licence). The canvas uses the photo's
+// own backdrop colour so the picture dissolves into the layout; type follows the brand's Black Friday warm-up post
+// (condensed, off-white) with a sand accent.
 // ?fmt=feed|story   &guides=1 draws the safe zones (review only, never for upload)
 const q = new URLSearchParams(location.search);
 const FMT = q.get('fmt') || 'feed', GUIDES = q.get('guides') === '1';
 const W = 1080, H = FMT === 'story' ? 1920 : 1350;
 const c = document.getElementById('c'); c.width = W; c.height = H;
 const ctx = c.getContext('2d');
-const BLK = '#0B0B0B', OFF = '#F4F0E8', SAND = '#D8B47E', WA = '#25D366';
+const BG = '#151821', OFF = '#F4F0E8', SAND = '#D8B47E', WA = '#25D366';
 // story: Meta keeps ~14% top / ~20% bottom under the profile row and the CTA; feed: plain margins
 const SAFE = FMT === 'story' ? { top: 270, bottom: 1920 - 380, side: 64 } : { top: 56, bottom: 1350 - 56, side: 60 };
+const X0 = SAFE.side, COL = FMT === 'story' ? 470 : 480;   // left text column
 
-// baselines / centers in px; band = [top, height], perf = [top, width]
+// photo: [top, height, face-centre x]; type baselines in px
 const L = FMT === 'story' ? {
-  brand: 318, black: 470, blackPx: 150, off: 690, offPx: 240, sub: 790,
-  band: [895, 330], perf: [950, 800], tag: 925, checks: 1410, cta: 1484,
+  photo: [330, 1590, 800], brand: 322, black: 438, blackPx: 104,
+  ate: 548, ateMax: 100, pct: 806, pctPx: 290, off: 952, offPx: 160,
+  sub: 1048, pill: 1142, checks: [1252, 1308], cta: 1464,
 } : {
-  brand: 76, black: 200, blackPx: 118, off: 412, offPx: 184, sub: 476,
-  band: [590, 300], perf: [645, 740], tag: 612, checks: 1084, cta: 1186,
+  photo: [96, 1290, 800], brand: 86, black: 192, blackPx: 96,
+  ate: 292, ateMax: 88, pct: 528, pctPx: 266, off: 664, offPx: 140,
+  sub: 756, pill: 830, checks: [942, 996], cta: 1172,
 };
 
 const load = src => new Promise((res, rej) => { const i = new Image(); i.onload = () => res(i); i.onerror = rej; i.src = src; });
-
 function font(w, px, fam = 'Montserrat') { ctx.font = `${w} ${px}px ${fam}`; }
 function box(x, y, w, h, r, fill) { ctx.fillStyle = fill; ctx.beginPath(); ctx.roundRect(x, y, w, h, r); ctx.fill(); }
-function fitText(txt, maxW, px, w, fam) { font(w, px, fam); const m = ctx.measureText(txt).width; return m > maxW ? Math.floor(px * maxW / m) : px; }
+function fit(txt, maxW, px, w, fam) { font(w, px, fam); const m = ctx.measureText(txt).width; if (m > maxW) { px = Math.floor(px * maxW / m); font(w, px, fam); } return px; }
 function diamond(cx, cy, w, col) {
   const h = w * 0.78;
   ctx.save(); ctx.strokeStyle = col; ctx.lineWidth = w * 0.08; ctx.lineJoin = 'round';
@@ -61,117 +64,86 @@ function waIcon(cx, cy, r, bg) {
   ctx.restore(); ctx.restore();
 }
 function check(cx, cy, r) {
-  ctx.fillStyle = SAND; ctx.beginPath(); ctx.arc(cx, cy, r, 0, Math.PI * 2); ctx.fill();
-  ctx.strokeStyle = BLK; ctx.lineWidth = r * 0.26; ctx.lineCap = 'round'; ctx.lineJoin = 'round';
-  ctx.beginPath(); ctx.moveTo(cx - r * 0.45, cy + r * 0.02); ctx.lineTo(cx - r * 0.12, cy + r * 0.36); ctx.lineTo(cx + r * 0.48, cy - r * 0.34); ctx.stroke();
+  ctx.strokeStyle = SAND; ctx.lineWidth = 3; ctx.beginPath(); ctx.arc(cx, cy, r, 0, Math.PI * 2); ctx.stroke();
+  ctx.lineWidth = r * 0.24; ctx.lineCap = 'round'; ctx.lineJoin = 'round';
+  ctx.beginPath(); ctx.moveTo(cx - r * 0.42, cy + r * 0.02); ctx.lineTo(cx - r * 0.1, cy + r * 0.34); ctx.lineTo(cx + r * 0.45, cy - r * 0.32); ctx.stroke();
 }
 
-function background() {
-  ctx.fillStyle = BLK; ctx.fillRect(0, 0, W, H);
-  // soft spotlight behind the products
-  const cy = L.perf[0] + 120;
-  const g = ctx.createRadialGradient(W / 2, cy, 40, W / 2, cy, 760);
-  g.addColorStop(0, 'rgba(216,180,126,0.20)'); g.addColorStop(0.5, 'rgba(216,180,126,0.06)'); g.addColorStop(1, 'rgba(0,0,0,0)');
-  ctx.fillStyle = g; ctx.fillRect(0, 0, W, H);
-  // fine film grain so the black doesn't band
-  const img = ctx.getImageData(0, 0, W, H), d = img.data;
-  let s = 7; const rnd = () => (s = (s * 16807) % 2147483647) / 2147483647;
-  for (let i = 0; i < d.length; i += 4) { const n = (rnd() - 0.5) * 10; d[i] += n; d[i + 1] += n; d[i + 2] += n; }
-  ctx.putImageData(img, 0, 0);
+function backgroundAndPhoto(photo) {
+  ctx.fillStyle = BG; ctx.fillRect(0, 0, W, H);
+  const [top, ph, faceX] = L.photo;
+  const pw = ph * photo.width / photo.height;
+  const x = faceX - pw * 0.49;
+  ctx.filter = 'contrast(1.04) saturate(0.92)';
+  ctx.drawImage(photo, x, top, pw, ph);
+  ctx.filter = 'none';
+  // dissolve the photo edges into the backdrop: top, left (under the type) and bottom
+  let g = ctx.createLinearGradient(0, top, 0, top + 120);
+  g.addColorStop(0, BG); g.addColorStop(1, 'rgba(21,24,33,0)');
+  ctx.fillStyle = g; ctx.fillRect(0, top - 2, W, 122);
+  g = ctx.createLinearGradient(x, 0, x + pw * 0.42, 0);
+  g.addColorStop(0, BG); g.addColorStop(0.55, 'rgba(21,24,33,0.55)'); g.addColorStop(1, 'rgba(21,24,33,0)');
+  ctx.fillStyle = g; ctx.fillRect(0, 0, x + pw * 0.42, H);
+  ctx.fillStyle = BG; ctx.fillRect(0, 0, Math.max(0, x), H);
+  g = ctx.createLinearGradient(0, H - 420, 0, H);
+  g.addColorStop(0, 'rgba(21,24,33,0)'); g.addColorStop(1, 'rgba(21,24,33,0.92)');
+  ctx.fillStyle = g; ctx.fillRect(0, H - 420, W, 420);
+  // a warm rim of light behind the model
+  g = ctx.createRadialGradient(faceX + 60, top + ph * 0.22, 20, faceX + 60, top + ph * 0.22, 620);
+  g.addColorStop(0, 'rgba(216,180,126,0.10)'); g.addColorStop(1, 'rgba(216,180,126,0)');
+  ctx.globalCompositeOperation = 'screen'; ctx.fillStyle = g; ctx.fillRect(0, 0, W, H); ctx.globalCompositeOperation = 'source-over';
 }
 
-function headline() {
-  ctx.textAlign = 'center'; ctx.textBaseline = 'alphabetic';
+function typeColumn() {
+  ctx.textAlign = 'left'; ctx.textBaseline = 'alphabetic';
+  ctx.shadowColor = 'rgba(0,0,0,0.35)'; ctx.shadowBlur = 18;
   // brand
-  font(700, 34); ctx.letterSpacing = '8px';
-  const bw = ctx.measureText('FAGNER DAVI').width;
-  diamond(W / 2 - bw / 2 - 34, L.brand - 12, 40, OFF);
-  ctx.fillStyle = OFF; ctx.fillText('FAGNER DAVI', W / 2 + 22, L.brand);
+  font(700, 30); ctx.letterSpacing = '7px';
+  diamond(X0 + 18, L.brand - 11, 36, OFF);
+  ctx.fillStyle = OFF; ctx.fillText('FAGNER DAVI', X0 + 50, L.brand);
   ctx.letterSpacing = '0px';
   // BLACK FRIDAY
-  let px = fitText('BLACK FRIDAY', W - 2 * SAFE.side, L.blackPx, 400, 'Anton');
-  font(400, px, 'Anton'); ctx.fillStyle = OFF; ctx.fillText('BLACK FRIDAY', W / 2, L.black);
-  // ATÉ 50% OFF — "50%" in sand
-  const a = 'ATÉ ', b = '50%', o = ' OFF';
-  px = L.offPx; font(400, px, 'Anton');
-  let tw = ctx.measureText(a + b + o).width;
-  const maxW = (W - 2 * SAFE.side) * 0.95;
-  if (tw > maxW) { px = Math.floor(px * maxW / tw); font(400, px, 'Anton'); tw = ctx.measureText(a + b + o).width; }
-  let x = W / 2 - tw / 2; ctx.textAlign = 'left';
-  ctx.fillStyle = OFF; ctx.fillText(a, x, L.off); x += ctx.measureText(a).width;
-  ctx.fillStyle = SAND; ctx.fillText(b, x, L.off); x += ctx.measureText(b).width;
-  ctx.fillStyle = OFF; ctx.fillText(o, x, L.off);
-  // explanation line: what it is and where
-  ctx.textAlign = 'center';
-  const s1 = 'As melhores ofertas saem primeiro no', s2 = 'GRUPO VIP DO WHATSAPP';
-  font(500, 38); ctx.fillStyle = 'rgba(244,240,232,0.85)'; ctx.fillText(s1, W / 2, L.sub);
-  font(800, 44); const w2 = ctx.measureText(s2).width + 120;
-  box(W / 2 - w2 / 2, L.sub + 22, w2, 76, 38, OFF);
-  waIcon(W / 2 - w2 / 2 + 44, L.sub + 60, 26, WA);
-  ctx.fillStyle = BLK; ctx.fillText(s2, W / 2 + 26, L.sub + 76);
-}
-
-function products(tees, perf) {
-  // BOISE tees band: full-bleed photo strip, faded into the black at the edges
-  const [by, bh] = L.band;
-  const sw = tees.width, sh = Math.round(sw * bh / W);
-  const sy = Math.round((tees.height - sh) * 0.35);
-  const off = document.createElement('canvas'); off.width = W; off.height = bh;
-  const o = off.getContext('2d');
-  o.filter = 'saturate(0.9) brightness(0.82)';
-  o.drawImage(tees, 0, sy, sw, sh, 0, 0, W, bh);
-  o.filter = 'none'; o.globalCompositeOperation = 'destination-in';
-  let g = o.createLinearGradient(0, 0, 0, bh);
-  g.addColorStop(0, 'rgba(0,0,0,0)'); g.addColorStop(0.22, 'rgba(0,0,0,1)'); g.addColorStop(0.7, 'rgba(0,0,0,1)'); g.addColorStop(1, 'rgba(0,0,0,0)');
-  o.fillStyle = g; o.fillRect(0, 0, W, bh);
-  ctx.drawImage(off, 0, by);
-  // perfumes in front, grounded with a contact shadow and a faint reflection
-  const [py, pw] = L.perf;
-  const ph = pw * perf.height / perf.width, px = (W - pw) / 2;
-  const floor = py + ph * 0.985;
-  ctx.save();
-  const sg = ctx.createRadialGradient(W / 2, floor, 10, W / 2, floor, pw * 0.55);
-  sg.addColorStop(0, 'rgba(0,0,0,0.75)'); sg.addColorStop(1, 'rgba(0,0,0,0)');
-  ctx.translate(0, floor); ctx.scale(1, 0.12); ctx.translate(0, -floor);
-  ctx.fillStyle = sg; ctx.fillRect(0, floor - pw, W, pw * 2);
-  ctx.restore();
-  ctx.save(); ctx.globalAlpha = 0.16; ctx.translate(0, floor * 2); ctx.scale(1, -1);
-  ctx.drawImage(perf, px, py, pw, ph); ctx.restore();
-  // fade the reflection out
-  g = ctx.createLinearGradient(0, floor, 0, floor + ph * 0.35);
-  g.addColorStop(0, 'rgba(11,11,11,0.2)'); g.addColorStop(1, 'rgba(11,11,11,1)');
-  ctx.fillStyle = g; ctx.fillRect(0, floor, W, ph * 0.4);
-  ctx.drawImage(perf, px, py, pw, ph);
-  // category tag (what the store sells)
-  font(700, 26); ctx.letterSpacing = '4px';
-  const t = 'MODA MASCULINA · PERFUMES IMPORTADOS';
-  const tw = ctx.measureText(t).width + 56;
-  box(W / 2 - tw / 2, L.tag - 26, tw, 52, 26, 'rgba(11,11,11,0.78)');
-  ctx.fillStyle = OFF; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillText(t, W / 2 + 2, L.tag + 1);
-  ctx.letterSpacing = '0px'; ctx.textBaseline = 'alphabetic';
-}
-
-function checksAndCta() {
-  ctx.textBaseline = 'middle';
-  const items = ['Acesso antecipado', 'Condições nunca vistas'];
-  font(700, 34);
-  const ws = items.map(s => ctx.measureText(s).width + 64);
-  const gap = 44, total = ws.reduce((a, b) => a + b) + gap;
-  let x = W / 2 - total / 2;
-  items.forEach((s, i) => {
-    check(x + 20, L.checks, 20);
-    ctx.fillStyle = OFF; ctx.textAlign = 'left'; ctx.fillText(s, x + 52, L.checks + 2);
-    x += ws[i] + gap;
+  fit('BLACK FRIDAY', COL, L.blackPx, 400, 'Anton');
+  ctx.fillStyle = OFF; ctx.fillText('BLACK FRIDAY', X0, L.black);
+  // ATÉ / 50% / OFF — the offer is the biggest thing on the page
+  const pctPx = fit('50%', COL, L.pctPx, 400, 'Anton');
+  const pctW = ctx.measureText('50%').width;
+  fit('ATÉ', pctW, L.ateMax, 400, 'Anton'); ctx.fillStyle = OFF; ctx.fillText('ATÉ', X0 + 4, L.ate);
+  font(400, pctPx, 'Anton'); ctx.fillStyle = SAND; ctx.fillText('50%', X0, L.pct);
+  font(400, L.offPx, 'Anton'); ctx.letterSpacing = `${Math.round(L.offPx * 0.08)}px`;
+  ctx.fillStyle = OFF; ctx.fillText('OFF', X0 + 2, L.off); ctx.letterSpacing = '0px';
+  // what & where
+  ctx.shadowBlur = 10;
+  ctx.fillStyle = 'rgba(244,240,232,0.88)';
+  if (FMT === 'story') {   // two larger lines read better on a phone held at arm's length
+    font(500, 38); ctx.fillText('As melhores ofertas', X0, L.sub - 22); ctx.fillText('saem primeiro no', X0, L.sub + 24);
+  } else {
+    fit('As melhores ofertas saem primeiro no', COL, 32, 500); ctx.fillText('As melhores ofertas saem primeiro no', X0, L.sub);
+  }
+  ctx.shadowColor = 'transparent';
+  const pillTxt = 'GRUPO VIP DO WHATSAPP';
+  const px = fit(pillTxt, COL - 92, 38, 800);
+  const pw = ctx.measureText(pillTxt).width + 92, phh = Math.round(px * 1.85);
+  box(X0, L.pill - phh / 2, pw, phh, phh / 2, OFF);
+  waIcon(X0 + 38, L.pill, px * 0.62, WA);
+  ctx.fillStyle = '#0B0B0B'; ctx.textBaseline = 'middle'; ctx.fillText(pillTxt, X0 + 70, L.pill + 2);
+  // benefits
+  ['Acesso antecipado', 'Condições nunca vistas'].forEach((s, i) => {
+    check(X0 + 18, L.checks[i], 17);
+    font(600, 32); ctx.fillStyle = OFF; ctx.fillText(s, X0 + 50, L.checks[i] + 2);
   });
-  // CTA
-  font(800, 50); const label = 'ENTRAR NO GRUPO VIP';
-  const bw = ctx.measureText(label).width + 236, bh = 112;
-  ctx.save(); ctx.shadowColor = 'rgba(37,211,102,0.45)'; ctx.shadowBlur = 40;
-  box(W / 2 - bw / 2, L.cta - bh / 2, bw, bh, bh / 2, WA); ctx.restore();
-  waIcon(W / 2 - bw / 2 + 66, L.cta, 34, '#1DA851');
-  ctx.fillStyle = '#fff'; ctx.textAlign = 'left'; ctx.fillText(label, W / 2 - bw / 2 + 122, L.cta + 3);
-  // arrow
-  const ax = W / 2 + bw / 2 - 62, ay = L.cta;
+  ctx.textBaseline = 'alphabetic';
+}
+
+function cta() {
+  ctx.textBaseline = 'middle';
+  font(800, 48); const label = 'ENTRAR NO GRUPO VIP';
+  const bw = ctx.measureText(label).width + 236, bh = 108, bx = W / 2 - bw / 2;
+  ctx.save(); ctx.shadowColor = 'rgba(37,211,102,0.4)'; ctx.shadowBlur = 36;
+  box(bx, L.cta - bh / 2, bw, bh, bh / 2, WA); ctx.restore();
+  waIcon(bx + 64, L.cta, 33, '#1DA851');
+  ctx.fillStyle = '#fff'; ctx.textAlign = 'left'; ctx.fillText(label, bx + 118, L.cta + 3);
+  const ax = bx + bw - 62, ay = L.cta;
   ctx.strokeStyle = '#fff'; ctx.lineWidth = 7; ctx.lineCap = 'round'; ctx.lineJoin = 'round';
   ctx.beginPath(); ctx.moveTo(ax - 16, ay); ctx.lineTo(ax + 14, ay); ctx.moveTo(ax + 2, ay - 13); ctx.lineTo(ax + 15, ay); ctx.lineTo(ax + 2, ay + 13); ctx.stroke();
   ctx.textBaseline = 'alphabetic';
@@ -188,9 +160,10 @@ function guides() {
 }
 
 window.ready = (async () => {
-  await document.fonts.load('400 100px Anton'); await document.fonts.load('800 40px Montserrat'); await document.fonts.load('500 40px Montserrat');
-  const [tees, perf] = await Promise.all([load('static/cut/shirts_crop.png'), load('static/cut/perfumes_cut.png')]);
-  background(); products(tees, perf); headline(); checksAndCta();
+  await document.fonts.load('400 100px Anton'); await document.fonts.load('800 40px Montserrat');
+  await document.fonts.load('600 40px Montserrat'); await document.fonts.load('500 40px Montserrat');
+  const photo = await load('static/stock/AdobeStock_482748750.jpeg');
+  backgroundAndPhoto(photo); typeColumn(); cta();
   if (GUIDES) guides();
 })();
 </script>

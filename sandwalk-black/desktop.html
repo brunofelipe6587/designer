@@ -10,7 +10,8 @@
 <canvas id="c" width="1920" height="960"></canvas>
 <script>
 // Black Sand Walk, semana 1 (sungas) — banner principal desktop 1920×960.
-// Left: the 3 partner athletes as cutouts (masks from Adobe applied to the ORIGINAL pixels — faces untouched),
+// Left: the 3 partner athletes as cutouts (photo 2: the third-party brand figure on the ball removed by
+// retouch_ball.py — ball pixels only) (masks from Adobe applied to the ORIGINAL pixels — faces untouched),
 // the middle one bigger and in front, all under the same rim light. The child in photo 1 is not in his cutout
 // (her mask was subtracted); the gap she left on his chest sits behind the middle athlete.
 // Right: seal → offer (3 SUNGAS · R$ 179) → anchor (de R$ 209,70 / economize R$ 30) → the 3 sungas → CTA → validity.
@@ -63,12 +64,28 @@ function athlete(img, x, y, s, crop, fade) {
   ctx.drawImage(c, x, y);
 }
 function sunga(img, cx, cy, w, rot) {
+  // studio treatment so the black sungas separate from the black background: spotlight behind, thin white rim
+  // light on the outline, soft floor reflection
   const h = w * img.height / img.width;
+  const sp = ctx.createRadialGradient(cx, cy - 6, 10, cx, cy, w * 0.78);
+  sp.addColorStop(0, 'rgba(255,255,255,0.30)'); sp.addColorStop(0.45, 'rgba(255,236,170,0.12)'); sp.addColorStop(1, 'rgba(255,255,255,0)');
+  ctx.fillStyle = sp; ctx.beginPath(); ctx.ellipse(cx, cy, w * 0.8, h * 0.95, 0, 0, Math.PI * 2); ctx.fill();
+  const sil = document.createElement('canvas'); sil.width = Math.ceil(w) + 40; sil.height = Math.ceil(h) + 40; const sg = sil.getContext('2d');
+  sg.translate(sil.width / 2, sil.height / 2); sg.rotate(rot); sg.drawImage(img, -w / 2, -h / 2, w, h);
+  sg.setTransform(1, 0, 0, 1, 0, 0); sg.globalCompositeOperation = 'source-in'; sg.fillStyle = '#FFFFFF'; sg.fillRect(0, 0, sil.width, sil.height);
+  // floor reflection, faded out within its own layer
+  const rf = document.createElement('canvas'); rf.width = Math.ceil(w); rf.height = Math.ceil(h * 0.45); const rgx = rf.getContext('2d');
+  rgx.translate(0, rf.height); rgx.scale(1, -0.45); rgx.drawImage(img, 0, 0, w, h); rgx.setTransform(1, 0, 0, 1, 0, 0);
+  rgx.globalCompositeOperation = 'destination-in';
+  const fl = rgx.createLinearGradient(0, 0, 0, rf.height); fl.addColorStop(0, 'rgba(0,0,0,0.22)'); fl.addColorStop(1, 'rgba(0,0,0,0)');
+  rgx.fillStyle = fl; rgx.fillRect(0, 0, rf.width, rf.height);
+  ctx.drawImage(rf, cx - w / 2, cy + h * 0.5 + 4);
+  // rim light: white silhouette slightly blurred behind the product
+  ctx.save(); ctx.globalAlpha = 0.6; ctx.filter = 'blur(3px)'; ctx.drawImage(sil, cx - sil.width / 2, cy - sil.height / 2); ctx.restore();
+  ctx.save(); ctx.globalAlpha = 0.3; ctx.filter = 'blur(14px)'; ctx.drawImage(sil, cx - sil.width / 2, cy - sil.height / 2); ctx.restore();
   ctx.save(); ctx.translate(cx, cy); ctx.rotate(rot);
-  ctx.shadowColor = 'rgba(255,204,41,0.35)'; ctx.shadowBlur = 40;
-  ctx.drawImage(img, -w / 2, -h / 2, w, h);
-  ctx.shadowColor = 'rgba(0,0,0,0.6)'; ctx.shadowBlur = 24; ctx.shadowOffsetY = 12; ctx.drawImage(img, -w / 2, -h / 2, w, h);
-  ctx.restore();
+  ctx.shadowColor = 'rgba(0,0,0,0.55)'; ctx.shadowBlur = 18; ctx.shadowOffsetY = 10;
+  ctx.drawImage(img, -w / 2, -h / 2, w, h); ctx.restore();
 }
 
 function render(P) {
@@ -110,12 +127,9 @@ function render(P) {
   ctx.strokeStyle = YEL; ctx.lineWidth = 3; ctx.beginPath(); ctx.roundRect(X + dw + 36, 476, ew, 50, 25); ctx.stroke();
   ctx.fillStyle = YEL; ctx.fillText(ec, X + dw + 58, 512);
   // the 3 sungas
-  sunga(IMG.s1, X + 140, 640, 270, -0.06);
-  sunga(IMG.s3, X + 435, 632, 270, 0.0);
-  sunga(IMG.s2, X + 730, 640, 270, 0.06);
-  ['Blackout', 'Graffiti Branco', 'All Black'].forEach((n, i) => {
-    ctx.font = '600 20px Inter'; ctx.fillStyle = '#BDBDBD'; ctx.textAlign = 'center'; ctx.fillText(n.toUpperCase(), X + 140 + i * 295, 760);
-  });
+  sunga(IMG.s1, X + 140, 648, 275, -0.06);
+  sunga(IMG.s3, X + 435, 640, 275, 0.0);
+  sunga(IMG.s2, X + 730, 648, 275, 0.06);
   ctx.textAlign = 'left';
   // CTA
   ctx.save(); ctx.shadowColor = 'rgba(255,204,41,0.45)'; ctx.shadowBlur = 30;

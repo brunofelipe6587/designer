@@ -5,6 +5,8 @@
 - Recortes: máscaras geradas no Adobe (select subject / select by prompt) e aplicadas localmente sobre os pixels
   ORIGINAIS (`build/cut1-3.png`) — os rostos não passam por nenhuma edição. Na foto 1, a máscara da criança foi
   subtraída da máscara do atleta; o espaço que ela deixava no peito dele fica atrás do atleta do meio na arte.
-- Sungas: fundo removido no Adobe (`build/sunga_*_crop.png`).
+- Sungas: fundo removido no Adobe (`build/sunga_*_crop.png`); na arte recebem luz de estúdio (spot, contorno de luz e reflexo).
+- Bola (foto 2): a figura da marca de terceiros impressa na bola foi removida com `retouch_ball.py` (só pixels da bola).
+
 - Artes: `desktop.html` (1920×960) → `node shot.js desktop.html out/<nome>.jpg`.
 - Amarelo: #FFCC29 (o destaque usado no site: etiquetas, tamanho selecionado). Syne bold nos títulos, Inter no apoio.

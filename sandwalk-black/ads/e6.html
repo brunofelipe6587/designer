@@ -1,0 +1,56 @@
+<!doctype html>
+<html lang="pt-br">
+<head>
+<meta charset="utf-8">
+<title>Black Sand Walk e6</title>
+<link href="../fonts/fonts.css" rel="stylesheet">
+<style>html, body { margin: 0; background: #000; } canvas { display: block; }</style>
+</head>
+<body>
+<canvas id="c" width="1080" height="1350"></canvas>
+<script src="common.js"></script>
+<script>
+W = 1080; H = 1350; ctx = document.getElementById('c').getContext('2d');
+// E6 · Preço por peça: avulsa R$ 69,90 vs. na Black menos de R$ 60 cada (comparison cards).
+function card(x, y, w, h, hi) {
+  ctx.save();
+  if (hi) { ctx.shadowColor = 'rgba(255,204,41,0.45)'; ctx.shadowBlur = 40; }
+  ctx.fillStyle = hi ? '#161204' : '#111'; ctx.strokeStyle = hi ? YEL : '#2A2A2A'; ctx.lineWidth = hi ? 4 : 2;
+  ctx.beginPath(); ctx.roundRect(x, y, w, h, 22); ctx.fill(); ctx.stroke(); ctx.restore();
+}
+function render() {
+  bgBlack([[760, 700, 0.14, 600]]);
+  logo(540, 50, 260, 'center');
+  seal(540, 150, 'BLACK SAND WALK', 30, -0.03, YEL, INK, 'center');
+  txt('MENOS DE R$ 60', 540, 292, '700 84px Syne', WHITE, 'center');
+  txt('POR SUNGA', 540, 382, '700 84px Syne', YEL, 'center');
+  // left: avulsa
+  card(60, 470, 420, 560, false);
+  txt('AVULSA', 270, 530, '700 30px Inter', GREY, 'center');
+  sunga('allblack', 270, 680, 290, 0, { spot: 0.18, alpha: 0.75 });
+  txt('1 sunga', 270, 870, '600 32px Inter', GREY, 'center');
+  txt('R$ 69,90', 270, 950, '700 66px Syne', '#BDBDBD', 'center');
+  // right: na Black
+  card(510, 440, 510, 620, true);
+  ctx.fillStyle = YEL; ctx.beginPath(); ctx.roundRect(640, 418, 250, 46, 23); ctx.fill();
+  txt('NA BLACK', 765, 442, '800 24px Inter', INK, 'center', 'middle');
+  const ks = ['graffiti', 'blackout', 'hupi_fire'];
+  sunga(ks[0], 640, 640, 220, -0.12, { spot: 0.15 });
+  sunga(ks[2], 890, 640, 220, 0.12, { spot: 0.15 });
+  sunga(ks[1], 765, 610, 240, 0, { spot: 0.25 });
+  txt('3 sungas por', 765, 820, '600 34px Inter', WHITE, 'center');
+  glowTxt('R$ 179', 765, 925, '700 112px Syne', YEL, 40, 0.6, 'center');
+  txt('= R$ 59,67 cada', 765, 1005, '800 36px Inter', WHITE, 'center');
+  // savings line
+  ctx.font = '600 32px Inter'; const dw = ctx.measureText('De R$ 209,70').width; ctx.font = '800 28px Inter';
+  const pw = ctx.measureText('ECONOMIZE R$ 30').width + 42, tot = dw + 28 + pw, x0 = 540 - tot / 2;
+  strike('De R$ 209,70', x0, 1118, '600 32px Inter');
+  pill('ECONOMIZE R$ 30', x0 + dw + 28, 1107, 28);
+  cta('APROVEITAR OFERTA  →', 540, 1210, 640, 90, 35);
+  footer(1300, 23);
+}
+window.ready = (async () => { await loadCommon(); render(); return true; })();
+
+</script>
+</body>
+</html>

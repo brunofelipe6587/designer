@@ -1,0 +1,31 @@
+// E3 · Vitrine amarela: yellow background (pattern break in a black feed), 9 prints in a grid on black tiles.
+function render() {
+  ctx.fillStyle = YEL; ctx.fillRect(0, 0, W, H);
+  ctx.save(); ctx.globalAlpha = 0.5; grain(); ctx.restore();
+  // header
+  seal(60, 78, 'BLACK SAND WALK', 30, 0, INK, YEL);
+  ctx.save(); ctx.globalAlpha = 1; ctx.filter = 'invert(1)'; logo(1020, 64, 230, 'right'); ctx.restore();
+  txt('LEVE 3 SUNGAS', 60, 228, '700 96px Syne', INK);
+  const pw = txt('POR', 64, 340, '700 60px Syne', INK);
+  txt('R$ 179', 64 + pw + 24, 352, '700 140px Syne', INK);
+  ctx.font = '700 32px Inter'; const dw = ctx.measureText('De R$ 209,70').width;
+  strike('De R$ 209,70', 768, 290, '700 32px Inter', 'rgba(10,10,10,0.6)', 'rgba(10,10,10,0.7)');
+  ctx.fillStyle = INK; ctx.beginPath(); ctx.roundRect(762, 312, 262, 50, 25); ctx.fill();
+  txt('ECONOMIZE R$ 30', 893, 339, '800 25px Inter', YEL, 'center', 'middle');
+  // grid
+  const ks = ['blackout', 'hupi_fire', 'graffiti', 'shadow', 'splash', 'allblack', 'pincelada_fluor', 'shadow_laranja', 'grafite_premium'];
+  const gx = 60, gy = 410, cw = 308, ch = 236, gap = 18;
+  for (let i = 0; i < 9; i++) {
+    const c = i % 3, r = Math.floor(i / 3), x = gx + c * (cw + gap), y = gy + r * (ch + gap);
+    ctx.fillStyle = '#0B0B0B'; ctx.beginPath(); ctx.roundRect(x, y, cw, ch, 18); ctx.fill();
+    ctx.save(); ctx.beginPath(); ctx.roundRect(x, y, cw, ch, 18); ctx.clip();
+    sunga(ks[i], x + cw / 2, y + ch / 2 + 4, 236, 0, { spot: 0.22, rimA: 0.45 });
+    ctx.restore();
+  }
+  txt('Estampas pra todo estilo, do básico ao colorido', 540, 1200, '600 30px Inter', INK, 'center');
+  // CTA in black on yellow
+  ctx.fillStyle = INK; ctx.beginPath(); ctx.roundRect(540 - 330, 1225, 660, 88, 14); ctx.fill();
+  txt('GARANTIR AS MINHAS  →', 540, 1271, '800 34px Inter', YEL, 'center', 'middle');
+  txt('Válido de 02 a 08/11 ou enquanto durar o estoque', 540, 1340, '600 20px Inter', 'rgba(10,10,10,0.75)', 'center');
+}
+window.ready = (async () => { await loadCommon(); render(); return true; })();

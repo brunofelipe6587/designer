@@ -1,0 +1,29 @@
+// E5 · Urgência: 7 days on a calendar strip, "só até 08/11", sungas fanned out.
+function render() {
+  bgBlack([[540, 700, 0.18, 700]]);
+  tape(0, 120, 1080, 40, YEL, INK, 'SÓ ATÉ 08/11  •  BLACK SAND WALK  •  ', 56, 26);
+  logo(540, 170, 260, 'center');
+  txt('SÓ 7 DIAS', 540, 370, '700 128px Syne', WHITE, 'center');
+  // calendar strip 02–08/11
+  const days = ['02', '03', '04', '05', '06', '07', '08'], wd = ['SEG', 'TER', 'QUA', 'QUI', 'SEX', 'SÁB', 'DOM'];
+  const bw = 124, gap = 13, x0 = 540 - (7 * bw + 6 * gap) / 2;
+  for (let i = 0; i < 7; i++) {
+    const x = x0 + i * (bw + gap), y = 430, last = i === 6;
+    ctx.fillStyle = last ? YEL : '#151515'; ctx.strokeStyle = last ? YEL : 'rgba(255,204,41,0.45)'; ctx.lineWidth = 2;
+    ctx.beginPath(); ctx.roundRect(x, y, bw, 140, 14); ctx.fill(); ctx.stroke();
+    txt(wd[i], x + bw / 2, y + 38, '700 22px Inter', last ? INK : GREY, 'center');
+    txt(days[i], x + bw / 2, y + 108, '700 58px Syne', last ? INK : WHITE, 'center');
+  }
+  txt('NOVEMBRO', 540, 618, '700 24px Inter', GREY, 'center');
+  // fan of sungas
+  const ks = ['shadow', 'graffiti', 'blackout', 'hupi_fire', 'stars'];
+  const pos = [[140, 790, -0.10], [940, 790, 0.10], [340, 770, -0.05], [740, 770, 0.05], [540, 760, 0]];
+  const order = [0, 4, 1, 3, 2];
+  for (const k of order) sunga(ks[k], pos[k][0], pos[k][1], k === 4 ? 225 : 205, pos[k][2], { spot: 0.22 });
+  txt('3 SUNGAS POR', 540, 970, '700 66px Syne', WHITE, 'center');
+  glowTxt('R$ 179', 540, 1105, '700 150px Syne', YEL, 60, 0.6, 'center');
+  strike('De R$ 209,70', 540, 1192, '600 32px Inter', GREY, '#D8D8D8', 'center');
+  cta('GARANTIR AS MINHAS  →', 540, 1262, 640, 88, 34);
+  txt('ou enquanto durar o estoque', 540, 1334, '500 22px Inter', '#8C8C8C', 'center');
+}
+window.ready = (async () => { await loadCommon(); render(); return true; })();

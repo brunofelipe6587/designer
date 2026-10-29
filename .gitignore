@@ -65,3 +65,7 @@ sandwalk-blackoutfem/audio/
 sandwalk-blackoutfem/build/still_*.png
 sandwalk-blackoutfem/out/*_silent.mp4
 sandwalk-black/build/desktop_draft.png
+sandwalk-black/ads/audio/
+sandwalk-black/ads/frames/
+sandwalk-black/ads/build/
+sandwalk-black/ads/out/*_silent.mp4

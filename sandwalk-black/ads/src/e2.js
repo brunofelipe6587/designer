@@ -1,0 +1,20 @@
+// E2 · A conta: sunga + sunga + sunga = R$ 179 (product-only, price math as the hook).
+function render() {
+  bgBlack([[540, 520, 0.10, 650], [540, 900, 0.20, 600]]);
+  logo(540, 50, 280, 'center');
+  seal(540, 160, 'BLACK SAND WALK', 34, -0.03, YEL, INK, 'center');
+  txt('A CONTA MAIS', 540, 290, '700 66px Syne', WHITE, 'center');
+  txt('FÁCIL DA BLACK', 540, 362, '700 66px Syne', WHITE, 'center');
+  const xs = [180, 540, 900], ks = ['graffiti', 'blackout', 'hupi_fire'], rot = [-0.07, 0, 0.07];
+  for (let i = 0; i < 3; i++) sunga(ks[i], xs[i], 540, 262, rot[i], { spot: 0.32 });
+  for (const x of [360, 720]) txt('+', x, 568, '700 90px Syne', YEL, 'center');
+  txt('=', 540, 745, '700 110px Syne', YEL, 'center');
+  glowTxt('R$ 179', 540, 925, '700 200px Syne', YEL, 70, 0.6, 'center');
+  ctx.font = '600 36px Inter'; const dw = ctx.measureText('De R$ 209,70').width; ctx.font = '800 30px Inter';
+  const pw = ctx.measureText('ECONOMIZE R$ 30').width + 45, tot = dw + 30 + pw, x0 = 540 - tot / 2;
+  strike('De R$ 209,70', x0, 1052, '600 36px Inter');
+  pill('ECONOMIZE R$ 30', x0 + dw + 30, 1039, 30);
+  cta('APROVEITAR OFERTA  →', 540, 1160, 640, 92, 36);
+  footer(1290, 24);
+}
+window.ready = (async () => { await loadCommon(); render(); return true; })();

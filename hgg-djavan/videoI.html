@@ -24,7 +24,7 @@ const eout = t => 1 - Math.pow(1 - t, 3);
 const eback = t => { const c1 = 1.6, c3 = c1 + 1; return 1 + c3 * Math.pow(t - 1, 3) + c1 * Math.pow(t - 1, 2); };
 const prog = (t, a, b) => clamp((t - a) / (b - a));
 
-const VN0 = 7.4, VNLEN = 5.13;
+const VN0 = 7.4, VNLEN = 5.19;
 const MSG = [
   [-1, 'chip', 'chip', 'HOJE'],
   [-1, 'them', 'text', 'mano 🚨'],
@@ -40,7 +40,7 @@ const MSG = [
   [12.9, 'me', 'text', 'meu pai vai surtar kkkk'],
   [13.6, 'me', 'text', 'vou levar uma pra mim e uma pra ele'],
   [14.6, 'them', 'link'],
-  [15.5, 'them', 'text', 'usa o cupom PRIMEIRACOMPRA que ganha +5% off 🔥'],
+  [15.5, 'them', 'text', 'pede até 13h que sai no mesmo dia 🔥'],
   [17.0, 'me', 'text', 'comprei ✅'],
 ];
 // group tails: first bubble of a run from the same side gets the WhatsApp-style tail
@@ -151,8 +151,8 @@ async function drawMsg(m, x, y, t) {
     ctx.fillText(playing ? `0:0${Math.floor(t - VN0)}` : '0:05', x + 160, y + 136);
     meta(x + w - 18, y + 136, side);
     // transcript (as the app shows under voice messages)
-    const TOK = [['Cara,', 0], ['tá', 0.58], ['R$ 49!', 0.72], ['E no', 2.84], ['Pix', 3.09], ['sai', 3.41], ['R$ 46,55.', 3.63]];
-    const said = t >= VN0 + VNLEN ? 'Cara, tá R$ 49! E no Pix sai R$ 46,55.' : TOK.filter(([, a]) => t >= VN0 + a - 0.02).map(([w]) => w).join(' ');
+    const TOK = [['Cara,', 0], ['tá', 0.55], ['R$ 59!', 0.67], ['E dá', 2.86], ['pra', 3.15], ['parcelar', 3.31], ['em', 3.78], ['6x', 3.89], ['sem', 4.58], ['juros.', 4.82]];
+    const said = t >= VN0 + VNLEN ? 'Cara, tá R$ 59! E dá pra parcelar em 6x sem juros.' : TOK.filter(([, a]) => t >= VN0 + a - 0.02).map(([w]) => w).join(' ');
     ctx.strokeStyle = '#E9EDEF'; ctx.lineWidth = 2; ctx.beginPath(); ctx.moveTo(x + 24, y + 158); ctx.lineTo(x + w - 24, y + 158); ctx.stroke();
     ctx.fillStyle = COL.text; ctx.font = `400 32px ${F}`; ctx.textAlign = 'left'; ctx.textBaseline = 'alphabetic'; ctx.fillText(said, x + 24, y + 202, w - 48);
   } else if (type === 'link') {
@@ -165,7 +165,7 @@ async function drawMsg(m, x, y, t) {
     ctx.restore();
     ctx.textAlign = 'left'; ctx.textBaseline = 'alphabetic';
     ctx.fillStyle = COL.text; ctx.font = `500 32px ${F}`; ctx.fillText('Camiseta Djavan Oceano MPB Oversized Preta', bx + 22, by + 400, bw - 44);
-    ctx.fillStyle = COL.meta; ctx.font = `400 26px ${F}`; ctx.fillText('100% algodão fio 30.1 · DTF alta definição · R$ 49,00', bx + 22, by + 444, bw - 44);
+    ctx.fillStyle = COL.meta; ctx.font = `400 26px ${F}`; ctx.fillText('100% algodão fio 30.1 · DTF alta definição · R$ 59,00', bx + 22, by + 444, bw - 44);
     ctx.fillText('hggstyle.com.br', bx + 22, by + 490);
     ctx.fillStyle = COL.link; ctx.font = `400 32px ${F}`; ctx.fillText('hggstyle.com.br/camiseta-streetwear-djavan…', x + 24, y + 584, w - 48);
     meta(x + w - 18, y + h - 14, side);
@@ -275,8 +275,8 @@ async function render(t) {
     const s = 0.36; ctx.drawImage(IMG.frente, 540 - 583 * s, cy + 250 - 760 * s, 1200 * s, 1600 * s); ctx.restore();
     ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillStyle = '#111B21';
     ctx.font = `800 40px "Montserrat"`; ctx.fillText('A camiseta do Djavan', 540, cy + 545);
-    ctx.font = `900 120px "Montserrat"`; ctx.fillText('R$ 49,00', 540, cy + 650);
-    ctx.fillStyle = COL.head; ctx.font = `800 36px "Montserrat"`; ctx.fillText('R$ 46,55 no Pix  ·  6x de R$ 8,17', 540, cy + 740);
+    ctx.font = `900 120px "Montserrat"`; ctx.fillText('R$ 59,00', 540, cy + 650);
+    ctx.fillStyle = COL.head; ctx.font = `800 36px "Montserrat"`; ctx.fillText('ou 6x de R$ 9,83 sem juros', 540, cy + 740);
     const cb = eback(prog(t, END + 0.5, END + 0.9)), pulse = 1 + 0.03 * Math.sin((t - END - 1) * 8) * clamp((t - END - 1) * 3);
     if (cb > 0) {
       ctx.save(); ctx.translate(540, cy + 860); ctx.scale(cb * pulse, cb * pulse);

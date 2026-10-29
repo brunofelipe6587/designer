@@ -271,41 +271,31 @@ function render(t) {
     const le = env(t, T.offer + 0.2, DUR + 1);
     if (le > 0) { ctx.save(); ctx.globalAlpha = le; ctx.drawImage(IMG.logo, 540 - 136 * 0.85, 175 - 63 * 0.85 + (1 - le) * -20, 272 * 0.85, 126 * 0.85); ctx.restore(); }
 
-    // price block
+    // price block (R$ 59, sem cupom / sem Pix)
     const a1 = env(t, T.offer + 0.35, DUR + 1);
-    text('DE R$ 59,90', 540, 1040, { size: 44, weight: 700, color: 'rgba(255,255,255,0.6)', alpha: a1, dy: (1 - a1) * 20, spacing: 1 });
-    // animated strike-through
-    if (a1 > 0) {
-      ctx.save(); ctx.font = '700 44px "Montserrat"'; ctx.letterSpacing = '1px';
-      const w = ctx.measureText('DE R$ 59,90').width, sp = eout(prog(t, T.offer + 0.6, T.offer + 0.95));
-      ctx.strokeStyle = C.accent; ctx.lineWidth = 5; ctx.globalAlpha = a1;
-      ctx.beginPath(); ctx.moveTo(540 - w / 2 - 8, 1042); ctx.lineTo(540 - w / 2 - 8 + (w + 16) * sp, 1042); ctx.stroke(); ctx.restore();
-    }
-    const a2 = env(t, T.offer + 0.7, DUR + 1);
-    const val = lerp(59.9, 49.0, eout(prog(t, T.offer + 0.7, T.offer + 1.5)));
-    const price = 'R$ ' + val.toFixed(2).replace('.', ',');
-    text('POR', 540, 1112, { size: 34, weight: 700, color: C.soft, alpha: a2, spacing: 6 });
-    text(price, 540, 1205, { size: 150, weight: 900, alpha: a2, dy: (1 - a2) * 30, spacing: -2 });
-    // -18% badge
+    text('POR APENAS', 540, 1060, { size: 36, weight: 700, color: C.soft, alpha: a1, dy: (1 - a1) * 20, spacing: 8 });
+    const pe = prog(t, T.offer + 0.7, T.offer + 1.15);
+    if (pe > 0) text('R$ 59,00', 540, 1175, { size: 160, weight: 900, alpha: clamp(pe * 3), scale: lerp(1.5, 1, eback(pe)), spacing: -2 });
+    // 6x badge
     const bp = eback(prog(t, T.offer + 1.45, T.offer + 1.9));
     if (bp > 0) {
-      ctx.save(); ctx.translate(905, 1100); ctx.rotate(0.12); ctx.scale(bp, bp);
-      ctx.fillStyle = C.accent; rrect(-82, -40, 164, 80, 40); ctx.fill();
-      ctx.fillStyle = '#fff'; ctx.font = '900 44px "Montserrat"'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillText('-18%', 0, 2);
+      ctx.save(); ctx.translate(872, 1046); ctx.rotate(0.08); ctx.scale(bp, bp);
+      ctx.fillStyle = C.accent; rrect(-92, -40, 184, 80, 40); ctx.fill();
+      ctx.fillStyle = '#fff'; ctx.font = '900 38px "Montserrat"'; ctx.letterSpacing = '1px'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillText('EM 6X', 0, 2);
       ctx.restore();
     }
     const a3 = env(t, T.offer + 1.6, DUR + 1);
-    text('R$ 46,55 NO PIX', 540, 1312, { size: 54, weight: 800, color: C.accent, alpha: a3, dy: (1 - a3) * 20, spacing: 1 });
+    text('ou 6x de R$ 9,83 sem juros', 540, 1300, { size: 48, weight: 800, color: C.accent, alpha: a3, dy: (1 - a3) * 20, spacing: 0.5 });
     const a4 = env(t, T.offer + 1.9, DUR + 1);
-    text('ou 6x de R$ 8,17 sem juros', 540, 1378, { size: 38, weight: 600, color: C.soft, alpha: a4, dy: (1 - a4) * 20 });
-    // coupon strip
+    text('TAMANHOS M  ·  G  ·  GG', 540, 1370, { size: 32, weight: 700, color: C.soft, alpha: a4, dy: (1 - a4) * 20, spacing: 3 });
+    // shipping strip
     const a5 = env(t, T.offer + 2.25, DUR + 1);
     if (a5 > 0) {
       ctx.save(); ctx.globalAlpha = a5; ctx.translate(0, (1 - a5) * 20);
       ctx.setLineDash([10, 8]); ctx.strokeStyle = 'rgba(255,255,255,0.6)'; ctx.lineWidth = 2.5;
       rrect(150, 1428, 780, 70, 14); ctx.stroke(); ctx.setLineDash([]);
       ctx.restore();
-      text('+5% OFF NA 1ª COMPRA  ·  CUPOM PRIMEIRACOMPRA', 540, 1464, { size: 27, weight: 800, alpha: a5, dy: (1 - a5) * 20, spacing: 0.5, maxW: 740 });
+      text('ENVIO NO MESMO DIA  ·  PEDIDOS ATÉ 13H', 540, 1464, { size: 28, weight: 800, alpha: a5, dy: (1 - a5) * 20, spacing: 1, maxW: 740 });
     }
     // CTA button
     const ce = eback(prog(t, T.cta, T.cta + 0.5));
@@ -320,7 +310,7 @@ function render(t) {
       ctx.restore();
     }
     const a6 = env(t, T.cta + 0.35, DUR + 1);
-    text('COMPRA SEGURA  ·  ENVIO NO MESMO DIA (PEDIDOS ATÉ 13H)', 540, 1690, { maxW: 980, size: 26, weight: 700, color: C.soft, alpha: a6, spacing: 2 });
+    text('COMPRA 100% SEGURA  ·  TROCA FÁCIL', 540, 1690, { size: 28, weight: 700, color: C.soft, alpha: a6, spacing: 2 });
   }
   progressBar(t);
 }

@@ -117,7 +117,7 @@ function render(t) {
   ctx.clearRect(0, 0, W, H);
 
   if (t < T.r1) {
-    // ===== HOOK: 18% OFF + model =====
+    // ===== HOOK: R$ 59 + model =====
     background(t);
     const up = eout(prog(t, 0, 0.6));
     const s = lerp(0.98, 1.04, prog(t, 0, T.r1));
@@ -125,7 +125,7 @@ function render(t) {
     // big discount slam
     const k = prog(t, 0.12, 0.45), ks = k > 0 ? lerp(1.9, 1, eback(k)) : 0;
     const shake = k > 0 && k < 1 ? Math.sin(t * 90) * 6 * (1 - k) : 0;
-    text('18% OFF', 540 + shake, 255, { size: 190, weight: 900, color: C.accentDeep, alpha: clamp(k * 3), scale: ks, spacing: -4 });
+    text('R$ 59', 540 + shake, 255, { size: 200, weight: 900, color: C.accentDeep, alpha: clamp(k * 3), scale: ks, spacing: -4 });
     const e2 = env(t, 0.55, T.r1 + 0.1);
     text('CAMISETA DO SABOTAGE', 540, 380, { size: 46, weight: 800, alpha: e2, dy: (1 - e2) * 20, spacing: 3 });
     // price sticker (off the product, beside the head)
@@ -134,9 +134,9 @@ function render(t) {
       ctx.save(); ctx.translate(205, 640); ctx.rotate(-0.16); ctx.scale(sp, sp);
       ctx.fillStyle = C.ink; ctx.beginPath(); ctx.arc(0, 0, 128, 0, Math.PI * 2); ctx.fill();
       ctx.fillStyle = C.white; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
-      ctx.font = '700 28px "Montserrat"'; ctx.letterSpacing = '4px'; ctx.fillText('POR', 0, -52);
-      ctx.font = '900 66px "Montserrat"'; ctx.letterSpacing = '-1px'; ctx.fillText('R$ 49', 0, 6);
-      ctx.font = '700 26px "Montserrat"'; ctx.letterSpacing = '0px'; ctx.fillStyle = C.accent; ctx.fillText('6x sem juros', 0, 62);
+      ctx.font = '700 26px "Montserrat"'; ctx.letterSpacing = '4px'; ctx.fillText('EM ATÉ', 0, -56);
+      ctx.font = '900 92px "Montserrat"'; ctx.letterSpacing = '-1px'; ctx.fillText('6x', 0, 4);
+      ctx.font = '700 26px "Montserrat"'; ctx.letterSpacing = '0px'; ctx.fillStyle = C.accent; ctx.fillText('sem juros', 0, 64);
       ctx.restore();
     }
   } else if (t < T.lyric) {
@@ -205,23 +205,18 @@ function render(t) {
       ctx.fillStyle = C.ink; rrect(90, 805, 900, 480, 40); ctx.fill();
       ctx.restore();
       const a = (d) => env(t, T.offer + d, DUR + 1);
-      text('DE R$ 59,90', 540, 880, { size: 40, weight: 700, color: 'rgba(255,255,255,0.55)', alpha: a(0.55) * ce, spacing: 1 });
-      if (a(0.55) > 0) {
-        ctx.save(); ctx.font = '700 40px "Montserrat"'; ctx.letterSpacing = '1px';
-        const w = ctx.measureText('DE R$ 59,90').width, sp = eout(prog(t, T.offer + 0.8, T.offer + 1.1));
-        ctx.strokeStyle = C.accent; ctx.lineWidth = 5; ctx.beginPath(); ctx.moveTo(540 - w / 2 - 8, 882); ctx.lineTo(540 - w / 2 - 8 + (w + 16) * sp, 882); ctx.stroke(); ctx.restore();
-      }
-      const val = lerp(59.9, 49.0, eout(prog(t, T.offer + 0.9, T.offer + 1.6)));
-      text('R$ ' + val.toFixed(2).replace('.', ','), 540, 990, { size: 150, weight: 900, color: C.white, alpha: a(0.85), spacing: -2 });
+      text('POR APENAS', 540, 875, { size: 34, weight: 700, color: 'rgba(255,255,255,0.6)', alpha: a(0.55) * ce, spacing: 8 });
+      const pe = prog(t, T.offer + 0.9, T.offer + 1.35);
+      if (pe > 0) text('R$ 59,00', 540, 990, { size: 150, weight: 900, color: C.white, alpha: clamp(pe * 3), scale: lerp(1.5, 1, eback(pe)), spacing: -2 });
       const bp = eback(prog(t, T.offer + 1.6, T.offer + 2.0));
       if (bp > 0) {
-        ctx.save(); ctx.translate(905, 840); ctx.rotate(0.12); ctx.scale(bp, bp);
-        ctx.fillStyle = C.accent; rrect(-82, -40, 164, 80, 40); ctx.fill();
-        ctx.fillStyle = '#fff'; ctx.font = '900 44px "Montserrat"'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillText('-18%', 0, 2);
+        ctx.save(); ctx.translate(880, 835); ctx.rotate(0.08); ctx.scale(bp, bp);
+        ctx.fillStyle = C.accent; rrect(-92, -40, 184, 80, 40); ctx.fill();
+        ctx.fillStyle = '#fff'; ctx.font = '900 38px "Montserrat"'; ctx.letterSpacing = '1px'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillText('EM 6X', 0, 2);
         ctx.restore();
       }
-      text('R$ 46,55 NO PIX', 540, 1100, { size: 54, weight: 800, color: C.accent, alpha: a(1.7), spacing: 1 });
-      text('ou 6x de R$ 8,17 sem juros', 540, 1162, { size: 36, weight: 600, color: 'rgba(255,255,255,0.75)', alpha: a(1.9) });
+      text('ou 6x de R$ 9,83 sem juros', 540, 1100, { size: 46, weight: 800, color: C.accent, alpha: a(1.7), spacing: 0.5 });
+      text('ENVIO NO MESMO DIA  ·  PEDIDOS ATÉ 13H', 540, 1160, { size: 28, weight: 700, color: 'rgba(255,255,255,0.75)', alpha: a(1.9), spacing: 1 });
       // size chips
       const ze = a(2.1);
       ['M', 'G', 'GG'].forEach((z, i) => {
@@ -231,12 +226,12 @@ function render(t) {
         text(z, x, 1226, { size: 28, weight: 800, color: C.white, alpha: ze });
       });
     }
-    // coupon
+    // product strip
     const ae = env(t, T.offer + 2.4, DUR + 1);
     if (ae > 0) {
       ctx.save(); ctx.globalAlpha = ae; ctx.setLineDash([10, 8]); ctx.strokeStyle = 'rgba(11,11,12,0.55)'; ctx.lineWidth = 2.5;
       rrect(130, 1312, 820, 70, 14); ctx.stroke(); ctx.restore();
-      text('1ª COMPRA? +5% OFF  ·  CUPOM PRIMEIRACOMPRA', 540, 1348, { size: 27, weight: 800, alpha: ae, maxW: 770 });
+      text('100% ALGODÃO FIO 30.1  ·  ESTAMPA DTF ALTA DEFINIÇÃO', 540, 1348, { size: 26, weight: 800, alpha: ae, maxW: 770 });
     }
     // CTA
     const cb = eback(prog(t, T.cta, T.cta + 0.45));
@@ -251,7 +246,7 @@ function render(t) {
       ctx.restore();
     }
     const te = env(t, T.cta + 0.3, DUR + 1);
-    text('COMPRA SEGURA  ·  ENVIO NO MESMO DIA (PEDIDOS ATÉ 13H)', 540, 1565, { maxW: 980, size: 25, weight: 700, color: C.mute, alpha: te, spacing: 2 });
+    text('COMPRA 100% SEGURA  ·  TROCA FÁCIL', 540, 1565, { size: 27, weight: 700, color: C.mute, alpha: te, spacing: 2 });
     if (te > 0) { ctx.save(); ctx.globalAlpha = te; ctx.drawImage(IMG.logo, 540 - 68, 1610, 136, 63); ctx.restore(); }
   }
   progressBar(t);

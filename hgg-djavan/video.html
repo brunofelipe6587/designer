@@ -270,11 +270,11 @@ function render(t) {
     const le = env(t, T.offer + 0.2, DUR + 1);
     if (le > 0) { ctx.save(); ctx.globalAlpha = le; ctx.drawImage(IMG.logo, 540 - 136 * 0.85, 175 - 63 * 0.85 + (1 - le) * -20, 272 * 0.85, 126 * 0.85); ctx.restore(); }
 
-    // price block (R$ 59, sem cupom / sem Pix)
+    // price block (R$ 59,90, sem cupom / sem Pix)
     const a1 = env(t, T.offer + 0.35, DUR + 1);
     text('POR APENAS', 540, 1060, { size: 36, weight: 700, color: C.soft, alpha: a1, dy: (1 - a1) * 20, spacing: 8 });
     const pe = prog(t, T.offer + 0.7, T.offer + 1.15);
-    if (pe > 0) text('R$ 59,00', 540, 1175, { size: 160, weight: 900, alpha: clamp(pe * 3), scale: lerp(1.5, 1, eback(pe)), spacing: -2 });
+    if (pe > 0) text('R$ 59,90', 540, 1175, { size: 160, weight: 900, alpha: clamp(pe * 3), scale: lerp(1.5, 1, eback(pe)), spacing: -2 });
     // 6x badge
     const bp = eback(prog(t, T.offer + 1.45, T.offer + 1.9));
     if (bp > 0) {
@@ -284,7 +284,7 @@ function render(t) {
       ctx.restore();
     }
     const a3 = env(t, T.offer + 1.6, DUR + 1);
-    text('ou 6x de R$ 9,83 sem juros', 540, 1300, { size: 48, weight: 800, color: C.accent, alpha: a3, dy: (1 - a3) * 20, spacing: 0.5 });
+    text('ou 6x de R$ 9,98 sem juros', 540, 1300, { size: 48, weight: 800, color: C.accent, alpha: a3, dy: (1 - a3) * 20, spacing: 0.5 });
     const a4 = env(t, T.offer + 1.9, DUR + 1);
     text('TAMANHOS M  ·  G  ·  GG', 540, 1370, { size: 32, weight: 700, color: C.soft, alpha: a4, dy: (1 - a4) * 20, spacing: 3 });
     // shipping strip

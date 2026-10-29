@@ -147,7 +147,7 @@ function render(t) {
       ctx.save(); ctx.translate(880, 820); ctx.rotate(0.16 + Math.sin(t * 6) * 0.03); ctx.scale(sp, sp);
       ctx.shadowColor = 'rgba(0,0,0,0.4)'; ctx.shadowBlur = 24; ctx.fillStyle = '#E8473F'; ctx.beginPath(); ctx.arc(0, 0, 125, 0, Math.PI * 2); ctx.fill();
       ctx.shadowColor = 'transparent'; ctx.fillStyle = '#fff'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
-      ctx.font = '800 26px Montserrat'; ctx.fillText('SÓ', 0, -56); ctx.font = '900 72px Montserrat'; ctx.fillText('R$ 59', 0, 2);
+      ctx.font = '800 26px Montserrat'; ctx.fillText('SÓ', 0, -56); ctx.font = '900 54px Montserrat'; ctx.fillText('R$ 59,90', 0, 2);
       ctx.font = '800 26px Montserrat'; ctx.fillText('6x S/ JUROS', 0, 58); ctx.restore();
     }
   }
@@ -189,10 +189,10 @@ function render(t) {
     g = ctx.createLinearGradient(0, 980, 0, H); g.addColorStop(0, 'rgba(0,0,0,0)'); g.addColorStop(0.45, `rgba(0,0,0,${0.55 * b})`); g.addColorStop(1, `rgba(0,0,0,${0.8 * b})`);
     ctx.fillStyle = g; ctx.fillRect(0, 980, W, H - 980);
     stroked('A CAMISETA DO SABOTAGE', 540, 250, { size: 62, scale: pop(t, 18.6), sw: 13 });
-    // price (R$ 59, sem cupom)
+    // price (R$ 59,90, sem cupom)
     stroked('POR APENAS', 540, 1150, { size: 58, color: 'rgba(255,255,255,0.85)', scale: pop(t, 18.75), sw: 11 });
-    stroked('R$ 59,00', 540, 1285, { size: 170, color: '#FFD60A', scale: pop(t, 19.1, 0.3) * (1 + 0.06 * (1 - prog(t, 19.7, 19.95)) * (t > 19.7 ? 1 : 0)), sw: 20 });
-    chip('ou 6x de R$ 9,83 sem juros', 540, 1430, { scale: pop(t, 19.85), size: 40, bg: '#fff' });
+    stroked('R$ 59,90', 540, 1285, { size: 170, color: '#FFD60A', scale: pop(t, 19.1, 0.3) * (1 + 0.06 * (1 - prog(t, 19.7, 19.95)) * (t > 19.7 ? 1 : 0)), sw: 20 });
+    chip('ou 6x de R$ 9,98 sem juros', 540, 1430, { scale: pop(t, 19.85), size: 40, bg: '#fff' });
     chip('Envio no mesmo dia (pedidos até 13h)', 540, 1535, { scale: pop(t, 20.1), size: 32 });
     // CTA
     const cp = pop(t, 20.4, 0.35);

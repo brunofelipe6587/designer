@@ -1,0 +1,149 @@
+<!doctype html>
+<html lang="pt-br">
+<head>
+<meta charset="utf-8">
+<title>Black Sand Walk S1 desktop</title>
+<link href="fonts/fonts.css" rel="stylesheet">
+<style>html, body { margin: 0; background: #000; } canvas { display: block; }</style>
+</head>
+<body>
+<canvas id="c" width="1920" height="960"></canvas>
+<script>
+// Black Sand Walk, semana 1 (sungas) — banner principal desktop 1920×960.
+// Left: the 3 partner athletes as cutouts (masks from Adobe applied to the ORIGINAL pixels — faces untouched),
+// the middle one bigger and in front, all under the same rim light. The child in photo 1 is not in his cutout
+// (her mask was subtracted); the gap she left on his chest sits behind the middle athlete.
+// Right: seal → offer (3 SUNGAS · R$ 179) → anchor (de R$ 209,70 / economize R$ 30) → the 3 sungas → CTA → validity.
+// Brand: black + #FFCC29 (site highlight), Syne bold titles, Inter support/button, wide white SAND WALK logo.
+const W = 1920, H = 960, YEL = '#FFCC29', WHITE = '#FFFFFF', GREY = '#9A9A9A';
+let ctx = document.getElementById('c').getContext('2d');
+const hash = n => { const x = Math.sin(n * 127.1 + 311.7) * 43758.5453; return x - Math.floor(x); };
+
+function background() {
+  ctx.fillStyle = '#050505'; ctx.fillRect(0, 0, W, H);
+  // warm glow behind the offer and a softer one behind the athletes
+  let g = ctx.createRadialGradient(1420, 420, 40, 1420, 420, 760);
+  g.addColorStop(0, 'rgba(255,204,41,0.20)'); g.addColorStop(0.5, 'rgba(255,204,41,0.06)'); g.addColorStop(1, 'rgba(255,204,41,0)');
+  ctx.fillStyle = g; ctx.fillRect(0, 0, W, H);
+  g = ctx.createRadialGradient(480, 380, 40, 480, 380, 620);
+  g.addColorStop(0, 'rgba(255,255,255,0.10)'); g.addColorStop(1, 'rgba(255,255,255,0)');
+  ctx.fillStyle = g; ctx.fillRect(0, 0, W, H);
+  // futevôlei net texture, very low opacity
+  ctx.save(); ctx.strokeStyle = 'rgba(255,255,255,0.045)'; ctx.lineWidth = 2;
+  for (let i = -H; i < W; i += 46) { ctx.beginPath(); ctx.moveTo(i, 0); ctx.lineTo(i + H, H); ctx.stroke(); ctx.beginPath(); ctx.moveTo(i + H, 0); ctx.lineTo(i, H); ctx.stroke(); }
+  ctx.restore();
+  // sand grain
+  ctx.save(); ctx.drawImage(IMG.grain, 0, 0, W, H); ctx.restore();
+}
+function tape(y0, y1, color, textColor, text, alpha = 1) {
+  // diagonal ribbon from (0, y0) to (W, y1)
+  const ang = Math.atan2(y1 - y0, W), len = Math.hypot(W, y1 - y0) + 200;
+  ctx.save(); ctx.globalAlpha = alpha; ctx.translate(-100, y0); ctx.rotate(ang);
+  ctx.fillStyle = color; ctx.fillRect(0, -30, len, 60);
+  ctx.font = '700 28px Syne'; ctx.fillStyle = textColor; ctx.textBaseline = 'middle';
+  const w = ctx.measureText(text).width;
+  for (let x = 20; x < len; x += w) ctx.fillText(text, x, 2);
+  ctx.restore();
+}
+// athlete cutout with a yellow rim light behind it
+function athlete(img, x, y, s, crop, fade) {
+  const [sx, sy, sw, sh] = crop, dw = sw * s, dh = sh * s;
+  const c = document.createElement('canvas'); c.width = Math.ceil(dw); c.height = Math.ceil(dh);
+  const g = c.getContext('2d');   // original pixels, no colour change (partner athletes' faces stay exactly as photographed)
+  g.drawImage(img, sx, sy, sw, sh, 0, 0, dw, dh);
+  if (fade) {   // fade the lower part out (keeps the frame clean and ends the bust)
+    g.globalCompositeOperation = 'destination-in';
+    const lg = g.createLinearGradient(0, dh * fade[0], 0, dh * fade[1]); lg.addColorStop(0, 'rgba(0,0,0,1)'); lg.addColorStop(1, 'rgba(0,0,0,0)');
+    g.fillStyle = lg; g.fillRect(0, 0, dw, dh); g.globalCompositeOperation = 'source-over';
+  }
+  // rim: tinted silhouette, blurred, behind
+  const r = document.createElement('canvas'); r.width = c.width; r.height = c.height; const rg = r.getContext('2d');
+  rg.drawImage(c, 0, 0); rg.globalCompositeOperation = 'source-in'; rg.fillStyle = YEL; rg.fillRect(0, 0, r.width, r.height);
+  ctx.save(); ctx.globalAlpha = 0.55; ctx.filter = 'blur(14px)'; ctx.drawImage(r, x + 6, y - 4); ctx.restore();
+  ctx.drawImage(c, x, y);
+}
+function sunga(img, cx, cy, w, rot) {
+  const h = w * img.height / img.width;
+  ctx.save(); ctx.translate(cx, cy); ctx.rotate(rot);
+  ctx.shadowColor = 'rgba(255,204,41,0.35)'; ctx.shadowBlur = 40;
+  ctx.drawImage(img, -w / 2, -h / 2, w, h);
+  ctx.shadowColor = 'rgba(0,0,0,0.6)'; ctx.shadowBlur = 24; ctx.shadowOffsetY = 12; ctx.drawImage(img, -w / 2, -h / 2, w, h);
+  ctx.restore();
+}
+
+function render(P) {
+  ctx.setTransform(1, 0, 0, 1, 0, 0);
+  background();
+  // athletes: back left, back right, then the middle one in front
+  athlete(IMG.a3, P.a3.x, P.a3.y, P.a3.s, P.a3.crop, P.a3.fade);
+  athlete(IMG.a1, P.a1.x, P.a1.y, P.a1.s, P.a1.crop, P.a1.fade);
+  athlete(IMG.a2, P.a2.x, P.a2.y, P.a2.s, P.a2.crop, P.a2.fade);
+  // floor fade under the athletes
+  let g = ctx.createLinearGradient(0, H - 230, 0, H); g.addColorStop(0, 'rgba(5,5,5,0)'); g.addColorStop(1, 'rgba(5,5,5,0.95)');
+  ctx.fillStyle = g; ctx.fillRect(0, H - 230, 1060, 230);
+  // ribbons cross the lower part of the athletes' half, in front of them, and fade out before the offer
+  const rb = document.createElement('canvas'); rb.width = W; rb.height = H; const keep = ctx; ctx = rb.getContext('2d');
+  tape(1010, 600, '#141414', 'rgba(255,204,41,0.65)', 'BLACK SAND WALK  •  ', 1);
+  tape(960, 470, YEL, '#0A0A0A', 'BLACK SAND WALK  •  3 SUNGAS POR R$ 179  •  ', 1);
+  ctx.globalCompositeOperation = 'destination-in';
+  const fg = ctx.createLinearGradient(820, 0, 975, 0); fg.addColorStop(0, 'rgba(0,0,0,1)'); fg.addColorStop(1, 'rgba(0,0,0,0)');
+  ctx.fillStyle = fg; ctx.fillRect(0, 0, W, H);
+  ctx = keep; ctx.drawImage(rb, 0, 0);
+
+  // ---- offer column ----
+  const X = 1010;
+  ctx.drawImage(IMG.logo, 1500, 70, 360, 360 * 30 / 480);
+  // seal
+  ctx.save(); ctx.translate(X, 82); ctx.rotate(-0.035);
+  ctx.font = '700 34px Syne'; const sealW = ctx.measureText('BLACK SAND WALK').width + 56;
+  ctx.fillStyle = YEL; ctx.fillRect(0, -30, sealW, 62); ctx.fillStyle = '#0A0A0A'; ctx.textBaseline = 'middle'; ctx.fillText('BLACK SAND WALK', 28, 3);
+  ctx.restore();
+  ctx.textBaseline = 'alphabetic'; ctx.textAlign = 'left';
+  ctx.font = '700 118px Syne'; ctx.fillStyle = WHITE; ctx.fillText('3 SUNGAS', X, 268);
+  ctx.font = '700 58px Syne'; ctx.fillStyle = WHITE; ctx.fillText('POR', X + 4, 430);
+  ctx.save(); ctx.shadowColor = 'rgba(255,204,41,0.55)'; ctx.shadowBlur = 50;
+  ctx.font = '700 196px Syne'; ctx.fillStyle = YEL; ctx.fillText('R$ 179', X + 150, 440); ctx.restore();
+  // anchor
+  ctx.font = '600 36px Inter'; ctx.fillStyle = GREY; const de = 'De R$ 209,70', dw = ctx.measureText(de).width;
+  ctx.fillText(de, X + 4, 512); ctx.fillStyle = '#D8D8D8'; ctx.fillRect(X + 2, 499, dw + 4, 3);
+  ctx.font = '800 30px Inter'; const ec = 'ECONOMIZE R$ 30', ew = ctx.measureText(ec).width + 44;
+  ctx.strokeStyle = YEL; ctx.lineWidth = 3; ctx.beginPath(); ctx.roundRect(X + dw + 36, 476, ew, 50, 25); ctx.stroke();
+  ctx.fillStyle = YEL; ctx.fillText(ec, X + dw + 58, 512);
+  // the 3 sungas
+  sunga(IMG.s1, X + 140, 640, 270, -0.06);
+  sunga(IMG.s3, X + 435, 632, 270, 0.0);
+  sunga(IMG.s2, X + 730, 640, 270, 0.06);
+  ['Blackout', 'Graffiti Branco', 'All Black'].forEach((n, i) => {
+    ctx.font = '600 20px Inter'; ctx.fillStyle = '#BDBDBD'; ctx.textAlign = 'center'; ctx.fillText(n.toUpperCase(), X + 140 + i * 295, 760);
+  });
+  ctx.textAlign = 'left';
+  // CTA
+  ctx.save(); ctx.shadowColor = 'rgba(255,204,41,0.45)'; ctx.shadowBlur = 30;
+  ctx.fillStyle = YEL; ctx.beginPath(); ctx.roundRect(X, 790, 560, 92, 12); ctx.fill(); ctx.restore();
+  ctx.font = '800 34px Inter'; ctx.fillStyle = '#0A0A0A'; ctx.textBaseline = 'middle'; ctx.fillText('APROVEITAR OFERTA  →', X + 42, 838);
+  ctx.textBaseline = 'alphabetic';
+  ctx.font = '500 22px Inter'; ctx.fillStyle = '#8C8C8C'; ctx.fillText('Válido de 02 a 08/11 ou enquanto durar o estoque', X + 2, 920);
+}
+
+const P = {
+  // crop = [sx, sy, sw, sh] in source px; fade = [start, end] as a fraction of the drawn height
+  a3: { x: -130, y: 165, s: 0.45, crop: [200, 0, 1100, 1900], fade: [0.60, 0.95] },
+  a1: { x: 617, y: 107, s: 0.62, crop: [900, 280, 700, 900], fade: [0.58, 0.95] },
+  a2: { x: 255, y: 72, s: 0.50, crop: [180, 120, 1600, 1440], fade: [0.72, 0.99] },
+};
+const IMG = {};
+function load(src) { const im = new Image(); im.src = src; return im.decode().then(() => im); }
+window.ready = (async () => {
+  IMG.a1 = await load('build/cut1.png'); IMG.a2 = await load('build/cut2.png'); IMG.a3 = await load('build/cut3.png');
+  IMG.s1 = await load('build/sunga_blackout_crop.png'); IMG.s2 = await load('build/sunga_allblack_crop.png'); IMG.s3 = await load('build/sunga_graffiti_crop.png');
+  IMG.logo = await load('build/logo_wide_white.svg');
+  const gc = document.createElement('canvas'); gc.width = 960; gc.height = 480; const g = gc.getContext('2d'), d = g.createImageData(960, 480);
+  for (let p = 0; p < d.data.length; p += 4) { const v = hash(p * 0.17) * 255; d.data[p] = d.data[p + 1] = d.data[p + 2] = v; d.data[p + 3] = hash(p * 0.31) < 0.5 ? 10 : 0; }
+  g.putImageData(d, 0, 0); IMG.grain = gc;
+  for (const f of ['700 40px Syne', '800 40px Inter', '600 40px Inter', '500 40px Inter']) await document.fonts.load(f, 'R$ÁÍ→');
+  await document.fonts.ready; render(window.P || P); return true;
+})();
+window.renderWith = p => render(p);
+</script>
+</body>
+</html>

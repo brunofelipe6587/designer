@@ -86,8 +86,8 @@ function athleteLayer(key, s, cropOverride, fadeOverride) {
 // draws an athlete cutout at (x, y) top-left; rim = yellow glow alpha (0 = none)
 function athlete(key, x, y, s, { rim = 0.55, alpha = 1, crop, fade } = {}) {
   const L = athleteLayer(key, s, crop, fade);
-  ctx.save(); ctx.globalAlpha = alpha;
-  if (rim) { ctx.save(); ctx.globalAlpha = alpha * rim; ctx.filter = 'blur(14px)'; ctx.drawImage(L.r, x + 6, y - 4); ctx.restore(); }
+  ctx.save(); ctx.globalAlpha *= alpha;
+  if (rim) { ctx.save(); ctx.globalAlpha *= rim; ctx.filter = 'blur(14px)'; ctx.drawImage(L.r, x + 6, y - 4); ctx.restore(); }
   ctx.drawImage(L.c, x, y); ctx.restore();
   return L.c;
 }
@@ -104,7 +104,7 @@ function sungaSil(key, w) {
 // studio treatment so dark sungas separate from the black background: spotlight, thin white rim, soft shadow
 function sunga(key, cx, cy, w, rot = 0, { spot = 0.30, rimA = 0.6, alpha = 1, reflect = false } = {}) {
   const img = IMG['s_' + key], h = w * img.height / img.width;
-  ctx.save(); ctx.globalAlpha = alpha;
+  ctx.save(); ctx.globalAlpha *= alpha; const A = ctx.globalAlpha;
   if (spot) {
     const sp = ctx.createRadialGradient(cx, cy - 6, 10, cx, cy, w * 0.78);
     sp.addColorStop(0, `rgba(255,255,255,${spot})`); sp.addColorStop(0.45, `rgba(255,236,170,${spot * 0.4})`); sp.addColorStop(1, 'rgba(255,255,255,0)');
@@ -121,8 +121,8 @@ function sunga(key, cx, cy, w, rot = 0, { spot = 0.30, rimA = 0.6, alpha = 1, re
   ctx.translate(cx, cy); ctx.rotate(rot);
   if (rimA) {
     const sil = sungaSil(key, Math.round(w));
-    ctx.save(); ctx.globalAlpha = alpha * rimA; ctx.filter = 'blur(3px)'; ctx.drawImage(sil, -sil.width / 2, -sil.height / 2); ctx.restore();
-    ctx.save(); ctx.globalAlpha = alpha * rimA * 0.5; ctx.filter = 'blur(14px)'; ctx.drawImage(sil, -sil.width / 2, -sil.height / 2); ctx.restore();
+    ctx.save(); ctx.globalAlpha = A * rimA; ctx.filter = 'blur(3px)'; ctx.drawImage(sil, -sil.width / 2, -sil.height / 2); ctx.restore();
+    ctx.save(); ctx.globalAlpha = A * rimA * 0.5; ctx.filter = 'blur(14px)'; ctx.drawImage(sil, -sil.width / 2, -sil.height / 2); ctx.restore();
   }
   ctx.shadowColor = 'rgba(0,0,0,0.55)'; ctx.shadowBlur = 18; ctx.shadowOffsetY = 10;
   ctx.drawImage(img, -w / 2, -h / 2, w, h); ctx.restore();
@@ -184,10 +184,48 @@ function frameImg(dir, n, i) {
   return fcache.get(key);
 }
 // plays clip u∈[0,1] full-frame with zoom z around (ax, ay) in clip px; filter optional
-async function drawClip(dir, n, u, { z = 1, ax = 540, ay = 960, alpha = 1, filter = 'none' } = {}) {
-  const f = 1 + clamp(u, 0, 1) * (n - 1), a = await frameImg(dir, n, Math.floor(f));
+// f = frame position (1-based, fractional → blends the two neighbours, for slow motion)
+async function drawFrame(dir, n, f, { z = 1, ax = 540, ay = 960, alpha = 1, filter = 'none' } = {}) {
+  f = clamp(f, 1, n); const ia = Math.floor(f), fr = f - ia;
+  const a = await frameImg(dir, n, ia), b = fr > 0.05 && ia < n ? await frameImg(dir, n, ia + 1) : null;
   ax = clamp(ax, 540 / z, 1080 - 540 / z); ay = clamp(ay, 960 / z, 1920 - 960 / z);
   ctx.save(); ctx.globalAlpha = alpha; ctx.filter = filter;
   ctx.translate(W / 2, H / 2); ctx.scale(z * W / 1080, z * W / 1080); ctx.translate(-ax, -ay);
-  ctx.drawImage(a, 0, 0, 1080, 1920); ctx.restore();
+  ctx.drawImage(a, 0, 0, 1080, 1920);
+  if (b) { ctx.globalAlpha = alpha * fr; ctx.drawImage(b, 0, 0, 1080, 1920); }
+  ctx.restore();
+}
+const drawClip = (dir, n, u, o) => drawFrame(dir, n, 1 + clamp(u, 0, 1) * (n - 1), o);
+
+// ---------- motion helpers (videos) ----------
+const pop = (t, t0, d = 0.35) => t < t0 ? 0 : eback(prog(t, t0, t0 + d));
+const enter = (t, t0, d = 0.4) => eout(prog(t, t0, t0 + d));
+function flash(t, t0, d = 0.18, a = 0.85, col = '255,255,255') {
+  if (t < t0 || t > t0 + d) return; ctx.fillStyle = `rgba(${col},${a * (1 - (t - t0) / d)})`; ctx.fillRect(0, 0, W, H);
+}
+const shake = (t, t0, amp = 14, d = 0.3) => (t < t0 || t > t0 + d) ? 0 : amp * (1 - (t - t0) / d) * Math.sin((t - t0) * 90);
+// draws fn() scaled by s around (cx, cy) with alpha a
+function scaled(cx, cy, s, a, fn) {
+  if (s <= 0.001 || a <= 0.001) return;
+  ctx.save(); ctx.globalAlpha *= a; ctx.translate(cx, cy); ctx.scale(s, s); ctx.translate(-cx, -cy); fn(); ctx.restore();
+}
+// the offer, centred; parts enter from t0 (each part can be timed). Returns nothing.
+function offerStack(t, t0, y, { head = '3 SUNGAS POR', size = 180, gap = [0, 0.25, 0.7, 0.95], noAnchor = false } = {}) {
+  scaled(540, y, pop(t, t0 + gap[0]), 1, () => txt(head, 540, y, '700 76px Syne', WHITE, 'center'));
+  const py = y + size * 0.95, sh = shake(t, t0 + gap[1], 16);
+  scaled(540, py - size * 0.35, pop(t, t0 + gap[1], 0.4), 1, () => glowTxt('R$ 179', 540 + sh, py, `700 ${size}px Syne`, YEL, 60, 0.6, 'center'));
+  if (noAnchor) return;
+  const ay = py + size * 0.42;
+  ctx.font = '600 34px Inter'; const dw = ctx.measureText('De R$ 209,70').width; ctx.font = '800 28px Inter';
+  const pw = ctx.measureText('ECONOMIZE R$ 30').width + 42, tot = dw + 28 + pw, x0 = 540 - tot / 2;
+  const ua = enter(t, t0 + gap[2], 0.3);
+  if (ua > 0) {
+    ctx.save(); ctx.globalAlpha *= ua; txt('De R$ 209,70', x0, ay, '600 34px Inter', GREY);
+    ctx.fillStyle = '#D8D8D8'; ctx.fillRect(x0 - 2, ay - 12, (dw + 4) * enter(t, t0 + gap[2] + 0.1, 0.3), 3); ctx.restore();
+  }
+  scaled(x0 + dw + 28 + pw / 2, ay - 12, pop(t, t0 + gap[3]), 1, () => pill('ECONOMIZE R$ 30', x0 + dw + 28, ay - 12, 28));
+}
+function ctaPulse(t, t0, y, label = 'APROVEITAR OFERTA  →', beat = 0.5) {
+  const s = pop(t, t0, 0.4) * (1 + 0.035 * Math.max(0, Math.cos(((t - t0) % beat) / beat * Math.PI * 2)) * (t > t0 + 0.4));
+  scaled(540, y, s, 1, () => cta(label, 540, y, 640, 96, 36));
 }

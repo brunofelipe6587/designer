@@ -1,0 +1,64 @@
+<!doctype html>
+<html lang="pt-br">
+<head>
+<meta charset="utf-8">
+<title>Black Sand Walk v4</title>
+<link href="../fonts/fonts.css" rel="stylesheet">
+<style>html, body { margin: 0; background: #000; } canvas { display: block; }</style>
+</head>
+<body>
+<canvas id="c" width="1080" height="1920"></canvas>
+<script src="common.js"></script>
+<script>
+W = 1080; H = 1920; ctx = document.getElementById('c').getContext('2d');
+// V4 · Montagem (house 100 bpm, beat_ftv.wav — beats of 0.6 s, bars of 2.4 s; 16.8 s with a fade).
+// Eight plays from the Sand Walk shoots, a hard cut every two beats with one word each, escalating to the bicycle
+// kicks; on bar 5 the plays go dark behind the offer card (sungas changing on the beat, price, CTA).
+const BEAT = 0.6, BAR = 2.4, CUT = 2 * BEAT, CARD = 4 * BAR, DUR = 16.8;
+const FR = '../../sandwalk-ftvpreta/frames/';
+// [dir, frames, first frame, zoom, anchorY, word]
+const CLIPS = [['b2', 84, 20, 1.15, 1150, 'AREIA.'], ['b4', 84, 22, 1.15, 1150, 'SOL.'], ['b7', 84, 20, 1.12, 1150, 'LANCE.'],
+               ['b5', 37, 1, 1.0, 960, 'ESTILO.'], ['shd', 87, 20, 1.0, 1000, 'TUDO ISSO'], ['b6', 84, 30, 1.12, 1150, 'AGORA'],
+               ['b3', 54, 8, 1.05, 1000, 'NA BLACK'], ['b1', 85, 40, 1.0, 1100, 'SAND WALK']];
+const ROT = ['graffiti', 'blackout', 'hupi_fire', 'shadow', 'allblack', 'splash', 'stars', 'shadow_laranja', 'pincelada_fluor', 'tricolor', 'grafite_premium'];
+async function plays(t) {
+  if (t < CARD) {
+    const k = Math.min(7, Math.floor(t / CUT)), u = t - k * CUT, [dir, n, f0, z, ay] = CLIPS[k];
+    await drawFrame(FR + dir, n, f0 + u * 30, { z: z * (1 + 0.04 * u / CUT), ay, filter: 'contrast(1.08) saturate(1.05)' });
+  } else {
+    const u = t - CARD, n = 85, f = 40 + Math.min(45, u * 30 * 0.5);   // the last bicycle continues in slow motion behind the card
+    await drawFrame(FR + 'b1', n, f, { z: 1.08, ay: 1100, filter: `blur(${6 * enter(t, CARD, 0.5)}px) brightness(${1 - 0.68 * enter(t, CARD, 0.5)})` });
+  }
+}
+async function render(t) {
+  W = 1080; H = 1920;
+  ctx.fillStyle = '#000'; ctx.fillRect(0, 0, W, H);
+  await plays(t);
+  vfade(0, 420, 0.5, 0);
+  logo(540, 150, 260, 'center');
+  if (t < CARD) {
+    const k = Math.min(7, Math.floor(t / CUT)), t0 = k * CUT, w = CLIPS[k][5], last = k >= 6;
+    scaled(540, 820, 0.6 + 0.4 * pop(t, t0, 0.25), 1, () => {
+      ctx.save(); ctx.shadowColor = 'rgba(0,0,0,0.6)'; ctx.shadowBlur = 30;
+      txt(w, 540, 860, `700 ${w.length > 7 ? 120 : 150}px Syne`, last ? YEL : WHITE, 'center'); ctx.restore();
+    });
+    flash(t, t0, 0.07, 0.35);
+  } else {
+    scaled(540, 290, pop(t, CARD), 1, () => seal(540, 290, 'BLACK SAND WALK', 36, -0.03, YEL, INK, 'center'));
+    for (let i = 0; i < 3; i++) {
+      const t0 = CARD + (i + 1) * BEAT / 2; if (t < t0) continue;
+      const k = Math.floor((t - CARD) / (2 * BEAT)), key = ROT[(k * 3 + i) % ROT.length], x = 200 + i * 340;
+      scaled(x, 560, pop(t, t0, 0.3) * (0.92 + 0.08 * pop(t, CARD + k * 2 * BEAT, 0.2)), 1, () => sunga(key, x, 560, 290, (i - 1) * 0.06, { spot: 0.3 }));
+    }
+    offerStack(t, CARD + 2 * BEAT, 830, { size: 175, gap: [0, BEAT, 2 * BEAT, 3 * BEAT] });
+    ctaPulse(t, CARD + 6 * BEAT, 1235, 'APROVEITAR OFERTA  →', 2 * BEAT);
+    ctx.save(); ctx.globalAlpha = enter(t, CARD + 7 * BEAT, 0.4); footer(1325, 24, '#BDBDBD'); ctx.restore();
+  }
+  flash(t, CARD, 0.2, 0.7, '255,204,41');
+}
+window.ready = (async () => { await loadCommon(); await render(0); return true; })();
+window.renderAt = t => render(t);
+
+</script>
+</body>
+</html>

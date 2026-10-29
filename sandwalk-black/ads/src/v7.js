@@ -1,0 +1,84 @@
+// V7 · Narração (voice: make_vo.py black7, pt-BR male TTS; bed: funk130.wav ducked). One scene per spoken line,
+// word-by-word captions in a fixed strip so the ad also works with the sound off. Timings come from src/v7_vo.js.
+const DUR = 16.4, LN = Object.fromEntries(VO.map(l => [l.k, l]));
+const S = k => LN[k].s - 0.12;   // scene starts just before its line
+const GRID = ['blackout', 'hupi_fire', 'graffiti', 'shadow', 'splash', 'allblack', 'pincelada_fluor', 'stars', 'shadow_laranja'];
+const DAYS = ['02', '03', '04', '05', '06', '07', '08'], WD = ['SEG', 'TER', 'QUA', 'QUI', 'SEX', 'SÁB', 'DOM'];
+function captions(t) {
+  const line = VO.find(l => t >= l.s - 0.05 && t <= l.e + 0.25); if (!line) return;
+  const words = line.w.map(w => w.w), fonts = '800 46px Inter';
+  ctx.font = fonts; const sp = ctx.measureText(' ').width;
+  // wrap into lines of at most 860 px
+  const rows = [[]]; let wsum = 0;
+  words.forEach((w, i) => { const ww = ctx.measureText(w).width; if (wsum + ww > 860 && rows[rows.length - 1].length) { rows.push([]); wsum = 0; } rows[rows.length - 1].push(i); wsum += ww + sp; });
+  const y0 = 1205 - (rows.length - 1) * 30;
+  ctx.fillStyle = 'rgba(0,0,0,0.55)'; ctx.beginPath(); ctx.roundRect(70, y0 - 50, 940, rows.length * 60 + 34, 18); ctx.fill();
+  rows.forEach((r, ri) => {
+    const tw = r.reduce((a, i) => a + ctx.measureText(words[i]).width, 0) + sp * (r.length - 1); let x = 540 - tw / 2;
+    r.forEach(i => { const on = t >= line.w[i].s - 0.03; txt(words[i], x, y0 + ri * 60, fonts, on ? (t <= line.w[i].e + 0.05 ? YEL : WHITE) : 'rgba(255,255,255,0.35)'); ctx.font = fonts; x += ctx.measureText(words[i]).width + sp; });
+  });
+}
+function render(t) {
+  W = 1080; H = 1920;
+  bgBlack([[540, 650, 0.14, 750]]);
+  tape(0, 1760, 1080, 1680, YEL, INK, 'BLACK SAND WALK  •  3 SUNGAS POR R$ 179  •  ', 56, 26, t * 60);
+  logo(540, 150, 260, 'center');
+  const sc = t < S('offer') ? 'hook' : t < S('style') ? 'offer' : t < S('date') ? 'style' : t < S('cta') ? 'date' : 'cta';
+  if (sc === 'hook') {
+    const z = 1 + 0.05 * t / 2.3;
+    ctx.save(); ctx.translate(540, 700); ctx.scale(z, z); ctx.translate(-540, -700);
+    athlete('a2', 44, 330 + 60 * (1 - enter(t, 0, 0.5)), 0.62, { alpha: enter(t, 0, 0.4) }); ctx.restore();
+    vfade(820, 1000, 0, 1); ctx.fillStyle = '#050505'; ctx.fillRect(0, 1000, W, 680);
+    scaled(540, 260, pop(t, 0.1), 1, () => seal(540, 260, 'CHEGOU A', 34, -0.03, YEL, INK, 'center'));
+    scaled(540, 1050, pop(t, LN.hook.w[2].s - 0.05, 0.35), 1, () => glowTxt('BLACK SAND WALK', 540, 1080, '700 84px Syne', YEL, 40, 0.5, 'center'));
+  }
+  if (sc === 'offer') {
+    const ws = LN.offer.w;
+    ['graffiti', 'blackout', 'hupi_fire'].forEach((k, i) => {
+      const t0 = ws[0].s + i * 0.16, x = 200 + i * 340;
+      scaled(x, 520, pop(t, t0, 0.3), 1, () => sunga(k, x, 520, 290, (i - 1) * 0.06, { spot: 0.3 }));
+    });
+    offerStack(t, ws[1].s, 760, { size: 175, gap: [0, ws[3].s - ws[1].s, LN.anchor.s - ws[1].s, LN.anchor.w[2].s - ws[1].s] });
+    flash(t, ws[3].s, 0.15, 0.5, '255,204,41');
+  }
+  if (sc === 'style') {
+    txt('ESTAMPAS PRA TODO ESTILO', 540, 330, '700 52px Syne', WHITE, 'center');
+    const cw = 300, ch = 230, gap = 18, gx = 540 - (3 * cw + 2 * gap) / 2, gy = 390;
+    GRID.forEach((k, i) => {
+      const c = i % 3, r = Math.floor(i / 3), x = gx + c * (cw + gap), y = gy + r * (ch + gap), p = pop(t, S('style') + i * 0.12, 0.3);
+      scaled(x + cw / 2, y + ch / 2, p, 1, () => {
+        ctx.fillStyle = '#121212'; ctx.beginPath(); ctx.roundRect(x, y, cw, ch, 16); ctx.fill();
+        ctx.save(); ctx.beginPath(); ctx.roundRect(x, y, cw, ch, 16); ctx.clip(); sunga(k, x + cw / 2, y + ch / 2, 230, 0, { spot: 0.24, rimA: 0.45 }); ctx.restore();
+      });
+    });
+  }
+  if (sc === 'date') {
+    scaled(540, 330, pop(t, S('date')), 1, () => txt('SÓ ATÉ 08/11', 540, 380, '700 120px Syne', WHITE, 'center'));
+    const bw = 128, gap = 12, x0 = 540 - (7 * bw + 6 * gap) / 2;
+    for (let i = 0; i < 7; i++) {
+      const x = x0 + i * (bw + gap), last = i === 6;
+      scaled(x + bw / 2, 560, pop(t, S('date') + 0.1 + i * 0.07, 0.25), 1, () => {
+        ctx.fillStyle = last ? YEL : '#151515'; ctx.strokeStyle = last ? YEL : 'rgba(255,204,41,0.45)'; ctx.lineWidth = 2;
+        ctx.beginPath(); ctx.roundRect(x, 485, bw, 150, 14); ctx.fill(); ctx.stroke();
+        txt(WD[i], x + bw / 2, 527, '700 22px Inter', last ? INK : GREY, 'center'); txt(DAYS[i], x + bw / 2, 602, '700 60px Syne', last ? INK : WHITE, 'center');
+      });
+    }
+    ctx.save(); ctx.globalAlpha = enter(t, LN.date.w[7].s, 0.3);
+    txt('ou enquanto durar o estoque', 540, 720, '600 40px Inter', GREY, 'center'); ctx.restore();
+    scaled(540, 900, pop(t, S('date') + 0.6), 1, () => { txt('3 SUNGAS POR', 540, 870, '700 66px Syne', WHITE, 'center'); glowTxt('R$ 179', 540, 1020, '700 150px Syne', YEL, 50, 0.6, 'center'); });
+  }
+  if (sc === 'cta') {
+    const u = enter(t, S('cta'), 0.45);
+    athlete('a3', 470 + 200 * (1 - u), 300, 0.56, { alpha: u, crop: [200, 0, 1100, 1900], fade: [0.5, 0.75] });
+    vfade(880, 1060, 0, 1); ctx.fillStyle = '#050505'; ctx.fillRect(0, 1060, W, 620);
+    seal(70, 330, 'BLACK SAND WALK', 28, -0.04);
+    txt('3', 66, 590, '700 230px Syne', WHITE); txt('SUNGAS', 70, 680, '700 66px Syne', WHITE);
+    glowTxt('R$ 179', 66, 820, '700 120px Syne', YEL, 50, 0.6); strike('De R$ 209,70', 72, 880, '600 32px Inter');
+    ctaPulse(t, LN.cta.w[1].s, 1000, 'GARANTIR AS MINHAS  →', 0.6);
+  }
+  captions(t);
+  flash(t, S('offer'), 0.12, 0.4); flash(t, S('style'), 0.12, 0.4); flash(t, S('date'), 0.12, 0.4); flash(t, S('cta'), 0.12, 0.4, '255,204,41');
+  if (t > 15.4) { ctx.save(); ctx.globalAlpha = enter(t, 15.4, 0.3); footer(1325, 24); ctx.restore(); }
+}
+window.ready = (async () => { await loadCommon(); render(0); return true; })();
+window.renderAt = t => render(t);

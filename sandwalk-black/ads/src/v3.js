@@ -1,0 +1,62 @@
+// V3 · Contador (funk 130 bpm, funk130.wav — bars of 1.846 s). "Quanto custam 3 sungas?" → three sungas at R$ 69,90
+// land on the beats → total R$ 209,70 → on the Black the number rolls down to R$ 179 (slam on bar 3) → prints change
+// on the beat → CTA.
+const BEAT = 60 / 130, BAR = 4 * BEAT, DUR = 15.4;
+const ROT = ['blackout', 'graffiti', 'hupi_fire', 'shadow', 'splash', 'allblack', 'stars', 'pincelada_fluor', 'shadow_laranja', 'tricolor', 'grafite_premium'];
+const ROLL0 = 2 * BAR, ROLL1 = 3 * BAR, SWAP = 4 * BAR, END = 6 * BAR;
+const brl = v => 'R$ ' + v.toFixed(2).replace('.', ',');
+function render(t) {
+  W = 1080; H = 1920;
+  bgBlack([[540, 760, 0.10 + 0.06 * Math.max(0, Math.cos((t % BEAT) / BEAT * Math.PI)), 700], [540, 1100, t > ROLL1 ? 0.2 : 0.05, 600]]);
+  tape(0, 1720, 1080, 1640, YEL, INK, 'BLACK SAND WALK  •  3 SUNGAS POR R$ 179  •  ', 56, 26, t * 70);
+  logo(540, 150, 260, 'center');
+  // headline: question, then the answer
+  if (t < ROLL0) {
+    scaled(540, 330, pop(t, 0.02, 0.3), 1, () => txt('QUANTO CUSTAM', 540, 360, '700 84px Syne', WHITE, 'center'));
+    scaled(540, 450, pop(t, BEAT, 0.3), 1, () => txt('3 SUNGAS?', 540, 480, '700 120px Syne', YEL, 'center'));
+  } else {
+    scaled(540, 350, pop(t, ROLL0, 0.35), 1, () => seal(540, 350, 'NA BLACK SAND WALK', 46, -0.03, YEL, INK, 'center'));
+    if (t >= SWAP) scaled(540, 470, pop(t, SWAP, 0.3), 1, () => txt('DO BÁSICO AO COLORIDO', 540, 485, '700 50px Syne', WHITE, 'center'));
+  }
+  // three sungas, one per beat, later changing prints on the beat
+  for (let i = 0; i < 3; i++) {
+    const t0 = (i + 2) * BEAT; if (t < t0) continue;
+    let key = ['blackout', 'graffiti', 'hupi_fire'][i], p = pop(t, t0, 0.3);
+    if (t >= SWAP) {
+      const step = t < END ? BEAT : 2 * BEAT, k = Math.floor((t - SWAP - i * BEAT / 3) / step);
+      if (k >= 0) { key = ROT[(k * 3 + i + 3) % ROT.length]; p = 0.9 + 0.1 * pop(t, SWAP + i * BEAT / 3 + k * step, 0.2); }
+    }
+    const x = 200 + i * 340;
+    scaled(x, 700, p, 1, () => sunga(key, x, 700, 290, (i - 1) * 0.06, { spot: 0.3 }));
+    if (t < ROLL1 + 0.3) {
+      ctx.save(); ctx.globalAlpha = enter(t, t0 + 0.1, 0.25) * (1 - prog(t, ROLL1, ROLL1 + 0.3));
+      txt('R$ 69,90', x, 870, '700 40px Inter', WHITE, 'center');
+      if (t > ROLL0) { const w = 168 * enter(t, ROLL0 + i * 0.12, 0.25); ctx.fillStyle = YEL; ctx.fillRect(x - 84, 856, w, 5); }
+      ctx.restore();
+    }
+  }
+  // total → rolling counter → R$ 179
+  const tt = 5 * BEAT;
+  if (t >= tt && t < ROLL1) {
+    const u = eio(prog(t, ROLL0 + 0.2, ROLL1 - 0.1)), v = 209.70 - 30.70 * u;
+    const blur = (t > ROLL0 + 0.2 && t < ROLL1 - 0.1) ? 'blur(1.5px)' : 'none';
+    scaled(540, 1000, pop(t, tt, 0.3), 1, () => { ctx.save(); ctx.filter = blur; txt(brl(v), 540, 1060, '700 140px Syne', u > 0 ? '#FFF2C2' : WHITE, 'center'); ctx.restore(); });
+    if (t < ROLL0) { ctx.save(); ctx.globalAlpha = enter(t, tt, 0.3); txt('no total', 540, 1140, '600 34px Inter', GREY, 'center'); ctx.restore(); }
+  }
+  if (t >= ROLL1) {
+    const sh = shake(t, ROLL1, 20);
+    scaled(540, 1000, pop(t, ROLL1, 0.35), 1, () => glowTxt('R$ 179', 540 + sh, 1075, '700 190px Syne', YEL, 70, 0.65, 'center'));
+    ctx.font = '600 34px Inter'; const dw = ctx.measureText('De R$ 209,70').width; ctx.font = '800 28px Inter';
+    const pw = ctx.measureText('ECONOMIZE R$ 30').width + 42, x0 = 540 - (dw + 28 + pw) / 2;
+    ctx.save(); ctx.globalAlpha = enter(t, ROLL1 + BEAT, 0.3); strike('De R$ 209,70', x0, 1150, '600 34px Inter'); ctx.restore();
+    scaled(x0 + dw + 28 + pw / 2, 1138, pop(t, ROLL1 + 2 * BEAT), 1, () => pill('ECONOMIZE R$ 30', x0 + dw + 28, 1138, 28));
+    txt('3 SUNGAS', 540, 925, '700 58px Syne', WHITE, 'center');
+  }
+  if (t >= ROLL1 + 4 * BEAT) {
+    ctaPulse(t, ROLL1 + 4 * BEAT, 1250, 'GARANTIR AS MINHAS  →', BEAT * 2);
+    ctx.save(); ctx.globalAlpha = enter(t, ROLL1 + 5 * BEAT, 0.4); footer(1340, 24); ctx.restore();
+  }
+  flash(t, 0, 0.2, 0.5); flash(t, ROLL1, 0.2, 0.85, '255,204,41'); flash(t, SWAP, 0.12, 0.3);
+}
+window.ready = (async () => { await loadCommon(); render(0); return true; })();
+window.renderAt = t => render(t);

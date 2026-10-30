@@ -1,0 +1,48 @@
+// Catalog ad frames / image-template layers for the Black Sand Walk sungas offer (Advantage+ catalog ads).
+// Meta: frames (1:1 PNG, transparent, ≥1080, <1 MB) are being replaced by image templates in Commerce Manager,
+// built from layers in 1:1, 4:5 (feed) and 9:16 (Stories/Reels). For each ratio this page draws:
+//   frame   — transparent PNG overlay: black bands with the SAND WALK logo top-left and the offer below the product,
+//             transparent rounded window where the product image shows (works as a classic frame too)
+//   bg      — background layer: black with a soft yellow spotlight behind the window (use with background removal)
+//   preview — bg + a sample sunga + frame, to judge the result
+// 9:16: logo, product and offer all inside the Reels safe area (y 270–1250).
+const R = H === 1080 ? '1x1' : H === 1350 ? '4x5' : '9x16';
+const LAY = {
+  '1x1':  { logo: [52, 50, 300], win: [36, 140, 1008, 680], off: 830 },
+  '4x5':  { logo: [52, 58, 320], win: [36, 160, 1008, 860], off: 1035 },
+  '9x16': { logo: [70, 300, 320], win: [50, 380, 980, 650], off: 1050 },
+};
+const Lc = LAY[R];
+function windowPath() { const [x, y, w, h] = Lc.win; ctx.beginPath(); ctx.roundRect(x, y, w, h, 30); }
+function drawBg() {
+  ctx.fillStyle = '#060606'; ctx.fillRect(0, 0, W, H);
+  const [x, y, w, h] = Lc.win, cx = x + w / 2, cy = y + h / 2;
+  const g = ctx.createRadialGradient(cx, cy, 20, cx, cy, Math.max(w, h) * 0.62);
+  g.addColorStop(0, 'rgba(255,236,170,0.30)'); g.addColorStop(0.45, 'rgba(255,204,41,0.12)'); g.addColorStop(1, 'rgba(255,204,41,0)');
+  ctx.fillStyle = g; ctx.fillRect(0, 0, W, H);
+}
+function drawFrame() {
+  // black bands everywhere except the product window
+  ctx.save(); ctx.fillStyle = '#060606'; ctx.beginPath(); ctx.rect(0, 0, W, H);
+  const [x, y, w, h] = Lc.win; ctx.roundRect(x, y, w, h, 30); ctx.fill('evenodd'); ctx.restore();
+  // thin yellow outline on the window
+  ctx.save(); windowPath(); ctx.strokeStyle = 'rgba(255,204,41,0.55)'; ctx.lineWidth = 3; ctx.stroke(); ctx.restore();
+  // brand, top-left
+  const [lx, ly, lw] = Lc.logo; logo(lx, ly, lw);
+  // offer under the product, centred
+  const y0 = Lc.off;
+  seal(540, y0, 'BLACK SAND WALK', 26, -0.03, YEL, INK, 'center');
+  ctx.font = '700 70px Syne'; const a = '3 SUNGAS POR ', aw = ctx.measureText(a).width, bw = ctx.measureText('R$ 179').width, x0 = 540 - (aw + bw) / 2;
+  txt(a, x0, y0 + 110, '700 70px Syne', WHITE); txt('R$ 179', x0 + aw, y0 + 110, '700 70px Syne', YEL);
+  ctx.font = '600 30px Inter'; const s1 = 'De R$ 209,70', s2 = '  ·  Só até 08/11';
+  const w1 = ctx.measureText(s1).width, w2 = ctx.measureText(s2).width, x1 = 540 - (w1 + w2) / 2;
+  strike(s1, x1, y0 + 168, '600 30px Inter', '#9A9A9A', '#BDBDBD'); txt(s2, x1 + w1, y0 + 168, '700 30px Inter', WHITE);
+}
+function render(mode) {
+  ctx.setTransform(1, 0, 0, 1, 0, 0); ctx.clearRect(0, 0, W, H);
+  if (mode === 'bg') drawBg();
+  else if (mode === 'frame') drawFrame();
+  else { drawBg(); const [x, y, w, h] = Lc.win; sunga('hupi_fire', x + w / 2, y + h / 2, Math.min(w * 0.72, h * 1.05), 0, { spot: 0.15 }); drawFrame(); }
+}
+window.ready = (async () => { await loadCommon(); render('preview'); return true; })();
+window.renderMode = m => { render(m); return document.getElementById('c').toDataURL('image/png'); };

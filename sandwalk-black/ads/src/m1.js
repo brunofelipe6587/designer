@@ -42,9 +42,20 @@ function athletes() {
 function sideBand() {
   const m = 0.27, xr = y => A1X + 5 + m * (y - 375), wHor = 100;          // right edge, horizontal width
   const c0 = [xr(-60) - wHor / 2, -60], c1 = [xr(900) - wHor / 2, 900];   // centre line
-  ctx.save();   // ends under the yellow ribbon
-  ctx.beginPath(); ctx.moveTo(0, -100); ctx.lineTo(LW, -100); ctx.lineTo(LW, RIB[1][1]); ctx.lineTo(0, RIB[0][1]); ctx.closePath(); ctx.clip();
+  // the band stops GAP units above the yellow ribbon's top edge (no contact with the horizontal ribbons)
+  const GAP = 14, top = x => RIB[0][1] + (RIB[1][1] - RIB[0][1]) * x / LW - 32, end = x => top(x) - GAP;
+  ctx.save();
+  ctx.beginPath(); ctx.moveTo(0, -100); ctx.lineTo(LW, -100); ctx.lineTo(LW, end(LW)); ctx.lineTo(0, end(0)); ctx.closePath(); ctx.clip();
   tape(c0[0], c0[1], c1[0], c1[1], YEL, INK, 'SÓ ATÉ 08/11  •  ', wHor * Math.cos(Math.atan(m)), 34, 0);
+  ctx.restore();
+  // between the band's end and the ribbon, under the band only, show the background (keeps the cut side hidden)
+  // corners where the band's two edges meet the end line and the ribbon top (one fixed-point step is exact enough)
+  const meet = (fy, edge) => { let y = fy(edge(760)); y = fy(edge(y)); return [edge(y), y]; };
+  const xl = y => xr(y) - wHor, bot = x => top(x) + 4;
+  const P = [meet(end, xl), meet(end, xr), meet(bot, xr), meet(bot, xl)];
+  ctx.save();
+  ctx.beginPath(); P.forEach(([x, y], i) => i ? ctx.lineTo(x, y) : ctx.moveTo(x, y)); ctx.closePath(); ctx.clip();
+  bgBlack([[480, 470, 0.12, 700], [480, 1300, 0.20, 700]]);
   ctx.restore();
 }
 function render() {

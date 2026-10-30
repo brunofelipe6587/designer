@@ -20,10 +20,12 @@ W = 2160; H = 4442; ctx = document.getElementById('c').getContext('2d');
 // that side stays outside the frame. Below: same offer block as the approved desktop.
 const K = W / 960, LW = 960, LH = H / K;
 // [file key, crop in source px, scale in layout units, rotation (deg, clockwise), x, y (top-left of the turned layer)]
-// Drawn in this order (the crossed-arms athlete last, so where he meets the ball his photo stays whole).
+// ORDER = draw order. [0, 2, 1]: the middle athlete in front, his ball over the crossed-arms athlete's forearms
+// (option A). [0, 1, 2]: the crossed-arms athlete in front, ball mostly behind him (option B, -opcao-B.jpg).
 // The side athletes sit 36 units in from the edges; the middle one's head is on the centre line (x 480).
 const EDGE = 30, ORDER = [0, 2, 1];
-const ATHS = [['a1', [1015, 330, 1600, 1600], 0.44, 0, EDGE, 240],
+const A1X = EDGE + 82;   // regata athlete moved in until his arm almost touches the middle athlete (~4 units apart)
+const ATHS = [['a1', [1015, 330, 1600, 1600], 0.44, 0, A1X, 240],
               ['a2', [100, 100, 1855, 1600], 0.35, 17, 192, 208],
               ['a3', [280, 0, 1260, 1800], 0.34, 0, 960 - EDGE - (1222 - 280) * 0.34, 245]];
 const RIB = [[0, 805], [LW, 758]];   // ribbon centre line = where the athletes' bodies end
@@ -72,7 +74,7 @@ function render() {
   // ribbons: dark one below, yellow one on the athletes' cut line
   tape(0, RIB[0][1] + 70, LW, RIB[1][1] + 70, '#141414', 'rgba(255,204,41,0.65)', 'BLACK SAND WALK  •  ', 56, 27);
   tape(RIB[0][0], RIB[0][1], RIB[1][0], RIB[1][1], YEL, INK, 'BLACK SAND WALK  •  3 SUNGAS POR R$ 179  •  ', 64, 29, 40);
-  badge(EDGE + 14, 584, 100);
+  badge(A1X + 14, 584, 100);
   logo(480, 52, 300, 'center');
   seal(480, 145, 'BLACK SAND WALK', 34, -0.03, YEL, INK, 'center');
   // offer

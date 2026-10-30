@@ -28,7 +28,7 @@ const ATH = {
 
 function load(src) { const im = new Image(); im.src = src; return im.decode().then(() => im); }
 async function loadCommon(extra = {}) {
-  const jobs = [['a1', '../build/cut1.png'], ['a2', '../build/cut2.png'], ['a3', '../build/cut3.png'], ['logo', '../build/logo_wide_white.svg']];
+  const jobs = [['a1', '../build/cut1.png'], ['a1f', '../build/cut1_fill.png'], ['a2', '../build/cut2.png'], ['a3', '../build/cut3.png'], ['logo', '../build/logo_wide_white.svg']];
   for (const s of SUNGAS) jobs.push(['s_' + s, `../build/sunga_${s}_crop.png`]);
   for (const k in extra) jobs.push([k, extra[k]]);
   await Promise.all(jobs.map(async ([k, src]) => { IMG[k] = await load(src); }));
@@ -230,4 +230,34 @@ function offerStack(t, t0, y, { head = '3 SUNGAS POR', size = 180, gap = [0, 0.2
 function ctaPulse(t, t0, y, label = 'APROVEITAR OFERTA  →', beat = 0.5) {
   const s = pop(t, t0, 0.4) * (1 + 0.035 * Math.max(0, Math.cos(((t - t0) % beat) / beat * Math.PI * 2)) * (t > t0 + 0.4));
   scaled(540, y, s, 1, () => cta(label, 540, y, 640, 96, 36));
+}
+
+// ---------- the 3 partner athletes side by side (clean banners) ----------
+// Approved arrangement: regata athlete at the left edge (his cutout is cut at x 1015 where the child was; the
+// small gaps there are filled with his jersey black by ../fill_cut1_gaps.py), the shirtless athlete turned 17°
+// so he stands straight, ball in front (option A), the crossed-arms athlete on the right. Original pixels, no
+// fades. Units: group units (1 = 1 layout px at G = 1); origin = the regata athlete's top-left.
+const GROUP = [['a1f', [1015, 330, 1600, 1600], 0.44, 0, 0, 0],
+               ['a2', [100, 100, 1855, 1600], 0.35, 17, 80, -32],
+               ['a3', [280, 0, 1260, 1800], 0.34, 0, 498, 5]];
+const GROUP_ORDER = [0, 2, 1];
+function groupLayer(key, [x0, y0, x1, y1], d, deg) {
+  const img = IMG[key], w = (x1 - x0) * d, h = (y1 - y0) * d, a = deg * Math.PI / 180;
+  const c = document.createElement('canvas');
+  c.width = Math.ceil(Math.abs(w * Math.cos(a)) + Math.abs(h * Math.sin(a))); c.height = Math.ceil(Math.abs(w * Math.sin(a)) + Math.abs(h * Math.cos(a)));
+  const g = c.getContext('2d'); g.imageSmoothingQuality = 'high';
+  g.translate(c.width / 2, c.height / 2); g.rotate(a); g.drawImage(img, x0, y0, x1 - x0, y1 - y0, -w / 2, -h / 2, w, h);
+  const r = document.createElement('canvas'); r.width = c.width; r.height = c.height; const rg = r.getContext('2d');
+  rg.drawImage(c, 0, 0); rg.globalCompositeOperation = 'source-in'; rg.fillStyle = YEL; rg.fillRect(0, 0, r.width, r.height);
+  return { c, r };
+}
+// G = group scale, (ox, oy) = origin in layout units, K = device px per layout unit, cutY = layout y where bodies end
+// dx = per-athlete horizontal nudges (group units), e.g. [0, 30, 0]
+function athleteGroup(G, ox, oy, K, cutY, { rimA = 0.42, dx = [0, 0, 0] } = {}) {
+  const L = GROUP.map(([k, crop, s, deg, x, y], i) => ({ ...groupLayer(k, crop, s * G * K, deg), x: (ox + (x + dx[i]) * G) * K, y: (oy + y * G) * K }));
+  ctx.save(); ctx.setTransform(1, 0, 0, 1, 0, 0);
+  ctx.beginPath(); ctx.rect(0, 0, ctx.canvas.width, cutY * K); ctx.clip();
+  for (const l of L) { ctx.save(); ctx.globalAlpha = rimA; ctx.filter = `blur(${14 * K}px)`; ctx.drawImage(l.r, l.x + 5 * K, l.y - 4 * K); ctx.restore(); }
+  for (const i of GROUP_ORDER) ctx.drawImage(L[i].c, L[i].x, L[i].y);
+  ctx.restore();
 }

@@ -5,6 +5,7 @@
 // no colour change on them — only a blurred tinted copy behind as rim light.
 const YEL = '#FFCC29', WHITE = '#FFFFFF', GREY = '#9A9A9A', INK = '#0A0A0A';
 let W = 1080, H = 1350, ctx;
+let FX = 1;   // device px per layout px (blur/shadow radii ignore the canvas transform)
 const IMG = {};
 const hash = n => { const x = Math.sin(n * 127.1 + 311.7) * 43758.5453; return x - Math.floor(x); };
 const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
@@ -98,8 +99,8 @@ const silCache = new Map();
 function sungaSil(key, w) {
   const id = key + w; if (silCache.has(id)) return silCache.get(id);
   const img = IMG['s_' + key], h = w * img.height / img.width;
-  const sil = document.createElement('canvas'); sil.width = Math.ceil(w) + 40; sil.height = Math.ceil(h) + 40; const sg = sil.getContext('2d');
-  sg.drawImage(img, 20, 20, w, h); sg.globalCompositeOperation = 'source-in'; sg.fillStyle = '#FFFFFF'; sg.fillRect(0, 0, sil.width, sil.height);
+  const pad = 20 * FX, sil = document.createElement('canvas'); sil.width = Math.ceil(w + 2 * pad); sil.height = Math.ceil(h + 2 * pad); const sg = sil.getContext('2d');
+  sg.drawImage(img, pad, pad, w, h); sg.globalCompositeOperation = 'source-in'; sg.fillStyle = '#FFFFFF'; sg.fillRect(0, 0, sil.width, sil.height);
   silCache.set(id, sil); return sil;
 }
 // studio treatment so dark sungas separate from the black background: spotlight, thin white rim, soft shadow
@@ -112,20 +113,20 @@ function sunga(key, cx, cy, w, rot = 0, { spot = 0.30, rimA = 0.6, alpha = 1, re
     ctx.fillStyle = sp; ctx.beginPath(); ctx.ellipse(cx, cy, w * 0.8, h * 0.95, 0, 0, Math.PI * 2); ctx.fill();
   }
   if (reflect) {
-    const rf = document.createElement('canvas'); rf.width = Math.ceil(w); rf.height = Math.ceil(h * 0.45); const rgx = rf.getContext('2d');
-    rgx.translate(0, rf.height); rgx.scale(1, -0.45); rgx.drawImage(img, 0, 0, w, h); rgx.setTransform(1, 0, 0, 1, 0, 0);
+    const rf = document.createElement('canvas'); rf.width = Math.ceil(w * FX); rf.height = Math.ceil(h * 0.45 * FX); const rgx = rf.getContext('2d');
+    rgx.translate(0, rf.height); rgx.scale(FX, -0.45 * FX); rgx.drawImage(img, 0, 0, w, h); rgx.setTransform(1, 0, 0, 1, 0, 0);
     rgx.globalCompositeOperation = 'destination-in';
     const fl = rgx.createLinearGradient(0, 0, 0, rf.height); fl.addColorStop(0, 'rgba(0,0,0,0.22)'); fl.addColorStop(1, 'rgba(0,0,0,0)');
     rgx.fillStyle = fl; rgx.fillRect(0, 0, rf.width, rf.height);
-    ctx.drawImage(rf, cx - w / 2, cy + h * 0.5 + 4);
+    ctx.drawImage(rf, cx - w / 2, cy + h * 0.5 + 4, rf.width / FX, rf.height / FX);
   }
   ctx.translate(cx, cy); ctx.rotate(rot);
   if (rimA) {
-    const sil = sungaSil(key, Math.round(w));
-    ctx.save(); ctx.globalAlpha = A * rimA; ctx.filter = 'blur(3px)'; ctx.drawImage(sil, -sil.width / 2, -sil.height / 2); ctx.restore();
-    ctx.save(); ctx.globalAlpha = A * rimA * 0.5; ctx.filter = 'blur(14px)'; ctx.drawImage(sil, -sil.width / 2, -sil.height / 2); ctx.restore();
+    const sil = sungaSil(key, Math.round(w * FX)), sw = sil.width / FX, sh = sil.height / FX;
+    ctx.save(); ctx.globalAlpha = A * rimA; ctx.filter = `blur(${3 * FX}px)`; ctx.drawImage(sil, -sw / 2, -sh / 2, sw, sh); ctx.restore();
+    ctx.save(); ctx.globalAlpha = A * rimA * 0.5; ctx.filter = `blur(${14 * FX}px)`; ctx.drawImage(sil, -sw / 2, -sh / 2, sw, sh); ctx.restore();
   }
-  ctx.shadowColor = 'rgba(0,0,0,0.55)'; ctx.shadowBlur = 18; ctx.shadowOffsetY = 10;
+  ctx.shadowColor = 'rgba(0,0,0,0.55)'; ctx.shadowBlur = 18 * FX; ctx.shadowOffsetY = 10 * FX;
   ctx.drawImage(img, -w / 2, -h / 2, w, h); ctx.restore();
   return h;
 }
@@ -136,7 +137,7 @@ function txt(s, x, y, font, color, align = 'left', base = 'alphabetic') {
   return ctx.measureText(s).width;
 }
 function glowTxt(s, x, y, font, color = YEL, blur = 50, a = 0.55, align = 'left') {
-  ctx.save(); ctx.shadowColor = `rgba(255,204,41,${a})`; ctx.shadowBlur = blur; const w = txt(s, x, y, font, color, align); ctx.restore(); return w;
+  ctx.save(); ctx.shadowColor = `rgba(255,204,41,${a})`; ctx.shadowBlur = blur * FX; const w = txt(s, x, y, font, color, align); ctx.restore(); return w;
 }
 function seal(x, y, s = 'BLACK SAND WALK', size = 34, rot = -0.035, bg = YEL, fg = INK, align = 'left') {
   ctx.save(); ctx.font = `700 ${size}px Syne`; const w = ctx.measureText(s).width + size * 1.6, h = size * 1.8;
@@ -158,7 +159,7 @@ function pill(s, x, y, size = 30, filled = false, align = 'left') {
   return w;
 }
 function cta(s, cx, cy, w, h, size = 34, glow = 0.45) {
-  ctx.save(); ctx.shadowColor = `rgba(255,204,41,${glow})`; ctx.shadowBlur = 30;
+  ctx.save(); ctx.shadowColor = `rgba(255,204,41,${glow})`; ctx.shadowBlur = 30 * FX;
   ctx.fillStyle = YEL; ctx.beginPath(); ctx.roundRect(cx - w / 2, cy - h / 2, w, h, 14); ctx.fill(); ctx.restore();
   txt(s, cx, cy + 2, `800 ${size}px Inter`, INK, 'center', 'middle');
 }

@@ -7,38 +7,78 @@
 <style>html, body { margin: 0; background: #000; } canvas { display: block; }</style>
 </head>
 <body>
-<canvas id="c" width="960" height="1974"></canvas>
+<canvas id="c" width="2160" height="4442"></canvas>
 <script src="common.js"></script>
 <script>
-W = 960; H = 1974; ctx = document.getElementById('c').getContext('2d');
-// Mobile home banner (proportion of the site's mobile banner, 480×987 → drawn at 2×: 960×1974; also fits 960×1940).
-// Same elements as the approved desktop 1920×960: 3 partner athletes on top (original pixels, ball recoloured),
-// ribbons, seal, 3 SUNGAS POR R$ 179, De R$ 209,70 + economize R$ 30, the 3 sungas with studio light, CTA, validity.
-// The offer block is anchored to the bottom so the same layout works for any height near 2:1.
+W = 2160; H = 4442; ctx = document.getElementById('c').getContext('2d');
+// Mobile home banner — proportion of the site's mobile banner (480×987), drawn at 4.5× = 2160×4442: the most pixels
+// the athlete photos give without upscaling (the left athlete is drawn at ~0.99 of his source resolution).
+// Layout in 960×1974 units (K = 2.25 device px per unit).
+// The 3 partner athletes stand side by side with no overlap (checked pixel by pixel when laid out), original pixels,
+// no fades on their bodies: each body ends under the yellow ribbon. The shirtless athlete is turned 17° so he stands
+// straight. The regata athlete is framed from the left edge of the banner — his photo's left side had the child, so
+// that side stays outside the frame. Below: same offer block as the approved desktop.
+const K = W / 960, LW = 960, LH = H / K;
+// [file key, crop in source px, scale in layout units, rotation (deg, clockwise), x, y (top-left of the turned layer)]
+const ATHS = [['a1', [1015, 330, 1600, 1600], 0.44, 0, 0, 240],
+              ['a2', [100, 100, 1855, 1600], 0.35, 17, 84, 208],
+              ['a3', [280, 0, 1220, 1800], 0.34, 0, 660, 245]];
+const RIB = [[0, 805], [LW, 758]];   // ribbon centre line = where the athletes' bodies end
+function athLayer(key, [x0, y0, x1, y1], s, deg) {
+  const img = IMG[key], d = s * K, w = (x1 - x0) * d, h = (y1 - y0) * d, a = deg * Math.PI / 180;
+  const c = document.createElement('canvas');
+  c.width = Math.ceil(Math.abs(w * Math.cos(a)) + Math.abs(h * Math.sin(a))); c.height = Math.ceil(Math.abs(w * Math.sin(a)) + Math.abs(h * Math.cos(a)));
+  const g = c.getContext('2d'); g.imageSmoothingQuality = 'high';
+  g.translate(c.width / 2, c.height / 2); g.rotate(a); g.drawImage(img, x0, y0, x1 - x0, y1 - y0, -w / 2, -h / 2, w, h);
+  const r = document.createElement('canvas'); r.width = c.width; r.height = c.height; const rg = r.getContext('2d');
+  rg.drawImage(c, 0, 0); rg.globalCompositeOperation = 'source-in'; rg.fillStyle = YEL; rg.fillRect(0, 0, r.width, r.height);
+  return { c, r };
+}
+function athletes() {
+  const L = ATHS.map(([k, crop, s, deg, x, y]) => ({ ...athLayer(k, crop, s, deg), x: x * K, y: y * K }));
+  ctx.save(); ctx.setTransform(1, 0, 0, 1, 0, 0);
+  // keep everything above the ribbon line (the ribbon covers the cut)
+  ctx.beginPath(); ctx.moveTo(0, 0); ctx.lineTo(LW * K, 0); ctx.lineTo(LW * K, RIB[1][1] * K); ctx.lineTo(0, RIB[0][1] * K); ctx.closePath(); ctx.clip();
+  // rims first, then the athletes on top, so no glow ever lies over a body
+  for (const l of L) { ctx.save(); ctx.globalAlpha = 0.5; ctx.filter = `blur(${14 * K}px)`; ctx.drawImage(l.r, l.x + 5 * K, l.y - 4 * K); ctx.restore(); }
+  for (const l of L) ctx.drawImage(l.c, l.x, l.y);
+  ctx.restore();
+}
+// round date badge on the left edge — it sits over the two small gaps the child left in the regata athlete's photo
+// (left of his neckline and by his hand), well below his face
+function badge(cx, cy, r) {
+  ctx.save(); ctx.translate(cx, cy); ctx.rotate(-0.2);
+  ctx.shadowColor = 'rgba(0,0,0,0.55)'; ctx.shadowBlur = 24 * FX; ctx.shadowOffsetY = 8 * FX;
+  ctx.fillStyle = YEL; ctx.beginPath(); ctx.arc(0, 0, r, 0, Math.PI * 2); ctx.fill(); ctx.shadowColor = 'transparent';
+  ctx.strokeStyle = INK; ctx.lineWidth = 3; ctx.setLineDash([9, 7]); ctx.beginPath(); ctx.arc(0, 0, r - 12, 0, Math.PI * 2); ctx.stroke(); ctx.setLineDash([]);
+  txt('SÓ ATÉ', 30, -6, '800 19px Inter', INK, 'center'); txt('08/11', 30, 28, '700 31px Syne', INK, 'center');
+  ctx.restore();
+}
 function render() {
-  const B = H - 1974;   // bottom offset (0 at 1974 tall)
-  bgBlack([[480, 520, 0.10, 700], [480, 1350 + B, 0.20, 650]]);
-  athlete('a3', -105, 245, 0.44);
-  athlete('a1', 545, 222, 0.57);
-  athlete('a2', 128, 250, 0.47, { rot: 0.30 });   // turned ~17° clockwise so he stands straighter
-  vfade(700, 980, 0, 1); ctx.fillStyle = '#050505'; ctx.fillRect(0, 980, W, H - 980);
-  // ribbons across the athletes' base
-  tape(0, 1045, 960, 925, '#141414', 'rgba(255,204,41,0.65)', 'BLACK SAND WALK  •  ', 56, 27);
-  tape(0, 985, 960, 905, YEL, INK, 'BLACK SAND WALK  •  3 SUNGAS POR R$ 179  •  ', 60, 28, 40);
+  ctx.setTransform(K, 0, 0, K, 0, 0); FX = K; W = LW; H = LH;
+  bgBlack([[480, 470, 0.12, 700], [480, 1300, 0.20, 700]]);
+  athletes();
+  ctx.fillStyle = '#050505'; ctx.beginPath(); ctx.moveTo(0, RIB[0][1]); ctx.lineTo(LW, RIB[1][1]); ctx.lineTo(LW, LH); ctx.lineTo(0, LH); ctx.closePath(); ctx.fill();
+  const g = ctx.createRadialGradient(480, 1300, 40, 480, 1300, 700); g.addColorStop(0, 'rgba(255,204,41,0.16)'); g.addColorStop(1, 'rgba(255,204,41,0)');
+  ctx.fillStyle = g; ctx.fillRect(0, RIB[1][1], LW, LH); grain();
+  // ribbons: dark one below, yellow one on the athletes' cut line
+  tape(0, RIB[0][1] + 70, LW, RIB[1][1] + 70, '#141414', 'rgba(255,204,41,0.65)', 'BLACK SAND WALK  •  ', 56, 27);
+  tape(RIB[0][0], RIB[0][1], RIB[1][0], RIB[1][1], YEL, INK, 'BLACK SAND WALK  •  3 SUNGAS POR R$ 179  •  ', 64, 29, 40);
+  badge(20, 584, 100);
   logo(480, 52, 300, 'center');
   seal(480, 145, 'BLACK SAND WALK', 34, -0.03, YEL, INK, 'center');
   // offer
-  txt('3 SUNGAS POR', 480, 1175 + B, '700 92px Syne', WHITE, 'center');
-  glowTxt('R$ 179', 480, 1375 + B, '700 200px Syne', YEL, 60, 0.55, 'center');
-  ctx.font = '600 36px Inter'; const dw = ctx.measureText('De R$ 209,70').width; ctx.font = '800 30px Inter';
-  const pw = ctx.measureText('ECONOMIZE R$ 30').width + 45, x0 = 480 - (dw + 30 + pw) / 2;
-  strike('De R$ 209,70', x0, 1467 + B, '600 36px Inter');
-  pill('ECONOMIZE R$ 30', x0 + dw + 30, 1454 + B, 30);
-  sunga('blackout', 175, 1610 + B, 250, -0.06, { reflect: true });
-  sunga('graffiti', 480, 1600 + B, 250, 0, { reflect: true });
-  sunga('allblack', 785, 1610 + B, 250, 0.06, { reflect: true });
-  cta('APROVEITAR OFERTA  →', 480, 1800 + B, 640, 104, 38);
-  footer(1912 + B, 25);
+  txt('3 SUNGAS POR', 480, 1010, '700 100px Syne', WHITE, 'center');
+  glowTxt('R$ 179', 480, 1235, '700 230px Syne', YEL, 60, 0.55, 'center');
+  ctx.font = '600 40px Inter'; const dw = ctx.measureText('De R$ 209,70').width; ctx.font = '800 32px Inter';
+  const pw = ctx.measureText('ECONOMIZE R$ 30').width + 48, x0 = 480 - (dw + 32 + pw) / 2;
+  strike('De R$ 209,70', x0, 1345, '600 40px Inter');
+  pill('ECONOMIZE R$ 30', x0 + dw + 32, 1331, 32);
+  sunga('blackout', 168, 1520, 280, -0.06, { reflect: true });
+  sunga('graffiti', 480, 1508, 280, 0, { reflect: true });
+  sunga('allblack', 792, 1520, 280, 0.06, { reflect: true });
+  cta('APROVEITAR OFERTA  →', 480, 1755, 680, 112, 40);
+  footer(1880, 27);
 }
 window.ready = (async () => { await loadCommon(); render(); return true; })();
 

@@ -50,9 +50,9 @@ async function render(t) {
       const k = Math.floor((t - CARD) / (2 * BEAT)), key = ROT[(k * 3 + i) % ROT.length], x = 200 + i * 340;
       scaled(x, 560, pop(t, t0, 0.3) * (0.92 + 0.08 * pop(t, CARD + k * 2 * BEAT, 0.2)), 1, () => sunga(key, x, 560, 290, (i - 1) * 0.06, { spot: 0.3 }));
     }
-    offerStack(t, CARD + 2 * BEAT, 830, { size: 175, gap: [0, BEAT, 2 * BEAT, 3 * BEAT] });
-    ctaPulse(t, CARD + 6 * BEAT, 1235, 'APROVEITAR OFERTA  →', 2 * BEAT);
-    ctx.save(); ctx.globalAlpha = enter(t, CARD + 7 * BEAT, 0.4); footer(1325, 24, '#BDBDBD'); ctx.restore();
+    offerStack(t, CARD + 2 * BEAT, 820, { size: 170, gap: [0, BEAT, 2 * BEAT, 3 * BEAT] });
+    ctaPulse(t, CARD + 6 * BEAT, 1200, 'APROVEITAR OFERTA  →', 2 * BEAT, 620, 84, 33);
+    ctx.save(); ctx.globalAlpha = enter(t, CARD + 7 * BEAT, 0.4); footer(1300, 24, '#BDBDBD'); ctx.restore();
   }
   flash(t, CARD, 0.2, 0.7, '255,204,41');
 }

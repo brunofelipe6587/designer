@@ -17,6 +17,7 @@ W = 1080; H = 1920; ctx = document.getElementById('c').getContext('2d');
 const DUR = 16.4, LN = Object.fromEntries(VO.map(l => [l.k, l]));
 const S = k => LN[k].s - 0.12;   // scene starts just before its line
 const GRID = ['blackout', 'hupi_fire', 'graffiti', 'shadow', 'splash', 'allblack', 'pincelada_fluor', 'stars', 'shadow_laranja'];
+const FR = '../../sandwalk-ftvpreta/frames/';
 const DAYS = ['02', '03', '04', '05', '06', '07', '08'], WD = ['SEG', 'TER', 'QUA', 'QUI', 'SEX', 'SÁB', 'DOM'];
 function captions(t) {
   const line = VO.find(l => t >= l.s - 0.05 && t <= l.e + 0.25); if (!line) return;
@@ -32,18 +33,17 @@ function captions(t) {
     r.forEach(i => { const on = t >= line.w[i].s - 0.03; txt(words[i], x, y0 + ri * 60, fonts, on ? (t <= line.w[i].e + 0.05 ? YEL : WHITE) : 'rgba(255,255,255,0.35)'); ctx.font = fonts; x += ctx.measureText(words[i]).width + sp; });
   });
 }
-function render(t) {
+async function render(t) {
   W = 1080; H = 1920;
   bgBlack([[540, 650, 0.14, 750]]);
   tape(0, 1760, 1080, 1680, YEL, INK, 'BLACK SAND WALK  •  3 SUNGAS POR R$ 179  •  ', 56, 26, t * 60);
   logo(540, 150, 260, 'center');
   const sc = t < S('offer') ? 'hook' : t < S('style') ? 'offer' : t < S('date') ? 'style' : t < S('cta') ? 'date' : 'cta';
   if (sc === 'hook') {
-    const z = 1 + 0.05 * t / 2.3;
-    ctx.save(); ctx.translate(540, 700); ctx.scale(z, z); ctx.translate(-540, -700);
-    athlete('a2', 44, 330 + 60 * (1 - enter(t, 0, 0.5)), 0.62, { alpha: enter(t, 0, 0.4) }); ctx.restore();
-    vfade(820, 1000, 0, 1); ctx.fillStyle = '#050505'; ctx.fillRect(0, 1000, W, 680);
-    scaled(540, 260, pop(t, 0.1), 1, () => seal(540, 260, 'CHEGOU A', 34, -0.03, YEL, INK, 'center'));
+    // bicycle kick from the Sand Walk night shoot, slowed down behind the opening line
+    await drawFrame(FR + 'b1', 85, 25 + t * 14, { z: 1.12 + 0.04 * t / 2.3, ay: 1100, filter: 'brightness(0.62) saturate(0.95)' });
+    vfade(0, 420, 0.65, 0); vfade(880, 1150, 0, 0.85); ctx.fillStyle = 'rgba(5,5,5,0.85)'; ctx.fillRect(0, 1150, W, 770);
+    scaled(540, 975, pop(t, 0.1), 1, () => seal(540, 975, 'CHEGOU A', 34, -0.03, YEL, INK, 'center'));
     scaled(540, 1050, pop(t, LN.hook.w[2].s - 0.05, 0.35), 1, () => glowTxt('BLACK SAND WALK', 540, 1080, '700 84px Syne', YEL, 40, 0.5, 'center'));
   }
   if (sc === 'offer') {
@@ -82,19 +82,20 @@ function render(t) {
     scaled(540, 900, pop(t, S('date') + 0.6), 1, () => { txt('3 SUNGAS POR', 540, 870, '700 66px Syne', WHITE, 'center'); glowTxt('R$ 179', 540, 1020, '700 150px Syne', YEL, 50, 0.6, 'center'); });
   }
   if (sc === 'cta') {
+    // another play behind (run-up + bicycle), darkened, with the offer centred on top
     const u = enter(t, S('cta'), 0.45);
-    athlete('a3', 470 + 200 * (1 - u), 300, 0.56, { alpha: u, crop: [200, 0, 1100, 1900], fade: [0.5, 0.75] });
-    vfade(880, 1060, 0, 1); ctx.fillStyle = '#050505'; ctx.fillRect(0, 1060, W, 620);
-    seal(70, 330, 'BLACK SAND WALK', 28, -0.04);
-    txt('3', 66, 590, '700 230px Syne', WHITE); txt('SUNGAS', 70, 680, '700 66px Syne', WHITE);
-    glowTxt('R$ 179', 66, 820, '700 120px Syne', YEL, 50, 0.6); strike('De R$ 209,70', 72, 880, '600 32px Inter');
+    await drawFrame(FR + 'b6', 84, 20 + (t - S('cta')) * 22, { z: 1.12, ay: 1100, alpha: u, filter: 'brightness(0.42) saturate(0.9)' });
+    vfade(0, 400, 0.6, 0); ctx.fillStyle = 'rgba(5,5,5,0.6)'; ctx.fillRect(0, 1140, W, 780);
+    scaled(540, 330, pop(t, S('cta')), 1, () => seal(540, 330, 'BLACK SAND WALK', 32, -0.03, YEL, INK, 'center'));
+    scaled(540, 520, pop(t, S('cta') + 0.1), 1, () => { txt('3 SUNGAS POR', 540, 520, '700 76px Syne', WHITE, 'center'); glowTxt('R$ 179', 540, 700, '700 190px Syne', YEL, 60, 0.6, 'center'); });
+    ctx.save(); ctx.globalAlpha = enter(t, S('cta') + 0.3, 0.3); strike('De R$ 209,70', 540, 790, '600 36px Inter', GREY, '#D8D8D8', 'center'); ctx.restore();
     ctaPulse(t, LN.cta.w[1].s, 1000, 'GARANTIR AS MINHAS  →', 0.6);
   }
   captions(t);
   flash(t, S('offer'), 0.12, 0.4); flash(t, S('style'), 0.12, 0.4); flash(t, S('date'), 0.12, 0.4); flash(t, S('cta'), 0.12, 0.4, '255,204,41');
   if (t > 15.4) { ctx.save(); ctx.globalAlpha = enter(t, 15.4, 0.3); footer(1325, 24); ctx.restore(); }
 }
-window.ready = (async () => { await loadCommon(); render(0); return true; })();
+window.ready = (async () => { await loadCommon(); await render(0); return true; })();
 window.renderAt = t => render(t);
 
 </script>

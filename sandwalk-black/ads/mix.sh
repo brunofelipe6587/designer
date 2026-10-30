@@ -7,7 +7,7 @@ set -euo pipefail
 cd "$(dirname "$0")"
 SHD=../../sandwalk-shadow/audio; FTV=../../sandwalk-ftvpreta/audio
 [ -f audio/trap140.wav ] || python3 make_beats.py
-declare -A NAME=([v1]=Trio [v2]=Bicicleta [v3]=Contador [v4]=Montagem [v5]=So7Dias [v6]=Matematica [v7]=Narracao)
+declare -A NAME=([v1]=Lances [v2]=Bicicleta [v3]=Contador [v4]=Montagem [v5]=So7Dias [v6]=Matematica [v7]=Narracao)
 norm() { echo "loudnorm=I=-14:TP=-1.5:LRA=11,aresample=48000"; }
 for v in ${@:-v1 v2 v3 v4 v5 v6 v7}; do
   [ -f out/${v}_silent.mp4 ] || { echo "skip $v (no render)"; continue; }

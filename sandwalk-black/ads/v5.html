@@ -51,9 +51,9 @@ function render(t) {
     scaled(540, 240, pop(t, DROP), 1, () => seal(540, 255, 'SÓ 7 DIAS', 32, -0.03, YEL, INK, 'center'));
     const k = Math.floor((t - DROP) / BEAT), key = ROT[k % ROT.length];
     scaled(540, 640, pop(t, DROP + 0.1, 0.35) * (0.94 + 0.06 * pop(t, DROP + k * BEAT, 0.15)), 1, () => sunga(key, 540, 640, 400, 0, { spot: 0.34 }));
-    offerStack(t, DROP + BEAT, 890, { size: 170, gap: [0, BEAT, 2 * BEAT, 3 * BEAT] });
-    ctaPulse(t, DROP + 4 * BAR, 1240, 'GARANTIR AS MINHAS  →', BEAT * 2);
-    ctx.save(); ctx.globalAlpha = enter(t, DROP + 4 * BAR + BEAT, 0.4); footer(1330, 24); ctx.restore();
+    offerStack(t, DROP + BEAT, 875, { size: 165, gap: [0, BEAT, 2 * BEAT, 3 * BEAT] });
+    ctaPulse(t, DROP + 4 * BAR, 1200, 'GARANTIR AS MINHAS  →', BEAT * 2, 620, 84, 33);
+    ctx.save(); ctx.globalAlpha = enter(t, DROP + 4 * BAR + BEAT, 0.4); footer(1300, 24); ctx.restore();
   }
   flash(t, DROP, 0.2, 0.85, '255,204,41');
 }

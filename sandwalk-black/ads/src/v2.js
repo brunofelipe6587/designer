@@ -47,8 +47,8 @@ async function render(t) {
       flash(t, t0, 0.08, 0.25, '255,204,41');
     }
     ctaPulse(t, DROP + 2 * BAR, 1130, 'APROVEITAR OFERTA  →', BEAT * 2);
-    ctx.save(); ctx.globalAlpha = enter(t, DROP + 2 * BAR + BEAT, 0.4); footer(1225, 25, '#BDBDBD'); ctx.restore();
-    if (t >= 6 * BAR) scaled(540, 1310, pop(t, 6 * BAR), 1, () => pill('SÓ ATÉ 08/11', 540, 1310, 30, true, 'center'));
+    ctx.save(); ctx.globalAlpha = enter(t, DROP + 2 * BAR + BEAT, 0.4); footer(1300, 25, '#BDBDBD'); ctx.restore();
+    if (t >= 6 * BAR) scaled(540, 1222, pop(t, 6 * BAR), 1, () => pill('SÓ ATÉ 08/11', 540, 1222, 28, true, 'center'));
   }
   flash(t, DROP, 0.2, 0.9);
 }

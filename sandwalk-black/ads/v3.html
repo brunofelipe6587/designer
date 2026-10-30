@@ -58,16 +58,16 @@ function render(t) {
   }
   if (t >= ROLL1) {
     const sh = shake(t, ROLL1, 20);
-    scaled(540, 1000, pop(t, ROLL1, 0.35), 1, () => glowTxt('R$ 179', 540 + sh, 1075, '700 190px Syne', YEL, 70, 0.65, 'center'));
+    scaled(540, 1000, pop(t, ROLL1, 0.35), 1, () => glowTxt('R$ 179', 540 + sh, 1060, '700 180px Syne', YEL, 70, 0.65, 'center'));
     ctx.font = '600 34px Inter'; const dw = ctx.measureText('De R$ 209,70').width; ctx.font = '800 28px Inter';
     const pw = ctx.measureText('ECONOMIZE R$ 30').width + 42, x0 = 540 - (dw + 28 + pw) / 2;
-    ctx.save(); ctx.globalAlpha = enter(t, ROLL1 + BEAT, 0.3); strike('De R$ 209,70', x0, 1150, '600 34px Inter'); ctx.restore();
-    scaled(x0 + dw + 28 + pw / 2, 1138, pop(t, ROLL1 + 2 * BEAT), 1, () => pill('ECONOMIZE R$ 30', x0 + dw + 28, 1138, 28));
+    ctx.save(); ctx.globalAlpha = enter(t, ROLL1 + BEAT, 0.3); strike('De R$ 209,70', x0, 1128, '600 34px Inter'); ctx.restore();
+    scaled(x0 + dw + 28 + pw / 2, 1116, pop(t, ROLL1 + 2 * BEAT), 1, () => pill('ECONOMIZE R$ 30', x0 + dw + 28, 1116, 28));
     txt('3 SUNGAS', 540, 925, '700 58px Syne', WHITE, 'center');
   }
   if (t >= ROLL1 + 4 * BEAT) {
-    ctaPulse(t, ROLL1 + 4 * BEAT, 1250, 'GARANTIR AS MINHAS  →', BEAT * 2);
-    ctx.save(); ctx.globalAlpha = enter(t, ROLL1 + 5 * BEAT, 0.4); footer(1340, 24); ctx.restore();
+    ctaPulse(t, ROLL1 + 4 * BEAT, 1200, 'GARANTIR AS MINHAS  →', BEAT * 2, 620, 84, 33);
+    ctx.save(); ctx.globalAlpha = enter(t, ROLL1 + 5 * BEAT, 0.4); footer(1300, 24); ctx.restore();
   }
   flash(t, 0, 0.2, 0.5); flash(t, ROLL1, 0.2, 0.85, '255,204,41'); flash(t, SWAP, 0.12, 0.3);
 }

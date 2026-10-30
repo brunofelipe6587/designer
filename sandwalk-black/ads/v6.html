@@ -39,35 +39,35 @@ function render(t) {
   ctx.fillStyle = g; ctx.fillRect(0, 0, W, H);
   logo(540, 150, 260, 'center');
   scaled(540, 250, pop(t, 0.05), 1, () => seal(540, 250, 'BLACK SAND WALK', 30, -0.03, YEL, INK, 'center'));
-  typed('A MATEMÁTICA', 540, 375, '700 76px Syne', WHITE, 'center', t, 0.2, 0.4);
-  typed('DA BLACK', 540, 460, '700 76px Syne', YEL, 'center', t, 0.6, 0.3);
+  typed('A MATEMÁTICA', 540, 350, '700 76px Syne', WHITE, 'center', t, 0.2, 0.4);
+  typed('DA BLACK', 540, 432, '700 76px Syne', YEL, 'center', t, 0.6, 0.3);
   // sunga icon next to the first line
-  if (t > 2 * BEAT) scaled(L + 60, 560, pop(t, 2 * BEAT, 0.35), 1, () => sunga('graffiti', L + 58, 570, 112, -0.06, { spot: 0.18, rimA: 0.4 }));
-  row(t, 2 * BEAT, 588, '1 sunga', 'R$ 69,90', '700 64px Syne', WHITE, L + 140);
-  row(t, 4 * BEAT, 690, '× 3 sungas', 'R$ 209,70');
-  row(t, 6 * BEAT, 792, 'desconto Black', '− R$ 30', '700 64px Syne', YEL);
-  if (t > 8 * BEAT) { const u = enter(t, 8 * BEAT, 0.4); ctx.fillStyle = WHITE; ctx.fillRect(L, 832, (R - L) * u, 4); }
+  if (t > 2 * BEAT) scaled(L + 60, 515, pop(t, 2 * BEAT, 0.35), 1, () => sunga('graffiti', L + 58, 525, 112, -0.06, { spot: 0.18, rimA: 0.4 }));
+  row(t, 2 * BEAT, 543, '1 sunga', 'R$ 69,90', '700 64px Syne', WHITE, L + 140);
+  row(t, 4 * BEAT, 640, '× 3 sungas', 'R$ 209,70');
+  row(t, 6 * BEAT, 737, 'desconto Black', '− R$ 30', '700 64px Syne', YEL);
+  if (t > 8 * BEAT) { const u = enter(t, 8 * BEAT, 0.4); ctx.fillStyle = WHITE; ctx.fillRect(L, 774, (R - L) * u, 4); }
   if (t > 8 * BEAT + 0.3) {
-    ctx.save(); ctx.globalAlpha = enter(t, 8 * BEAT + 0.3, 0.3); txt('TOTAL', L, 960, '800 46px Inter', WHITE); ctx.restore();
+    ctx.save(); ctx.globalAlpha = enter(t, 8 * BEAT + 0.3, 0.3); txt('TOTAL', L, 895, '800 46px Inter', WHITE); ctx.restore();
     const sh = shake(t, 9 * BEAT, 10);
-    scaled(R - 200, 920, pop(t, 9 * BEAT, 0.4), 1, () => glowTxt('R$ 179', R + sh, 985, '700 150px Syne', YEL, 50, 0.6, 'right'));
+    scaled(R - 200, 855, pop(t, 9 * BEAT, 0.4), 1, () => glowTxt('R$ 179', R + sh, 920, '700 150px Syne', YEL, 50, 0.6, 'right'));
   }
-  row(t, 12 * BEAT, 1100, '÷ 3', 'R$ 59,67 cada', '700 60px Syne', WHITE);
+  row(t, 12 * BEAT, 1025, '÷ 3', 'R$ 59,67 cada', '700 60px Syne', WHITE);
   // hand-drawn circle around the per-sunga price
   if (t > 13 * BEAT) {
     const u = eout(prog(t, 13 * BEAT, 13 * BEAT + 0.6));
     ctx.save(); ctx.strokeStyle = YEL; ctx.lineWidth = 6; ctx.lineCap = 'round'; ctx.beginPath();
     for (let k = 0; k <= 80 * u; k++) {
       const a = -2.6 + k / 80 * Math.PI * 2.15, rx = 260 + 8 * Math.sin(k * 0.3), ry = 70;
-      const x = 755 + rx * Math.cos(a), y = 1080 + ry * Math.sin(a) + k * 0.15;
+      const x = 755 + rx * Math.cos(a), y = 1005 + ry * Math.sin(a) + k * 0.15;
       k ? ctx.lineTo(x, y) : ctx.moveTo(x, y);
     }
     ctx.stroke(); ctx.restore();
-    ctx.save(); ctx.globalAlpha = enter(t, 14 * BEAT, 0.4); txt('menos de R$ 60 por sunga', 540, 1195, '700 40px Inter', YEL, 'center'); ctx.restore();
+    ctx.save(); ctx.globalAlpha = enter(t, 14 * BEAT, 0.4); txt('menos de R$ 60 por sunga', 540, 1118, '700 40px Inter', YEL, 'center'); ctx.restore();
   }
   if (t > 16 * BEAT) {
-    ctaPulse(t, 16 * BEAT, 1290, 'APROVEITAR OFERTA  →', 2 * BEAT);
-    ctx.save(); ctx.globalAlpha = enter(t, 17 * BEAT, 0.4); footer(1380, 24); ctx.restore();
+    ctaPulse(t, 16 * BEAT, 1200, 'APROVEITAR OFERTA  →', 2 * BEAT, 620, 84, 33);
+    ctx.save(); ctx.globalAlpha = enter(t, 17 * BEAT, 0.4); footer(1300, 24); ctx.restore();
   }
   // a row of sungas along the bottom (decor)
   if (t > 18 * BEAT) {

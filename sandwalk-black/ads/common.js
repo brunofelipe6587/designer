@@ -227,9 +227,20 @@ function offerStack(t, t0, y, { head = '3 SUNGAS POR', size = 180, gap = [0, 0.2
   }
   scaled(x0 + dw + 28 + pw / 2, ay - 12, pop(t, t0 + gap[3]), 1, () => pill('ECONOMIZE R$ 30', x0 + dw + 28, ay - 12, 28));
 }
-function ctaPulse(t, t0, y, label = 'APROVEITAR OFERTA  →', beat = 0.5) {
+function ctaPulse(t, t0, y, label = 'APROVEITAR OFERTA  →', beat = 0.5, w = 640, h = 96, fs = 36) {
   const s = pop(t, t0, 0.4) * (1 + 0.035 * Math.max(0, Math.cos(((t - t0) % beat) / beat * Math.PI * 2)) * (t > t0 + 0.4));
-  scaled(540, y, s, 1, () => cta(label, 540, y, 640, 96, 36));
+  scaled(540, y, s, 1, () => cta(label, 540, y, w, h, fs));
+}
+// a video frame cover-fitted into a rounded panel (x, y, w, h); z zooms in around (ax, ay) in clip px
+async function framePanel(dir, n, f, x, y, w, h, { z = 1, ax = 540, ay = 960, r = 22, filter = 'none', alpha = 1 } = {}) {
+  f = clamp(f, 1, n); const ia = Math.floor(f), fr = f - ia;
+  const a = await frameImg(dir, n, ia), b = fr > 0.05 && ia < n ? await frameImg(dir, n, ia + 1) : null;
+  const s = Math.max(w / 1080, h / 1920) * z, vw = w / s, vh = h / s;
+  const sx = clamp(ax - vw / 2, 0, 1080 - vw), sy = clamp(ay - vh / 2, 0, 1920 - vh);
+  ctx.save(); ctx.globalAlpha *= alpha; ctx.beginPath(); ctx.roundRect(x, y, w, h, r); ctx.clip(); ctx.filter = filter;
+  ctx.drawImage(a, sx, sy, vw, vh, x, y, w, h);
+  if (b) { ctx.globalAlpha *= fr; ctx.drawImage(b, sx, sy, vw, vh, x, y, w, h); }
+  ctx.restore();
 }
 
 // ---------- the 3 partner athletes side by side (clean banners) ----------

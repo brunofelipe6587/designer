@@ -7,9 +7,13 @@
 // that side stays outside the frame. Below: same offer block as the approved desktop.
 const K = W / 960, LW = 960, LH = H / K;
 // [file key, crop in source px, scale in layout units, rotation (deg, clockwise), x, y (top-left of the turned layer)]
-const ATHS = [['a1', [1015, 330, 1600, 1600], 0.44, 0, 0, 240],
-              ['a2', [100, 100, 1855, 1600], 0.35, 17, 84, 208],
-              ['a3', [280, 0, 1220, 1800], 0.34, 0, 660, 245]];
+// ORDER = draw order. [0, 2, 1]: the middle athlete in front, his ball over the crossed-arms athlete's forearms
+// (option A). [0, 1, 2]: the crossed-arms athlete in front, ball mostly behind him (option B, -opcao-B.jpg).
+// The side athletes sit 36 units in from the edges; the middle one's head is on the centre line (x 480).
+const EDGE = 30, ORDER = [0, 2, 1];
+const ATHS = [['a1', [1015, 330, 1600, 1600], 0.44, 0, EDGE, 240],
+              ['a2', [100, 100, 1855, 1600], 0.35, 17, 192, 208],
+              ['a3', [280, 0, 1260, 1800], 0.34, 0, 960 - EDGE - (1222 - 280) * 0.34, 245]];
 const RIB = [[0, 805], [LW, 758]];   // ribbon centre line = where the athletes' bodies end
 function athLayer(key, [x0, y0, x1, y1], s, deg) {
   const img = IMG[key], d = s * K, w = (x1 - x0) * d, h = (y1 - y0) * d, a = deg * Math.PI / 180;
@@ -17,6 +21,11 @@ function athLayer(key, [x0, y0, x1, y1], s, deg) {
   c.width = Math.ceil(Math.abs(w * Math.cos(a)) + Math.abs(h * Math.sin(a))); c.height = Math.ceil(Math.abs(w * Math.sin(a)) + Math.abs(h * Math.cos(a)));
   const g = c.getContext('2d'); g.imageSmoothingQuality = 'high';
   g.translate(c.width / 2, c.height / 2); g.rotate(a); g.drawImage(img, x0, y0, x1 - x0, y1 - y0, -w / 2, -h / 2, w, h);
+  if (key === 'a1') {
+    g.setTransform(1, 0, 0, 1, 0, 0); g.globalCompositeOperation = 'destination-in';
+    const lg = g.createLinearGradient(0, 0, 26 * K, 0); lg.addColorStop(0, 'rgba(0,0,0,0)'); lg.addColorStop(1, 'rgba(0,0,0,1)');
+    g.fillStyle = lg; g.fillRect(0, 0, c.width, c.height); g.globalCompositeOperation = 'source-over';
+  }
   const r = document.createElement('canvas'); r.width = c.width; r.height = c.height; const rg = r.getContext('2d');
   rg.drawImage(c, 0, 0); rg.globalCompositeOperation = 'source-in'; rg.fillStyle = YEL; rg.fillRect(0, 0, r.width, r.height);
   return { c, r };
@@ -28,7 +37,7 @@ function athletes() {
   ctx.beginPath(); ctx.moveTo(0, 0); ctx.lineTo(LW * K, 0); ctx.lineTo(LW * K, RIB[1][1] * K); ctx.lineTo(0, RIB[0][1] * K); ctx.closePath(); ctx.clip();
   // rims first, then the athletes on top, so no glow ever lies over a body
   for (const l of L) { ctx.save(); ctx.globalAlpha = 0.5; ctx.filter = `blur(${14 * K}px)`; ctx.drawImage(l.r, l.x + 5 * K, l.y - 4 * K); ctx.restore(); }
-  for (const l of L) ctx.drawImage(l.c, l.x, l.y);
+  for (const i of ORDER) ctx.drawImage(L[i].c, L[i].x, L[i].y);
   ctx.restore();
 }
 // round date badge on the left edge — it sits over the two small gaps the child left in the regata athlete's photo
@@ -51,7 +60,7 @@ function render() {
   // ribbons: dark one below, yellow one on the athletes' cut line
   tape(0, RIB[0][1] + 70, LW, RIB[1][1] + 70, '#141414', 'rgba(255,204,41,0.65)', 'BLACK SAND WALK  •  ', 56, 27);
   tape(RIB[0][0], RIB[0][1], RIB[1][0], RIB[1][1], YEL, INK, 'BLACK SAND WALK  •  3 SUNGAS POR R$ 179  •  ', 64, 29, 40);
-  badge(20, 584, 100);
+  badge(EDGE + 14, 584, 100);
   logo(480, 52, 300, 'center');
   seal(480, 145, 'BLACK SAND WALK', 34, -0.03, YEL, INK, 'center');
   // offer

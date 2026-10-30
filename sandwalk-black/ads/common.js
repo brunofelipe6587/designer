@@ -84,9 +84,10 @@ function athleteLayer(key, s, cropOverride, fadeOverride) {
   const out = { c, r }; athCache.set(id, out); return out;
 }
 // draws an athlete cutout at (x, y) top-left; rim = yellow glow alpha (0 = none)
-function athlete(key, x, y, s, { rim = 0.55, alpha = 1, crop, fade } = {}) {
+function athlete(key, x, y, s, { rim = 0.55, alpha = 1, crop, fade, rot = 0 } = {}) {
   const L = athleteLayer(key, s, crop, fade);
   ctx.save(); ctx.globalAlpha *= alpha;
+  if (rot) { const cx = x + L.c.width / 2, cy = y + L.c.height / 2; ctx.translate(cx, cy); ctx.rotate(rot); ctx.translate(-cx, -cy); }
   if (rim) { ctx.save(); ctx.globalAlpha *= rim; ctx.filter = 'blur(14px)'; ctx.drawImage(L.r, x + 6, y - 4); ctx.restore(); }
   ctx.drawImage(L.c, x, y); ctx.restore();
   return L.c;

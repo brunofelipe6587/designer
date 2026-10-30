@@ -1,0 +1,42 @@
+// R7 · Cupom — Reels/Stories 1080×1920 (essentials inside y 270–1250). Receipt + CTA in the safe area; the athlete
+// with the SW ball beside it (photo untouched, bottom ends in the dark before his waistband).
+function receipt(x, y, w, h, rot) {
+  ctx.save(); ctx.translate(x, y); ctx.rotate(rot);
+  ctx.shadowColor = 'rgba(0,0,0,0.6)'; ctx.shadowBlur = 40; ctx.shadowOffsetY = 18;
+  const z = 18; ctx.beginPath(); ctx.moveTo(0, z);
+  for (let i = 0; i <= w / z; i++) ctx.lineTo(i * z, i % 2 ? 0 : z);
+  ctx.lineTo(w, h - z);
+  for (let i = Math.floor(w / z); i >= 0; i--) ctx.lineTo(i * z, i % 2 ? h : h - z);
+  ctx.closePath(); ctx.fillStyle = '#F4F1EA'; ctx.fill(); ctx.shadowColor = 'transparent';
+  ctx.save(); ctx.globalAlpha = 0.6; ctx.drawImage(IMG.grain, 0, 0, w, h); ctx.restore();
+  const L = 36, R = w - 36, C = w / 2;
+  ctx.save(); ctx.filter = 'invert(1)'; ctx.drawImage(IMG.logo, C - 120, 48, 240, 240 * 30 / 480); ctx.restore();
+  txt('BLACK SAND WALK · SEMANA DAS SUNGAS', C, 130, '700 17px Inter', '#555', 'center');
+  const dash = y => { ctx.save(); ctx.setLineDash([8, 7]); ctx.strokeStyle = '#999'; ctx.lineWidth = 2; ctx.beginPath(); ctx.moveTo(L, y); ctx.lineTo(R, y); ctx.stroke(); ctx.restore(); };
+  dash(160);
+  const line = (a, b, y, f = '600 30px Inter', c = '#1A1A1A') => { txt(a, L, y, f, c); txt(b, R, y, f, c, 'right'); };
+  line('1x SUNGA', 'R$ 69,90', 214); line('1x SUNGA', 'R$ 69,90', 264); line('1x SUNGA', 'R$ 69,90', 314);
+  dash(346);
+  line('SUBTOTAL', 'R$ 209,70', 398, '600 30px Inter', '#555');
+  txt('DESCONTO BLACK', L, 448, '800 21px Inter', '#1A1A1A'); txt('− R$ 30,00', R, 448, '800 26px Inter', '#1A1A1A', 'right');
+  dash(482);
+  txt('TOTAL', L, 548, '800 30px Inter', '#1A1A1A');
+  txt('R$ 179', R, 560, '700 70px Syne', '#1A1A1A', 'right');
+  for (let i = 0, bx = L; bx < R; i++) { const bw = 2 + Math.floor(hash(i) * 5); if (hash(i + 99) > 0.35) { ctx.fillStyle = '#1A1A1A'; ctx.fillRect(bx, 600, bw, 70); } bx += bw + 2; }
+  txt('VÁLIDO DE 02 A 08/11', C, 712, '700 20px Inter', '#555', 'center');
+  ctx.restore();
+}
+function render() {
+  bgBlack([[330, 700, 0.14, 650], [800, 800, 0.10, 520]]);
+  athlete('a2', 0, 470, 0.55, { crop: [180, 120, 1600, 1440], fade: [0.80, 0.995] });
+  vfade(1050, 1250, 0, 1); ctx.fillStyle = '#050505'; ctx.fillRect(0, 1250, W, H - 1250);
+  logo(70, 100, 240);
+  seal(70, 205, 'BLACK SAND WALK', 30, -0.03);
+  txt('A CONTA QUE', 70, 355, '700 70px Syne', WHITE);
+  txt('VOCÊ QUER VER', 70, 435, '700 70px Syne', YEL);
+  ctx.save(); ctx.translate(640, 495); ctx.scale(0.88, 0.88); receipt(0, 0, 420, 740, 0.05); ctx.restore();
+  cta('APROVEITAR OFERTA  →', 540, 1205, 640, 84, 34);
+  txt('3 SUNGAS POR R$ 179', 540, 1360, '700 54px Syne', WHITE, 'center');
+  footer(1430, 22);
+}
+window.ready = (async () => { await loadCommon(); render(); return true; })();

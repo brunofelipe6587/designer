@@ -1,0 +1,27 @@
+// R5 · Só 7 dias — Reels/Stories 1080×1920 (essentials inside y 270–1250).
+function render() {
+  bgBlack([[540, 760, 0.18, 760]]);
+  tape(0, 180, 1080, 100, YEL, INK, 'SÓ ATÉ 08/11  •  BLACK SAND WALK  •  ', 56, 26);
+  logo(540, 30, 220, 'center', 0);
+  txt('SÓ 7 DIAS', 540, 400, '700 128px Syne', WHITE, 'center');
+  const days = ['02', '03', '04', '05', '06', '07', '08'], wd = ['SEG', 'TER', 'QUA', 'QUI', 'SEX', 'SÁB', 'DOM'];
+  const bw = 124, gap = 13, x0 = 540 - (7 * bw + 6 * gap) / 2;
+  for (let i = 0; i < 7; i++) {
+    const x = x0 + i * (bw + gap), y = 450, last = i === 6;
+    ctx.fillStyle = last ? YEL : '#151515'; ctx.strokeStyle = last ? YEL : 'rgba(255,204,41,0.45)'; ctx.lineWidth = 2;
+    ctx.beginPath(); ctx.roundRect(x, y, bw, 140, 14); ctx.fill(); ctx.stroke();
+    txt(wd[i], x + bw / 2, y + 38, '700 22px Inter', last ? INK : GREY, 'center');
+    txt(days[i], x + bw / 2, y + 108, '700 58px Syne', last ? INK : WHITE, 'center');
+  }
+  txt('NOVEMBRO', 540, 635, '700 24px Inter', GREY, 'center');
+  const ks = ['shadow', 'graffiti', 'blackout', 'hupi_fire', 'stars'];
+  const pos = [[150, 765, -0.10], [930, 765, 0.10], [345, 748, -0.05], [735, 748, 0.05], [540, 740, 0]];
+  for (const k of [0, 1, 2, 3, 4]) sunga(ks[k], pos[k][0], pos[k][1], k === 4 ? 210 : 190, pos[k][2], { spot: 0.22 });
+  txt('3 SUNGAS POR', 540, 925, '700 66px Syne', WHITE, 'center');
+  glowTxt('R$ 179', 540, 1060, '700 150px Syne', YEL, 60, 0.6, 'center');
+  strike('De R$ 209,70', 540, 1125, '600 32px Inter', GREY, '#D8D8D8', 'center');
+  cta('GARANTIR AS MINHAS  →', 540, 1200, 640, 84, 33);
+  txt('ou enquanto durar o estoque', 540, 1330, '500 24px Inter', '#8C8C8C', 'center');
+  tape(0, 1760, 1080, 1690, '#141414', 'rgba(255,204,41,0.65)', 'SÓ ATÉ 08/11  •  BLACK SAND WALK  •  ', 54, 25);
+}
+window.ready = (async () => { await loadCommon(); render(); return true; })();

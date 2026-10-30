@@ -1,0 +1,19 @@
+// R4 · Atleta — Reels/Stories 1080×1920 (essentials inside y 270–1250). The smiling partner athlete large on the
+// right (original pixels), stacked offer on the left, CTA in the safe area; sungas strip + validity below it.
+function render() {
+  bgBlack([[760, 560, 0.14, 760], [250, 1000, 0.10, 520]]);
+  athlete('a3', 330, 250, 0.74, { crop: [200, 0, 1300, 1900], fade: [0.86, 1.0] });
+  vfade(1250, 1500, 0, 1); ctx.fillStyle = '#050505'; ctx.fillRect(0, 1500, W, H - 1500);
+  logo(70, 110, 260);
+  seal(70, 330, 'BLACK SAND WALK', 26, -0.04);
+  txt('3', 62, 590, '700 250px Syne', WHITE);
+  txt('SUNGAS', 70, 720, '700 74px Syne', WHITE);
+  txt('POR', 74, 795, '700 46px Syne', WHITE);
+  glowTxt('R$ 179', 66, 925, '700 128px Syne', YEL, 50, 0.6);
+  strike('De R$ 209,70', 72, 1000, '600 32px Inter');
+  pill('ECONOMIZE R$ 30', 70, 1058, 26, true);
+  cta('APROVEITAR OFERTA  →', 540, 1195, 640, 88, 35);
+  ['allblack', 'graffiti', 'blackout'].forEach((k, i) => sunga(k, 200 + i * 340, 1420, 250, (i - 1) * 0.05, { spot: 0.28 }));
+  footer(1590, 23);
+}
+window.ready = (async () => { await loadCommon(); render(); return true; })();

@@ -14,7 +14,9 @@ W = 1080; H = 1920; ctx = document.getElementById('c').getContext('2d');
 // V6 · A matemática da Black (lofi_ftv2.wav — 85 bpm, beats of 0.706 s; first 17 s with a fade).
 // A calm sum written line by line: 1 sunga R$ 69,90 → × 3 = R$ 209,70 → desconto Black − R$ 30 → total R$ 179
 // → ÷ 3 = R$ 59,67 por sunga (circled) → CTA.
-const BEAT = 60 / 85, BAR = 4 * BEAT, DUR = 17;
+// Track: the Ever Flame film soundtrack, 89 bpm, window 4.49–17.19 s: the TOTAL R$ 179 slam (9 beats) lands on the
+// track's first impact (10.55 s).
+const BEAT = 0.6738, BAR = 4 * BEAT, DUR = 12.7;
 const L = 110, R = 970;
 function typed(s, x, y, font, color, align, t, t0, d = 0.35) {
   const n = Math.round(s.length * prog(t, t0, t0 + d)); if (n <= 0) return;

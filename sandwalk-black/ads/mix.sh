@@ -1,28 +1,32 @@
 #!/usr/bin/env bash
-# Audio for the 7 Black Sand Walk videos (all tracks are originals synthesised with numpy; the voice is TTS) at -14 LUFS,
-# muxed with each render (out/<v>_silent.mp4). Usage: ./mix.sh v1 v2 ...  (no args = all that have a render)
-# Tracks: v1 phonk 128 (../../sandwalk-shadow/make_beat.py), v2 trap140, v3 funk130, v5 tick120 (make_beats.py),
-#         v4 beach house 100 and v6 lo-fi 85 (../../sandwalk-ftvpreta/make_beat.py / make_beat2.py), v7 voice + funk130 bed.
+# Audio for the 7 Black Sand Walk videos — the client's tracks already validated on earlier male-product creatives
+# (none from the women's kits), each video re-timed to its track's beat (see the BEAT constants in src/v*.js):
+#   FUNK  = client's funk (Shadow V2b/V2c), only the clean windows used there: 23.737–38.99 s and 109.65–124.85 s
+#   VOID  = the Void product video soundtrack (Void V1 "Bicicleta na areia", bed of Void V2 and Shadow V1)
+#   EVER  = the Ever Flame film soundtrack (Ever Flame V1–V3, Phoenix 1B)
+# -14 LUFS, short fades, muxed with each render (out/<v>_silent.mp4). Usage: ./mix.sh v1 v2 ...  (no args = all)
 set -euo pipefail
 cd "$(dirname "$0")"
-SHD=../../sandwalk-shadow/audio; FTV=../../sandwalk-ftvpreta/audio
-[ -f audio/trap140.wav ] || python3 make_beats.py
+FUNK=../../sandwalk-shadow/src/trilha_quebrar_a_cama.mp3; VOID=../../sandwalk-void/src/v01_studio.mov; EVER=../../sandwalk-everflame/src/v01_studio.mp4
 declare -A NAME=([v1]=Lances [v2]=Bicicleta [v3]=Contador [v4]=Montagem [v5]=So7Dias [v6]=Matematica [v7]=Narracao)
 norm() { echo "loudnorm=I=-14:TP=-1.5:LRA=11,aresample=48000"; }
 for v in ${@:-v1 v2 v3 v4 v5 v6 v7}; do
   [ -f out/${v}_silent.mp4 ] || { echo "skip $v (no render)"; continue; }
   D=$(ffprobe -v error -show_entries format=duration -of csv=p=0 out/${v}_silent.mp4)
+  win() {  # src start
+    ffmpeg -v error -y -ss $2 -t $D -i $1 -vn -af "aresample=48000,afade=t=in:d=0.03,afade=t=out:st=$(echo "$D-0.6" | bc):d=0.6,apad,atrim=0:$D,$(norm)" -ac 2 audio/mix_$v.wav
+  }
   case $v in
-    v1) ffmpeg -v error -y -i $SHD/beat_shd2.wav -af "$(norm),apad,atrim=0:$D" -ac 2 audio/mix_$v.wav ;;
-    v2) ffmpeg -v error -y -i audio/trap140.wav -af "$(norm),apad,atrim=0:$D" -ac 2 audio/mix_$v.wav ;;
-    v3) ffmpeg -v error -y -i audio/funk130.wav -af "$(norm),apad,atrim=0:$D" -ac 2 audio/mix_$v.wav ;;
-    v4) ffmpeg -v error -y -i $FTV/beat_ftv.wav -af "atrim=0:$D,afade=t=out:st=$(echo "$D-1" | bc):d=1,$(norm),apad,atrim=0:$D" -ac 2 audio/mix_$v.wav ;;
-    v5) ffmpeg -v error -y -i audio/tick120.wav -af "$(norm),apad,atrim=0:$D" -ac 2 audio/mix_$v.wav ;;
-    v6) ffmpeg -v error -y -i $FTV/lofi_ftv2.wav -af "atrim=0:$D,afade=t=out:st=$(echo "$D-0.8" | bc):d=0.8,$(norm),apad,atrim=0:$D" -ac 2 audio/mix_$v.wav ;;
+    v1) win $FUNK 23.737 ;;
+    v2) win $VOID 1.965 ;;
+    v3) win $FUNK 109.65 ;;
+    v4) win $FUNK 23.737 ;;
+    v5) win $VOID 1.965 ;;
+    v6) win $EVER 4.49 ;;
     v7) [ -f audio/vo_black7.wav ] || python3 make_vo.py black7
-        ffmpeg -v error -y -i audio/vo_black7.wav -i audio/funk130.wav -filter_complex "\
-[1:a]aresample=48000,equalizer=f=2200:t=q:w=1.2:g=-7,volume='if(lt(t,15.3),0.17,0.6)':eval=frame,apad,atrim=0:$D,afade=t=out:st=$(echo "$D-0.6" | bc):d=0.6[bed];\
-[0:a]aresample=48000,volume=1.0[vo];[vo][bed]amix=inputs=2:normalize=0:duration=longest,apad,atrim=0:$D,$(norm)[o]" -map "[o]" -ac 2 audio/mix_$v.wav ;;
+        ffmpeg -v error -y -i audio/vo_black7.wav -i $VOID -filter_complex "\
+[1:a]aresample=48000,equalizer=f=2000:t=q:w=1.2:g=-8,volume='if(lt(t,15.3),0.17,0.75)':eval=frame,apad,atrim=0:$D,afade=t=out:st=$(echo "$D-0.6" | bc):d=0.6[bed];\
+[0:a]aresample=48000[vo];[vo][bed]amix=inputs=2:normalize=0:duration=longest,apad,atrim=0:$D,$(norm)[o]" -map "[o]" -ac 2 audio/mix_$v.wav ;;
   esac
   ffmpeg -v error -y -i out/${v}_silent.mp4 -i audio/mix_$v.wav -map 0:v -map 1:a -c:v libx264 -preset slow -crf 19 -pix_fmt yuv420p \
     -c:a aac -b:a 192k -shortest -movflags +faststart out/SandWalk_BlackS1_${v^^}_${NAME[$v]}_9x16.mp4

@@ -1,7 +1,9 @@
 // V5 · Só 7 dias (tick120.wav — 120 bpm, a clock tick on every beat, drop at 4.0 s, offer bars from 12 s).
 // The 7 days of the campaign (02–08/11) land one per tick; on the drop the calendar moves up, a big sunga changes
 // print on every beat and the offer + CTA come in.
-const BEAT = 0.5, BAR = 2, DROP = 4, DUR = 16;
+// Track: the Void product video soundtrack, 86.65 bpm, window 1.965–18.47 s: one day per beat, drop (2 bars) on the
+// downbeat after the song's short break.
+const BEAT = 0.6924, BAR = 4 * BEAT, DROP = 2 * BAR, DUR = 16.5;
 const ROT = ['blackout', 'hupi_fire', 'graffiti', 'shadow', 'splash', 'allblack', 'stars', 'pincelada_fluor', 'shadow_laranja', 'tricolor', 'grafite_premium'];
 const DAYS = ['02', '03', '04', '05', '06', '07', '08'], WD = ['SEG', 'TER', 'QUA', 'QUI', 'SEX', 'SÁB', 'DOM'];
 function calendar(t, cy, s) {
@@ -39,8 +41,8 @@ function render(t) {
     const k = Math.floor((t - DROP) / BEAT), key = ROT[k % ROT.length];
     scaled(540, 640, pop(t, DROP + 0.1, 0.35) * (0.94 + 0.06 * pop(t, DROP + k * BEAT, 0.15)), 1, () => sunga(key, 540, 640, 400, 0, { spot: 0.34 }));
     offerStack(t, DROP + BEAT, 875, { size: 165, gap: [0, BEAT, 2 * BEAT, 3 * BEAT] });
-    ctaPulse(t, DROP + 4 * BAR, 1200, 'GARANTIR AS MINHAS  →', BEAT * 2, 620, 84, 33);
-    ctx.save(); ctx.globalAlpha = enter(t, DROP + 4 * BAR + BEAT, 0.4); footer(1300, 24); ctx.restore();
+    ctaPulse(t, DROP + 3 * BAR, 1200, 'GARANTIR AS MINHAS  →', BEAT * 2, 620, 84, 33);
+    ctx.save(); ctx.globalAlpha = enter(t, DROP + 3 * BAR + BEAT, 0.4); footer(1300, 24); ctx.restore();
   }
   flash(t, DROP, 0.2, 0.85, '255,204,41');
 }

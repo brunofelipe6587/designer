@@ -1,9 +1,9 @@
 // V3 · Contador (funk 130 bpm, funk130.wav — bars of 1.846 s). "Quanto custam 3 sungas?" → three sungas at R$ 69,90
 // land on the beats → total R$ 209,70 → on the Black the number rolls down to R$ 179 (slam on bar 3) → prints change
 // on the beat → CTA.
-// Track: client's funk, 111.4 bpm, window 109.65–124.85 s. The video timeline is offset by OFF so that the price slam
-// (ROLL1 = 3 bars) lands on the song's drop at 115.357 s.
-const BEAT = 0.5386, BAR = 4 * BEAT, DUR = 15.2, OFF = 3 * 4 * 0.5386 - (115.357 - 109.65);
+// Track: Eduardinho dos Teclados – Baile do VJ, 137 bpm, chorus window from 58.848 s (a downbeat): the price slam
+// (ROLL1 = 3 bars) lands on the song's section change at 64.10 s.
+const BEAT = 0.438, BAR = 4 * BEAT, DUR = 14.0, OFF = 0;
 const ROT = ['blackout', 'graffiti', 'hupi_fire', 'shadow', 'splash', 'allblack', 'stars', 'pincelada_fluor', 'shadow_laranja', 'tricolor', 'grafite_premium'];
 const ROLL0 = 2 * BAR, ROLL1 = 3 * BAR, SWAP = 4 * BAR, END = 6 * BAR;
 const brl = v => 'R$ ' + v.toFixed(2).replace('.', ',');

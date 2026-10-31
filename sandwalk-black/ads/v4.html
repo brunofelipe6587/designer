@@ -14,8 +14,9 @@ W = 1080; H = 1920; ctx = document.getElementById('c').getContext('2d');
 // V4 · Montagem (house 100 bpm, beat_ftv.wav — beats of 0.6 s, bars of 2.4 s; 16.8 s with a fade).
 // Eight plays from the Sand Walk shoots, a hard cut every two beats with one word each, escalating to the bicycle
 // kicks; on bar 5 the plays go dark behind the offer card (sungas changing on the beat, price, CTA).
-// Track: client's funk, 111.4 bpm, window 23.737–38.99 s (cut every 2 beats from a downbeat).
-const BEAT = 0.5388, BAR = 4 * BEAT, CUT = 2 * BEAT, CARD = 4 * BAR, DUR = 15.25;
+// Track: Eduardinho dos Teclados – Baile do VJ, 137 bpm, from the chorus at 57.096 s: a cut every 2 beats, the offer
+// card on the song's next section (7.0 s).
+const BEAT = 0.438, BAR = 4 * BEAT, CUT = 2 * BEAT, CARD = 4 * BAR, DUR = 15.25;
 const FR = '../../sandwalk-ftvpreta/frames/';
 // [dir, frames, first frame, zoom, anchorY, word]
 const CLIPS = [['b2', 84, 20, 1.15, 1150, 'AREIA.'], ['b4', 84, 22, 1.15, 1150, 'SOL.'], ['b7', 84, 20, 1.12, 1150, 'LANCE.'],

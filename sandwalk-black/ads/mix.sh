@@ -1,13 +1,13 @@
 #!/usr/bin/env bash
 # Audio for the 7 Black Sand Walk videos — the client's tracks already validated on earlier male-product creatives
 # (none from the women's kits), each video re-timed to its track's beat (see the BEAT constants in src/v*.js):
-#   FUNK  = client's funk (Shadow V2b/V2c), only the clean windows used there: 23.737–38.99 s and 109.65–124.85 s
+#   VJ    = Eduardinho dos Teclados – Baile do VJ (sent by the client to replace the funk), from the chorus (57.096 s)
 #   VOID  = the Void product video soundtrack (Void V1 "Bicicleta na areia", bed of Void V2 and Shadow V1)
 #   EVER  = the Ever Flame film soundtrack (Ever Flame V1–V3, Phoenix 1B)
 # -14 LUFS, short fades, muxed with each render (out/<v>_silent.mp4). Usage: ./mix.sh v1 v2 ...  (no args = all)
 set -euo pipefail
 cd "$(dirname "$0")"
-FUNK=../../sandwalk-shadow/src/trilha_quebrar_a_cama.mp3; VOID=../../sandwalk-void/src/v01_studio.mov; EVER=../../sandwalk-everflame/src/v01_studio.mp4
+VJ=src/audio/baile_do_vj.mp3; VOID=../../sandwalk-void/src/v01_studio.mov; EVER=../../sandwalk-everflame/src/v01_studio.mp4
 declare -A NAME=([v1]=Lances [v2]=Bicicleta [v3]=Contador [v4]=Montagem [v5]=So7Dias [v6]=Matematica [v7]=Narracao)
 norm() { echo "loudnorm=I=-14:TP=-1.5:LRA=11,aresample=48000"; }
 for v in ${@:-v1 v2 v3 v4 v5 v6 v7}; do
@@ -17,10 +17,10 @@ for v in ${@:-v1 v2 v3 v4 v5 v6 v7}; do
     ffmpeg -v error -y -ss $2 -t $D -i $1 -vn -af "aresample=48000,afade=t=in:d=0.03,afade=t=out:st=$(echo "$D-0.6" | bc):d=0.6,apad,atrim=0:$D,$(norm)" -ac 2 audio/mix_$v.wav
   }
   case $v in
-    v1) win $FUNK 23.737 ;;
+    v1) win $VJ 57.096 ;;
     v2) win $VOID 1.965 ;;
-    v3) win $FUNK 109.65 ;;
-    v4) win $FUNK 23.737 ;;
+    v3) win $VJ 58.848 ;;
+    v4) win $VJ 57.096 ;;
     v5) win $VOID 1.965 ;;
     v6) win $EVER 4.49 ;;
     v7) [ -f audio/vo_black7.wav ] || python3 make_vo.py black7

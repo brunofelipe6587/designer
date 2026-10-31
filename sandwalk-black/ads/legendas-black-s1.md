@@ -61,10 +61,10 @@ Válido de 02 a 08/11 ou enquanto durar o estoque.
 | estatico-05-so-7-dias | Calendário 02–08/11 | 1080×1350 |
 | estatico-06-preco-por-sunga | Avulsa R$ 69,90 × na Black R$ 59,67 | 1080×1350 |
 | estatico-07-cupom | Cupom fiscal estilizado + atleta com a bola | 1080×1350 |
-| V1 Lances | 3 lances entram no beat, oferta no drop | funk da Sand Walk · 15,3 s |
+| V1 Lances | 3 lances entram no beat, oferta no drop | Baile do VJ (Eduardinho dos Teclados) · 15,3 s |
 | V2 Bicicleta | Bicicleta em câmera lenta, 3-2-1, "para tudo" | trilha do vídeo Void · 15,6 s |
-| V3 Contador | R$ 209,70 rolando até R$ 179 | funk da Sand Walk · 15,2 s |
-| V4 Montagem | 8 lances, uma palavra por corte | funk da Sand Walk · 15,3 s |
+| V3 Contador | R$ 209,70 rolando até R$ 179 | Baile do VJ (Eduardinho dos Teclados) · 14 s |
+| V4 Montagem | 8 lances, uma palavra por corte | Baile do VJ (Eduardinho dos Teclados) · 15,3 s |
 | V5 Só 7 dias | Calendário 02–08/11, um dia por batida | trilha do vídeo Void · 16,5 s |
 | V6 Matemática | Conta escrita linha a linha | trilha do filme Ever Flame · 12,7 s |
 | V7 Narração | Locução + legenda palavra a palavra | voz + trilha do vídeo Void · 16,4 s |

@@ -11,12 +11,12 @@
 <script src="common.js"></script>
 <script>
 W = 1080; H = 1920; ctx = document.getElementById('c').getContext('2d');
-// V1 · Lances (client's funk track, 111.4 bpm, window 23.737–38.99 s starting on a downbeat — bars of 2.155 s,
-// drop at 4.31 s, outro at 12.93 s).
+// V1 · Lances (Eduardinho dos Teclados – Baile do VJ, 137 bpm, from the chorus at 57.096 s — bars of 1.752 s, drop
+// at 3.50 s, carousel on the song's next section at 7.0 s, outro at 10.5 s).
 // Three plays from the Sand Walk shoots enter as panels one per beat, "a Black da areia chegou" word by word,
 // the offer lands on the drop, a sunga carousel takes over the panels for two bars, then the plays come back.
 // Reels/Stories safe area: everything essential between y 270 and 1250 (CTA ends at 1242).
-const BEAT = 0.5388, BAR = 4 * BEAT, DROP = 2 * BAR, CAR = 4 * BAR, OUTRO = 6 * BAR, DUR = 15.25;
+const BEAT = 0.438, BAR = 4 * BEAT, DROP = 2 * BAR, CAR = 4 * BAR, OUTRO = 6 * BAR, DUR = 15.25;
 const FR = '../../sandwalk-ftvpreta/frames/';
 // [dir, frames, zoom, anchorX, anchorY]
 const PLAYS = [['b4', 84, 1.55, 560, 1100], ['b1', 85, 1.45, 700, 1150], ['b6', 84, 1.55, 620, 1080]];

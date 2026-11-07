@@ -1,0 +1,175 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<title>Black Friday Fabrício</title>
+<link rel="stylesheet" href="../fonts/fonts.css">
+<style>
+  :root { --red: #f40000; --red2: #c80000; }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html, body { background: transparent; }
+  body { font-family: 'Barlow Condensed', sans-serif; color: #fff; overflow: hidden; }
+  .stage { position: relative; width: 1080px; overflow: hidden; }
+  .stage.feed { height: 1350px; }
+  .stage.stories { height: 1920px; }
+  .abs { position: absolute; }
+  .sh { text-shadow: 0 4px 12px rgba(0,0,0,.7), 0 0 2px rgba(0,0,0,.9); }
+  .it { font-style: italic; }
+  .skew { transform: skewX(-12deg); }
+  .skew > * { transform: skewX(12deg); }
+  .redbox { background: linear-gradient(180deg, #ff2424, #c40000); box-shadow: 0 10px 26px rgba(0,0,0,.5); }
+  .blackbox { background: #000; border: 4px solid var(--red); box-shadow: 0 10px 26px rgba(0,0,0,.5); }
+  svg { display: block; flex: none; }
+
+  /* topo fixo */
+  .topo { left: 0; right: 0; display: flex; align-items: center; justify-content: center; gap: 22px; }
+  .topo .bf { padding: 8px 30px 4px; }
+  .topo .bf span { display: block; font-weight: 900; font-style: italic; font-size: 64px; line-height: 1; letter-spacing: 1px; }
+  .topo img { height: 92px; filter: drop-shadow(0 4px 8px rgba(0,0,0,.7)); }
+
+  .chip { display: inline-flex; align-items: center; gap: 14px; padding: 10px 26px 8px 20px; }
+  .chip .t { font-weight: 800; font-style: italic; font-size: 46px; line-height: 1; white-space: nowrap; }
+
+  /* gancho */
+  .hook { left: 0; right: 0; display: flex; flex-direction: column; align-items: center; text-align: center; }
+  .hook .k { font-weight: 800; font-style: italic; font-size: 46px; letter-spacing: 4px; color: #fff; }
+  .hook .big { font-weight: 900; font-style: italic; line-height: .86; letter-spacing: -2px; }
+  .hook .big .r { color: var(--red); }
+  .hook .cond { margin-top: 18px; padding: 10px 36px 6px; }
+  .hook .cond span { display: block; font-weight: 900; font-style: italic; font-size: 64px; line-height: 1; }
+
+  /* oferta */
+  .oferta { left: 0; right: 0; display: flex; flex-direction: column; align-items: center; gap: 22px; }
+  .oferta .lead { font-weight: 800; font-style: italic; font-size: 50px; letter-spacing: 2px; }
+  .oferta .item { display: flex; align-items: center; gap: 22px; padding: 16px 40px 12px 28px; }
+  .oferta .item .t { font-weight: 900; font-style: italic; font-size: 84px; line-height: 1; white-space: nowrap; }
+  .oferta .todos { font-weight: 900; font-style: italic; font-size: 54px; margin-top: 4px; }
+
+  /* card do carro */
+  .carro { left: 50%; transform: translateX(-50%); width: 940px; display: flex; flex-direction: column; align-items: flex-start; }
+  .carro .row { display: flex; align-items: flex-end; gap: 16px; }
+  .carro .n { padding: 6px 18px 2px; }
+  .carro .n span { display: block; font-weight: 800; font-style: italic; font-size: 40px; line-height: 1.1; }
+  .carro .nome { font-weight: 900; font-style: italic; font-size: 104px; line-height: .9; letter-spacing: -1px; }
+  .carro .ver { font-weight: 800; font-style: italic; font-size: 50px; line-height: 1; margin-top: 6px; }
+  .carro .specs { display: flex; gap: 14px; margin-top: 16px; }
+  .carro .spec { padding: 8px 22px 4px; background: rgba(0,0,0,.82); border-left: 8px solid var(--red); }
+  .carro .spec span { font-weight: 800; font-style: italic; font-size: 44px; line-height: 1; }
+  .carro .preco { margin-top: 18px; padding: 10px 34px 4px 28px; display: flex; align-items: baseline; }
+  .carro .preco .rs { font-weight: 900; font-style: italic; font-size: 64px; margin-right: 10px; }
+  .carro .preco .num { font-weight: 900; font-style: italic; font-size: 132px; line-height: .9; letter-spacing: -2px; }
+  .carro .preco .c { font-weight: 900; font-style: italic; font-size: 56px; align-self: flex-start; margin-top: 8px; }
+  .carro .ent { margin-top: 14px; padding: 8px 24px 6px; }
+  .carro .ent span { display: block; font-weight: 800; font-style: italic; font-size: 48px; line-height: 1; }
+  .carro .ent b { font-weight: 900; color: #fff; }
+  .carro .extra { margin-top: 14px; font-weight: 700; font-style: italic; font-size: 38px; }
+  .pend { color: #ffd400 !important; }
+
+  /* CTA */
+  .cta { left: 0; right: 0; display: flex; flex-direction: column; align-items: center; text-align: center; }
+  .cta .k { font-weight: 800; font-style: italic; font-size: 48px; color: #ff3030; letter-spacing: 2px; }
+  .cta .big { font-weight: 900; font-style: italic; line-height: .9; margin-top: 10px; }
+  .cta .btn { margin-top: 34px; padding: 12px 46px 6px; }
+  .cta .btn span { display: block; font-weight: 900; font-style: italic; font-size: 66px; line-height: 1; }
+  .cta .sub { margin-top: 26px; font-weight: 700; font-style: italic; font-size: 46px; line-height: 1.15; }
+  .cta .sub b { color: #ff3030; font-weight: 900; }
+  .dim { left: 0; right: 0; background: rgba(0,0,0,.74); }
+
+  /* vitrine (grade com 3 carros) */
+  .gl { left: 26px; display: flex; flex-direction: column; align-items: flex-start; }
+  .gl .nome { font-weight: 900; font-style: italic; font-size: 76px; line-height: .9; }
+  .gl .info { font-weight: 800; font-style: italic; font-size: 40px; margin-top: 4px; }
+  .gl .preco { margin-top: 8px; padding: 6px 22px 2px; }
+  .gl .preco span { display: block; font-weight: 900; font-style: italic; font-size: 64px; line-height: 1; }
+  .gsep { left: 0; right: 0; height: 10px; background: var(--red); box-shadow: 0 0 12px rgba(255,0,0,.6); }
+  .titulo { left: 0; right: 0; display: flex; justify-content: center; }
+  .titulo .box { padding: 10px 34px 6px; }
+  .titulo .box span { display: block; font-weight: 900; font-style: italic; font-size: 64px; line-height: 1; }
+
+  /* legenda da voz */
+  .cap { left: 60px; right: 60px; display: flex; justify-content: center; flex-wrap: wrap; gap: 0 18px; text-align: center; }
+  .cap .w { font-weight: 900; font-style: italic; font-size: var(--fs, 92px); line-height: 1.02; text-transform: uppercase;
+    -webkit-text-stroke: 3px #000; paint-order: stroke fill; text-shadow: 0 6px 14px rgba(0,0,0,.8); }
+  .cap .w.on { color: #fff; background: var(--red); padding: 0 12px; transform: skewX(-8deg); -webkit-text-stroke: 0; }
+</style>
+</head>
+<body>
+<div id="root"></div>
+<script>
+const RED = '#f40000';
+const esc = (s) => String(s ?? '').replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+const up = (s) => String(s ?? '').toUpperCase();
+const ICON = {
+  pin: (h, c = RED) => `<svg width="${h * .72}" height="${h}" viewBox="0 0 72 100"><path d="M36 2C17.2 2 3 16.4 3 34.6 3 58 36 98 36 98s33-40 33-63.4C69 16.4 54.8 2 36 2z" fill="${c}"/><circle cx="36" cy="34" r="12.5" fill="#000"/></svg>`,
+  fuel: (h, c = '#fff') => `<svg width="${h * .9}" height="${h}" viewBox="0 0 90 100"><rect x="6" y="8" width="50" height="86" rx="8" fill="${c}"/><rect x="14" y="18" width="34" height="24" rx="4" fill="#c40000"/><path d="M56 30h10c6 0 10 4 10 10v38c0 4 3 7 6 7s6-3 6-7V34L74 18" fill="none" stroke="${c}" stroke-width="7" stroke-linecap="round" stroke-linejoin="round"/><rect x="0" y="88" width="62" height="10" rx="3" fill="${c}"/></svg>`,
+  doc: (h, c = '#fff') => `<svg width="${h * .8}" height="${h}" viewBox="0 0 80 100"><path d="M8 4h44l22 22v66c0 3-2 5-5 5H8c-3 0-5-2-5-5V9c0-3 2-5 5-5z" fill="${c}"/><path d="M52 4v22h22" fill="#ddd"/><rect x="16" y="40" width="46" height="7" rx="3" fill="#c40000"/><rect x="16" y="55" width="46" height="7" rx="3" fill="#c40000"/><rect x="16" y="70" width="30" height="7" rx="3" fill="#c40000"/></svg>`,
+  check: (h) => `<svg width="${h}" height="${h}" viewBox="0 0 100 100"><circle cx="50" cy="50" r="46" fill="#fff"/><path d="M28 52l15 15 30-32" fill="none" stroke="#c40000" stroke-width="12" stroke-linecap="round" stroke-linejoin="round"/></svg>`,
+  arrows: () => `<svg width="120" height="90" viewBox="0 0 120 90"><path d="M10 6L60 40 110 6" fill="none" stroke="${RED}" stroke-width="14" stroke-linecap="round" stroke-linejoin="round"/><path d="M10 46L60 80 110 46" fill="none" stroke="#fff" stroke-width="14" stroke-linecap="round" stroke-linejoin="round"/></svg>`,
+};
+
+// Zonas seguras: stories (topo 14% = 269px coberto pelo perfil; base 35% coberta no Reels a partir de 1248px).
+const Z = {
+  stories: { topo: 290, meio: 760, card: 690, local: 1150, cta: 430, cap: 640 },
+  feed: { topo: 34, meio: 380, card: 640, local: 1250, cta: 250, cap: 260 },
+};
+
+const money = (v, c) => (v ? `<span class="rs">R$</span><span class="num">${esc(v)},</span><span class="c">${esc(c ?? '00')}</span>` : `<span class="num pend">VALOR</span>`);
+
+const K = {
+  topo: (m, d) => `<div class="topo abs" style="top:${Z[m].topo}px;left:${d.left ?? 0}px">${d.semLogo ? '' : '<img src="../assets/logo_fabricio.png">'}<div class="bf redbox skew"><span>BLACK FRIDAY</span></div></div>`,
+  // quadro provisório para carro sem vídeo ainda
+  ph: (m, d) => `<div class="abs" style="inset:0;background:radial-gradient(circle at 50% 40%,#3a3a3a,#0d0d0d 70%);display:flex;flex-direction:column;align-items:center;justify-content:flex-start;padding-top:400px;gap:24px">
+      <div style="border:8px dashed #ffd400;padding:40px 60px;text-align:center"><div class="it" style="font-weight:900;font-size:110px;line-height:.95">${esc(up(d.nome))}</div>
+      <div class="it pend" style="font-weight:800;font-size:56px;margin-top:16px">VÍDEO PENDENTE</div></div></div>`,
+  local: (m, d) => `<div class="abs" style="left:0;right:0;top:${d.top ?? Z[m].local}px;display:flex;justify-content:center"><div class="chip blackbox skew"><div style="display:flex;align-items:center;gap:14px">${ICON.pin(52)}<span class="t">${esc(up(d.local))}</span></div></div></div>`,
+  hook: (m, d) => `<div class="hook abs" style="top:${m === 'feed' ? 260 : 400}px">
+      <div class="k sh">${esc(up(d.kicker))}</div>
+      <div class="big sh" style="font-size:${m === 'feed' ? 190 : 230}px">BLACK<br><span class="r">FRIDAY</span></div>
+      <div class="cond redbox skew"><span>${esc(up(d.cond))}</span></div></div>`,
+  oferta: (m, d) => `<div class="oferta abs" style="top:${m === 'feed' ? 340 : 690}px">
+      <div class="lead sh">${esc(up(d.lead))}</div>
+      <div class="item redbox skew"><div style="display:flex;align-items:center;gap:22px">${ICON.fuel(82)}<span class="t">TANQUE CHEIO</span></div></div>
+      <div class="item blackbox skew"><div style="display:flex;align-items:center;gap:22px">${ICON.doc(82)}<span class="t">DOCUMENTAÇÃO INCLUSA</span></div></div>
+      <div class="todos sh">${esc(up(d.todos))}</div></div>`,
+  carro: (m, d) => {
+    const pend = !d.valor;
+    const specs = [d.ano && `ANO ${d.ano}`, d.km && `${d.km} KM`].filter(Boolean);
+    return `<div class="abs" style="left:0;right:0;top:${Z[m].card - 140}px;height:${(m === 'feed' ? 1350 : 1260) - Z[m].card + 140}px;background:linear-gradient(180deg,rgba(0,0,0,0),rgba(0,0,0,.55) 35%,rgba(0,0,0,.6))"></div><div class="carro abs" style="top:${Z[m].card - (d.alto ? 60 : 0)}px">
+      <div class="row"><div class="n redbox skew"><span>${d.n}/${d.total}</span></div><div class="nome sh">${esc(up(d.nome))}</div></div>
+      ${d.versao ? `<div class="ver sh">${esc(up(d.versao))}</div>` : ''}
+      <div class="specs">${(specs.length ? specs : ['ANO / KM']).map((s) => `<div class="spec skew"><span class="${specs.length ? '' : 'pend'}">${esc(s)}</span></div>`).join('')}</div>
+      <div class="preco redbox skew"><div style="display:flex;align-items:baseline">${money(d.valor, d.centavos)}</div></div>
+      ${d.entrada ? `<div class="ent blackbox skew"><span>ENTRADA A PARTIR DE <b>R$ ${esc(up(d.entrada))}</b></span></div>` : (pend ? `<div class="ent blackbox skew"><span class="pend">AGUARDANDO DADOS DO CARRO</span></div>` : '')}
+    </div>`;
+  },
+  cta: (m, d) => `<div class="dim abs" style="top:0;bottom:0"></div><div class="cta abs" style="top:${Z[m].cta}px">
+      <div class="k">${esc(up(d.kicker))}</div>
+      <div class="big sh" style="font-size:${m === 'feed' ? 120 : 140}px">CHAMA NO<br>WHATSAPP</div>
+      <div class="btn redbox skew"><span>ENVIAR MENSAGEM</span></div>
+      <div class="sub sh">${d.sub}</div>
+      <div style="margin-top:26px">${ICON.arrows()}</div></div>`,
+  titulo: (m, d) => `<div class="titulo abs" style="top:${d.y}px"><div class="box ${d.red ? 'redbox' : 'blackbox'} skew"><span>${esc(up(d.texto))}</span></div></div>`,
+  grade: (m, d) => {
+    const rows = d.carros.length, rh = d.h / rows, compact = m === 'stories';
+    return d.carros.map((c, i) => `
+      ${i ? `<div class="gsep abs" style="top:${d.y0 + i * rh - 5}px"></div>` : ''}
+      <div class="gl abs" style="top:${d.y0 + (i + 1) * rh - (compact ? 108 : 196)}px;${compact ? 'flex-direction:row;align-items:flex-end;gap:18px' : ''}">
+        <div>
+          <div class="nome sh" style="font-size:${compact ? 64 : 64}px">${esc(up(c.nome))}</div>
+          <div class="info sh" style="${compact ? 'font-size:34px' : ''}">${esc(up([c.ano, c.km && c.km + ' KM'].filter(Boolean).join(' • ')))}</div>
+        </div>
+        <div class="preco redbox skew"><span class="${c.valor ? '' : 'pend'}" style="${compact ? 'font-size:56px' : ''}">${c.valor ? 'R$ ' + esc(c.valor) + ',' + esc(c.centavos ?? '00') : 'VALOR'}</span></div>
+      </div>`).join('') + `<div class="gsep abs" style="top:${d.y0 - 5}px"></div><div class="gsep abs" style="top:${d.y0 + d.h - 5}px"></div>`;
+  },
+  cap: (m, d) => `<div class="cap abs" style="top:${d.top ?? Z[m].cap}px;left:${d.left ?? 60}px;right:${d.right ?? 60}px;--fs:${d.fs ?? 92}px">${d.words.map((w, i) => `<span class="w ${i === d.on ? 'on' : ''}">${esc(w)}</span>`).join('')}</div>`,
+};
+
+window.render = async (kind, mode, d) => {
+  document.getElementById('root').innerHTML = `<div class="stage ${mode}">${K[kind](mode, d || {})}</div>`;
+  await document.fonts.ready;
+  await Promise.all([...document.images].map((im) => (im.complete ? 0 : new Promise((r) => { im.onload = im.onerror = r; }))));
+  return true;
+};
+</script>
+</body>
+</html>

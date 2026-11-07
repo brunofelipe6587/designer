@@ -1,0 +1,52 @@
+{
+  "local": "Juazeiro do Norte - CE",
+  "oferta": {
+    "kicker": "Fabrício Veículos",
+    "cond": "Condições de Black",
+    "lead": "Na Black, todo carro sai com",
+    "todos": "Em todos os carros"
+  },
+  "carros": [
+    {
+      "id": "palio",
+      "pasta": "palio-attractive-2015",
+      "marca": "Fiat",
+      "nome": "Palio",
+      "versao": "Attractive 1.0",
+      "ano": "2015",
+      "km": "120.000",
+      "valor": "43.990",
+      "centavos": "00",
+      "entrada": "15 mil",
+      "fala": "Fiat Palio Attractive 2015, com 120 mil quilômetros, por 43.990 reais, com entrada a partir de 15 mil.",
+      "clipes": { "frente": [0.3, 3.9], "lateral": [7.5, 9.9], "interior": [12.5, 16.4], "bancos": [17.5, 20.4], "traseira": [41.5, 44.9], "final": [67, 70.5] }
+    },
+    {
+      "id": "parati",
+      "pasta": null,
+      "marca": "Volkswagen",
+      "nome": "Parati",
+      "fala": "Volkswagen Parati, com condição especial de Black."
+    },
+    {
+      "id": "grand-siena",
+      "pasta": null,
+      "marca": "Fiat",
+      "nome": "Grand Siena",
+      "fala": "Fiat Grand Siena, com condição especial de Black."
+    }
+  ],
+  "musica": { "arquivo": "musica/vaqueiro.mp3", "inicio": 30.0, "fim": 57.45 },
+  "voz": {
+    "voz": "pt-BR-AntonioNeural",
+    "ritmo": "+10%",
+    "intro": "Black Friday na Fabrício Veículos, aqui em Juazeiro do Norte!",
+    "oferta": "Na Black, todo carro sai com tanque cheio e documentação inclusa.",
+    "final": "Gostou de algum? Toque em enviar mensagem e mande o nome do carro no WhatsApp."
+  },
+  "vitrine": {
+    "voz": "pt-BR-ThalitaMultilingualNeural",
+    "abertura": "Black Friday em Juazeiro do Norte. Escolha o seu!",
+    "final": "Manda o nome do carro no WhatsApp!"
+  }
+}

@@ -34,3 +34,5 @@ hgg-sabotage/build/sb*.png
 fabricio-veiculos/out/*/*.mp4
 fabricio-veiculos/carros/demo-*/bruto.mp4
 fabricio-veiculos/out/*/tour/*.mp4
+fabricio-veiculos/out/black-friday/
+fabricio-veiculos/black-friday/musica/

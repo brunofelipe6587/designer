@@ -137,7 +137,7 @@ const K = {
     return `<div class="abs" style="left:0;right:0;top:${Z[m].card - 140}px;height:${(m === 'feed' ? 1350 : 1260) - Z[m].card + 140}px;background:linear-gradient(180deg,rgba(0,0,0,0),rgba(0,0,0,.55) 35%,rgba(0,0,0,.6))"></div><div class="carro abs" style="top:${Z[m].card - (d.alto ? 60 : 0)}px">
       <div class="row"><div class="n redbox skew"><span>${d.n}/${d.total}</span></div><div class="nome sh">${esc(up(d.nome))}</div></div>
       ${d.versao ? `<div class="ver sh">${esc(up(d.versao))}</div>` : ''}
-      <div class="specs">${(specs.length ? specs : ['ANO / KM']).map((s) => `<div class="spec skew"><span class="${specs.length ? '' : 'pend'}">${esc(s)}</span></div>`).join('')}</div>
+      <div class="specs">${(specs.length ? specs : ['ANO / KM']).map((s) => `<div class="spec skew"><span class="${specs.length ? '' : 'pend'}">${esc(s)}</span></div>`).join('')}${d.selo ? `<div class="spec skew" style="background:#ffd400;border-left-color:#000"><span style="color:#000">${esc(up(d.selo))}</span></div>` : ''}</div>
       <div class="preco redbox skew"><div style="display:flex;align-items:baseline">${money(d.valor, d.centavos)}</div></div>
       ${d.entrada ? `<div class="ent blackbox skew"><span>ENTRADA A PARTIR DE <b>R$ ${esc(up(d.entrada))}</b></span></div>` : (pend ? `<div class="ent blackbox skew"><span class="pend">AGUARDANDO DADOS DO CARRO</span></div>` : '')}
     </div>`;
@@ -148,7 +148,7 @@ const K = {
       <div class="btn redbox skew"><span>ENVIAR MENSAGEM</span></div>
       <div class="sub sh">${d.sub}</div>
       <div style="margin-top:26px">${ICON.arrows()}</div></div>`,
-  titulo: (m, d) => `<div class="titulo abs" style="top:${d.y}px"><div class="box ${d.red ? 'redbox' : 'blackbox'} skew"><span>${esc(up(d.texto))}</span></div></div>`,
+  titulo: (m, d) => `<div class="titulo abs" style="top:${d.y}px;left:${d.left ?? 0}px"><div class="box ${d.red ? 'redbox' : 'blackbox'} skew"><span>${esc(up(d.texto))}</span></div></div>`,
   grade: (m, d) => {
     const rows = d.carros.length, rh = d.h / rows, compact = m === 'stories';
     return d.carros.map((c, i) => `

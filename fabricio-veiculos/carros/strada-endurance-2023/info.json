@@ -1,0 +1,27 @@
+{
+  "localizacao": [
+    "Juazeiro",
+    "do Norte - CE"
+  ],
+  "marca": "Fiat",
+  "modelo": [
+    "Strada Endurance",
+    "1.3 Completa"
+  ],
+  "modelo_stories": [
+    "Strada",
+    "Endurance 1.3"
+  ],
+  "ano": "2023",
+  "km": "124.000",
+  "valor": "74.990",
+  "centavos": "00",
+  "entrada": "20 mil",
+  "ordem_feed": [
+    "localizacao",
+    "modelo",
+    "ano",
+    "km"
+  ],
+  "nome_arquivo": "Strada_Endurance_2023"
+}

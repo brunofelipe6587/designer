@@ -1,0 +1,21 @@
+{
+  "localizacao": [
+    "Juazeiro",
+    "do Norte - CE"
+  ],
+  "marca": "Volkswagen",
+  "modelo": [
+    "Parati",
+    "Comfortline 1.8"
+  ],
+  "ano": "2006",
+  "valor": "26.990",
+  "centavos": "00",
+  "entrada": "10 mil",
+  "ordem_feed": [
+    "localizacao",
+    "modelo",
+    "ano"
+  ],
+  "nome_arquivo": "Parati_Comfortline_2006"
+}

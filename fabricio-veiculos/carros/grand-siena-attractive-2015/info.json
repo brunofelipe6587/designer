@@ -1,0 +1,25 @@
+{
+  "localizacao": [
+    "Juazeiro",
+    "do Norte - CE"
+  ],
+  "marca": "Fiat",
+  "modelo": [
+    "Grand Siena",
+    "Attractive"
+  ],
+  "modelo_stories": [
+    "Grand Siena",
+    "Attractive"
+  ],
+  "ano": "2015",
+  "valor": "47.990",
+  "centavos": "00",
+  "entrada": "15 mil",
+  "ordem_feed": [
+    "localizacao",
+    "modelo",
+    "ano"
+  ],
+  "nome_arquivo": "Grand_Siena_Attractive_2015"
+}

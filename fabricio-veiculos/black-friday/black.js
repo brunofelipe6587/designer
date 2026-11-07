@@ -86,7 +86,8 @@ async function clipsFor(car, d, order = ['frente', 'lateral', 'interior', 'banco
   if (!car.src) return [{ src: await phClip(car), a: 0, b: d }];
   const out = []; let left = d, i = 0;
   while (left > 0.05) {
-    const [a, b] = car.clipes[order[i % order.length]]; i++;
+    const key = order.filter((k) => car.clipes[k])[i % order.filter((k) => car.clipes[k]).length] ?? 'frente'; i++;
+    const [a, b] = car.clipes[key];
     const take = Math.min(b - a, left);
     out.push({ src: car.src, a, b: a + take }); left -= take;
   }
@@ -133,7 +134,8 @@ async function captionTrack(words, total, mode, pos) {
   });
   const events = [];
   for (const ch of chunks) {
-    const ws = ch.map((i) => words[i].w.replace(/[.,!?]/g, ''));
+    // números com ponto de milhar (a voz devolve "74990")
+    const ws = ch.map((i) => words[i].w.replace(/[,!?]/g, '').replace(/\.$/, '').replace(/^\d{5,}$/, (n) => Number(n).toLocaleString('pt-BR')));
     for (const [j, i] of ch.entries()) {
       const st = words[i].t, en = (j < ch.length - 1) ? words[ch[j + 1]].t : words[i].t + words[i].d + 0.15;
       events.push({ st, en, png: await layer('cap', mode, { words: ws, on: j, ...pos }) });
@@ -194,35 +196,40 @@ function tts(text, voice, rate, name) {
 }
 
 const NAME = (k, mode) => path.join(OUT, `BlackFriday_${k}_${mode === 'feed' ? 'FEED_4x5' : 'STORIES_9x16'}.mp4`);
-const cardData = (car, i) => ({ n: i + 1, total: CARS.length, nome: car.nome, versao: car.versao, ano: car.ano, km: car.km, valor: car.valor, centavos: car.centavos, entrada: car.entrada });
+const cardData = (car, i) => ({ n: i + 1, total: CARS.length, nome: car.nome, versao: car.versao, ano: car.ano, km: car.km, valor: car.valor, centavos: car.centavos, entrada: car.entrada, selo: car.selo });
 
 // ======================= 1) MÚSICA =======================
 async function criativoMusica(mode) {
-  const M = C.musica; const total = M.fim - M.inicio;            // ~27,4s
-  // tempos relativos ao trecho (palavras da letra): "Se" 4.46 abre o refrão; "flash" 7.66 / 9.60 / 17.84 / 19.28
-  const T = { oferta: 4.46, c1: 7.66, c2: 12.46, c3: 17.84, cta: 23.3 };
-  const [p, q, r] = CARS;
+  const M = C.musica; const total = M.fim - M.inicio;            // ~32,8s: refrão + parte instrumental antes da voz voltar
+  // tempos relativos ao trecho (palavras da letra): "Se" 4.46 abre o refrão; "flash" 7.66 / 9.60 / 17.84 / 19.28; "E aí" 22.30
+  const T = { oferta: 4.46, cars: [7.66, 12.46, 17.84, 22.30], cta: 27.4 };
+  const cut = [9.60, 15.0, 19.28, 24.8];                        // troca de cena dentro de cada carro
+  const by = (id) => CARS.find((c) => c.id === id) ?? CARS[0];
   const segs = [];
   const add = async (car, a, b, order, zoom) => (await clipsFor(car, b - a, order)).forEach((c) => segs.push({ ...c, zoom }));
-  await add(p, 0, T.oferta, ['frente'], 0.12);
-  await add(p, T.oferta, T.c1, ['lateral', 'interior'], 0.06);
-  await add(p, T.c1, 9.60, ['frente'], 0.05); await add(p, 9.60, T.c2, ['interior', 'bancos'], 0.05);
-  await add(q, T.c2, T.c3, ['frente', 'interior'], 0.05);
-  await add(r, T.c3, T.cta, ['frente', 'interior'], 0.05);
-  await add(p, T.cta, total, ['final', 'frente'], 0.04);
+  await add(by('strada'), 0, T.oferta, ['frente'], 0.12);
+  await add(by('grand-siena'), T.oferta, 6.0, ['interior'], 0.06); await add(by('palio'), 6.0, T.cars[0], ['interior'], 0.06);
+  for (const [i, car] of CARS.entries()) {
+    const st = T.cars[i], en = T.cars[i + 1] ?? T.cta;
+    await add(car, st, cut[i], ['frente'], 0.05);
+    await add(car, cut[i], en, ['interior', 'lateral', 'traseira'], 0.05);
+  }
+  await add(by('strada'), T.cta, total, ['final'], 0.04);
   const base = buildBase(segs, mode, 'musica');
 
   const L = [];
   L.push({ png: await layer('hook', mode, { kicker: C.oferta.kicker, cond: C.oferta.cond }), st: 0.15, d: T.oferta - 0.15, slide: 'up' });
   L.push({ png: await layer('topo', mode, {}), st: T.oferta, d: T.cta - T.oferta, slide: 'up' });
-  L.push({ png: await layer('oferta', mode, C.oferta), st: T.oferta + 0.05, d: T.c1 - T.oferta - 0.05, slide: 'up' });
-  for (const [i, st, en] of [[0, T.c1, T.c2], [1, T.c2, T.c3], [2, T.c3, T.cta]]) {
-    L.push({ png: await layer('carro', mode, cardData(CARS[i], i)), st: st + 0.05, d: en - st - 0.05, slide: 'left' });
+  L.push({ png: await layer('oferta', mode, C.oferta), st: T.oferta + 0.05, d: T.cars[0] - T.oferta - 0.05, slide: 'up' });
+  for (const [i, car] of CARS.entries()) {
+    const st = T.cars[i], en = T.cars[i + 1] ?? T.cta;
+    L.push({ png: await layer('carro', mode, cardData(car, i)), st: st + 0.05, d: en - st - 0.05, slide: 'left' });
   }
   L.push({ png: await layer('cta', mode, { kicker: 'Condições de Black Friday', sub: 'Toque no botão e mande o<br><b>nome do carro</b> que você quer' }), st: T.cta, d: total - T.cta, keep: true });
   L.push({ png: await layer('local', mode, { local: C.local }), st: 0.3, d: total - 0.3, keep: true });
 
-  compose({ base, mode, layers: L, flashes: [T.oferta, T.c1, 9.60, T.c2, T.c3, 19.28, T.cta].map((t) => t - 0.04), total,
+  // só a música: o som original dos vídeos (voz do Fabrício) não entra
+  compose({ base, mode, layers: L, flashes: [T.oferta, ...T.cars, 9.60, 19.28, T.cta].map((t) => t - 0.04), total,
     audioInputs: [['-i', path.join(__dirname, M.arquivo)]],
     audioFilter: (a) => `[${a}:a]atrim=${M.inicio}:${M.fim},asetpts=PTS-STARTPTS,afade=t=in:d=0.04,afade=t=out:st=${(total - 0.9).toFixed(2)}:d=0.9,loudnorm=I=-14:TP=-1.5:LRA=11[aout]`,
     out: NAME('1_Musica', mode) });
@@ -245,7 +252,8 @@ async function criativoVoz(mode) {
   const panel = mode === 'feed';
   const segs = [];
   for (const p of parts) {
-    const car = p.k === 'car' ? CARS[p.i] : CARS[0];
+    const by = (id) => CARS.find((c) => c.id === id) ?? CARS[0];
+    const car = p.k === 'car' ? CARS[p.i] : by({ intro: 'strada', oferta: 'grand-siena', final: 'palio' }[p.k]);
     const order = p.k === 'car' ? ['frente', 'interior', 'lateral', 'bancos', 'traseira'] : p.k === 'oferta' ? ['lateral', 'interior'] : ['frente'];
     (await clipsFor(car, p.b - p.a, order)).forEach((c) => segs.push({ ...c, panel: panel && p.k === 'car', zoom: p.k === 'car' ? 0 : 0.06 }));
   }
@@ -259,6 +267,7 @@ async function criativoVoz(mode) {
     if (p.k === 'car') {
       L.push({ png: await faixa(mode, CARS[p.i]), st: p.a, d, fade: false });
       L.push({ png: await layer('topo', mode, panel ? { semLogo: true, left: PANEL_X } : {}), st: p.a, d, fade: false });
+      if (CARS[p.i].selo) L.push({ png: await layer('titulo', mode, { texto: CARS[p.i].selo, red: false, y: panel ? 130 : 400, left: panel ? PANEL_X : 0 }), st: p.a + 0.1, d: d - 0.1, slide: 'up' });
     }
     if (p.k === 'final') L.push({ png: await layer('cta', mode, { kicker: 'Condições de Black Friday', sub: 'Toque no botão e mande o<br><b>nome do carro</b> que você quer' }), st: p.a, d, keep: true });
   }
@@ -276,7 +285,7 @@ async function criativoVoz(mode) {
   compose({ base, mode, layers: L, caps, total, flashes: [parts[1].st, firstCar.a].map((x) => x - 0.04),
     audioInputs: voiceIns,
     audioFilter: (a) => parts.map((p, i) => `[${a + i}:a]aresample=48000,adelay=${Math.round(p.st * 1000)}|${Math.round(p.st * 1000)}[v${i}]`).join(';') +
-      `;[0:a]volume=0.10[amb];${parts.map((_, i) => `[v${i}]`).join('')}[amb]amix=inputs=${parts.length + 1}:normalize=0:duration=longest,loudnorm=I=-14:TP=-1.5:LRA=11[aout]`,
+      `;${parts.map((_, i) => `[v${i}]`).join('')}amix=inputs=${parts.length}:normalize=0:duration=longest,loudnorm=I=-14:TP=-1.5:LRA=11[aout]`,
     out: NAME('2_VozIA', mode) });
 }
 
@@ -319,7 +328,7 @@ async function criativoVitrine(mode) {
 
 (async () => {
   browser = await chromium.launch({ executablePath: CHROME, args: ['--allow-file-access-from-files'] });
-  const todo = which.length ? which : ['musica', 'voz', 'vitrine'];
+  const todo = which.length ? which : ['musica', 'voz'];
   for (const k of todo) for (const m of modes) {
     console.log(`${k} ${m}`);
     await ({ musica: criativoMusica, voz: criativoVoz, vitrine: criativoVitrine })[k](m);

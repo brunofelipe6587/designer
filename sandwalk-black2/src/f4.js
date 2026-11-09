@@ -1,0 +1,42 @@
+// F4 · Quanto custa — female voice (Francisca) + the "bipolar" track. The old price shows, then rolls down to the Black
+// price on its line, the per-piece price follows, CTA with the deadline. Footage dimmed behind.
+const L = LNS(VO), DUR = 15.0;
+const CUTS = [0, ...cutGrid('bip', 2, 0.5, DUR)];
+const SEQ = [['h2', 0], ['m8', 0], ['h4', 0], ['m2', 0], ['m5', 0], ['x3', 0], ['m6', 0], ['h1', 0], ['m10', 0], ['m7', 0], ['m9', 0], ['o1', 0], ['x1', 0], ['m1', 0]];
+const brl = v => 'R$ ' + v.toFixed(2).replace('.', ',');
+async function render(t) {
+  W = 1080; H = 1920;
+  await montage(t, CUTS, SEQ, { dim: 0.52, blur: 2.5 });
+  vfade(0, 500, 0.6, 0); vfade(1000, 1920, 0, 0.85);
+  scaled(540, 330, pop(t, 0.05), 1, () => seal(540, 330, 'BLACK SAND WALK', 30, -0.03, YEL, INK, 'center'));
+  const w = L.hook.w;   // "Quanto custa um kit feminino completo da Sand Walk"
+  const qa = 1 - enter(t, L.per.s - 0.25, 0.2);
+  scaled(540, 440, pop(t, w[0].s, 0.3), qa, () => txt('QUANTO CUSTA UM', 540, 470, '700 66px Syne', WHITE, 'center'));
+  scaled(540, 530, pop(t, w[3].s, 0.3), qa, () => txt('KIT FEMININO COMPLETO?', 540, 550, '700 56px Syne', YEL, 'center'));
+  kit('blackout', 540, 735, 340 * eback(prog(t, w[4].s, w[4].s + 0.35)), 0, { spot: 0.3 });
+  if (t >= L.old.s - 0.1) {
+    const r0 = wordT(L, 'new', 2), r1 = L.new.e - 0.2, u = eio(prog(t, r0, r1)), v = 189.70 - 28.45 * u, done = t >= r1;
+    const sh = shake(t, r1, 16);
+    scaled(540, 965, pop(t, L.old.s - 0.1, 0.3) * (done ? 1 + 0.12 * (1 - eout(prog(t, r1, r1 + 0.3))) : 1), 1, () => {
+      if (done) glowTxt(OFF.to, 540 + sh, 1005, '700 140px Syne', YEL, 60, 0.6, 'center');
+      else { ctx.save(); ctx.filter = u > 0 && u < 1 ? 'blur(1.4px)' : 'none'; txt(brl(v), 540, 1005, '700 140px Syne', u > 0 ? '#FFF2C2' : WHITE, 'center'); ctx.restore(); }
+    });
+    if (t < r0) { ctx.save(); ctx.globalAlpha = enter(t, L.old.s, 0.3); txt('preço normal', 540, 1052, '600 30px Inter', '#BDBDBD', 'center'); ctx.restore(); }
+    if (done) {
+      strike('de ' + OFF.from, 540, 1050, '600 30px Inter', '#BDBDBD', '#E0E0E0', 'center');
+      ctx.save(); ctx.translate(830, 610); ctx.rotate(-0.14); const s = pop(t, r1 + 0.05, 0.35); ctx.scale(s, s);
+      ctx.fillStyle = YEL; ctx.beginPath(); ctx.arc(0, 0, 92, 0, Math.PI * 2); ctx.fill(); txt('15%', 0, 8, '700 64px Syne', INK, 'center'); txt('OFF', 0, 50, '800 28px Inter', INK, 'center'); ctx.restore();
+    }
+  }
+  if (t >= L.per.s - 0.1) scaled(540, 500, pop(t, L.per.s - 0.1, 0.3), 1, () => {
+    ctx.fillStyle = 'rgba(10,10,10,0.88)'; ctx.beginPath(); ctx.roundRect(170, 452, 740, 96, 20); ctx.fill(); ctx.strokeStyle = YEL; ctx.lineWidth = 3; ctx.stroke();
+    txt('R$ 53,75 POR PEÇA', 540, 517, '700 54px Syne', YEL, 'center');
+  });
+  if (t >= L.cta.s - 0.1) {
+    ctaPulse(t, L.cta.s - 0.1, 1112, 'GARANTIR O MEU  →', TRK.bip.beat * 2, 560, 72, 30);
+    scaled(540, 395, pop(t, L.cta.s, 0.3), 1, () => pill('SÓ ATÉ DOMINGO, 15/11', 540, 395, 28, true, 'center'));
+  }
+  captions(t, VO, 1212, 900, 40);
+}
+window.ready = (async () => { await loadCommon(); await render(0); return true; })();
+window.renderAt = t => render(t);

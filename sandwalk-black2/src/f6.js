@@ -1,0 +1,37 @@
+// F6 · Feito pra quem joga — female voice (Thalita) + the "bipolar" track. Play footage in a rounded panel on top, the kit
+// that matches each benefit below it, benefit chips on the panel; full offer at the end.
+const L = LNS(VO), DUR = 17.0;
+const CUTS = [0, ...cutGrid('bip', 2, 0.5, DUR)];
+const SEQ = [['h1', 0], ['m3', 0], ['m1', 0], ['h4', 0], ['m4', 0], ['x3', 0], ['m5', 0], ['h2', 0], ['m6', 0], ['m8', 0], ['m10', 0], ['o1', 0], ['m9', 0], ['x1', 0], ['m7', 0]];
+const BEN = [['b1', 'void', ['LEVE', 'RESPIRA', 'SECA RÁPIDO']], ['b2', 'everflame', ['CAIMENTO', 'MOVIMENTO']], ['b3', 'blackout', ['3 PEÇAS', 'JUNTAS OU SEPARADAS']]];
+async function render(t) {
+  W = 1080; H = 1920;
+  bgBlack([[540, 700, 0.14, 760]]);
+  const full = t >= L.offer.s - 0.1, fo = enter(t, L.offer.s - 0.1, 0.35);
+  // footage panel (shrinks away when the offer comes in)
+  const PY = 300, PH = 560 * (1 - 0.35 * fo);
+  let k = 0; while (k + 1 < CUTS.length && t >= CUTS[k + 1]) k++;
+  const [name, f0] = SEQ[k % SEQ.length], n = CLIPS[name], seg = (k + 1 < CUTS.length ? CUTS[k + 1] : DUR) - CUTS[k], sp = Math.min(1, (n - 1) / 30 / seg);
+  await framePanel(FR2 + name, n, 1 + f0 * (n - 1) + (t - CUTS[k]) * 30 * sp, 60, PY, 960, PH, { z: 1.25 * (1 + 0.06 * (1 - eout(Math.min(1, (t - CUTS[k]) / 0.35)))), ay: 1000, r: 28, alpha: 1 - 0.85 * fo });
+  ctx.save(); ctx.globalAlpha = 1 - 0.85 * fo; ctx.strokeStyle = YEL; ctx.lineWidth = 3; ctx.beginPath(); ctx.roundRect(60, PY, 960, PH, 28); ctx.stroke(); ctx.restore();
+  seal(540, PY, 'BLACK SAND WALK', 28, -0.03, YEL, INK, 'center');
+  if (t < L.b1.s - 0.1) {
+    const w = L.hook.w;   // "Feito pra quem joga de verdade"
+    scaled(540, 960, pop(t, w[0].s, 0.3), 1, () => txt('FEITO PRA QUEM', 540, 980, '700 76px Syne', WHITE, 'center'));
+    scaled(540, 1060, pop(t, w[3].s, 0.3), 1, () => glowTxt('JOGA DE VERDADE', 540, 1080, '700 76px Syne', YEL, 30, 0.5, 'center'));
+  } else if (!full) {
+    let i = 0; while (i + 1 < BEN.length && t >= L[BEN[i + 1][0]].s - 0.1) i++;
+    const [bk, kk, chips] = BEN[i], t0 = L[bk].s - 0.1;
+    kit(kk, 540, 1000, 330 * (0.85 + 0.15 * pop(t, t0, 0.3)), 0, { spot: 0.3 });
+    chips.forEach((c, j) => { const x = 540 + (j - (chips.length - 1) / 2) * 300; scaled(x, 800, pop(t, t0 + 0.1 + j * 0.12, 0.3), 1, () => pill(c, x, 800, 24, true, 'center')); });
+  } else {
+    const t0 = L.offer.s - 0.1;
+    ['void', 'blackout', 'everflame'].forEach((k2, j) => kit(k2, [250, 540, 830][j], 760 + (j === 1 ? -10 : 10), j === 1 ? 320 : 270, (j - 1) * 0.06, { spot: 0.25, alpha: enter(t, t0 + j * 0.08, 0.3) }));
+    scaled(540, 470, pop(t, wordT(L, 'offer', 3), 0.4), 1, () => glowTxt(OFF.pct, 540, 520, '700 150px Syne', YEL, 60, 0.6, 'center'));
+    priceLine(540, 1000, 0.9, enter(t, t0 + 0.4, 0.3));
+    ctaPulse(t, wordT(L, 'offer', 7), 1100, 'APROVEITAR 15% OFF  →', TRK.bip.beat * 2, 600, 80, 31);
+  }
+  captions(t, VO, 1212, 900, 40);
+}
+window.ready = (async () => { await loadCommon(); await render(0); return true; })();
+window.renderAt = t => render(t);

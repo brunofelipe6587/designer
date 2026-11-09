@@ -1,0 +1,51 @@
+<!doctype html>
+<html lang="pt-br">
+<head>
+<meta charset="utf-8">
+<title>Black Sand Walk f7</title>
+<link href="fonts/fonts.css" rel="stylesheet">
+<style>html, body { margin: 0; background: #000; } canvas { display: block; }</style>
+</head>
+<body>
+<canvas id="c" width="1080" height="1920"></canvas>
+<script src="common.js"></script>
+<script src="src/f7_vo.js"></script>
+<script>
+W = 1080; H = 1920; ctx = document.getElementById('c').getContext('2d');
+// F7 · Só 7 dias — female voice (Francisca) + Outfit Check instrumental. The seven days (09–15/11) land one per beat,
+// then the kits, 15% OFF, price and CTA with the deadline. Footage dimmed behind.
+const L = LNS(VO), DUR = 15.0;
+const CUTS = [0, ...cutGrid('v02', 2, 0.5, DUR)];
+const SEQ = [['m9', 0], ['h3', 0], ['m5', 0], ['x2', 0], ['h1', 0], ['m2', 0], ['m6', 0], ['m10', 0], ['o1', 0], ['m8', 0], ['m1', 0], ['h4', 0], ['m7', 0], ['x4', 0]];
+const DAYS = ['09', '10', '11', '12', '13', '14', '15'], WD = ['SEG', 'TER', 'QUA', 'QUI', 'SEX', 'SÁB', 'DOM'];
+async function render(t) {
+  W = 1080; H = 1920;
+  await montage(t, CUTS, SEQ, { dim: 0.55, blur: 2 });
+  vfade(0, 500, 0.6, 0); vfade(1000, 1920, 0, 0.85);
+  scaled(540, 330, pop(t, 0.05), 1, () => seal(540, 330, 'BLACK SAND WALK', 30, -0.03, YEL, INK, 'center'));
+  scaled(540, 440, pop(t, L.hook.w[0].s, 0.3), 1, () => txt('SÓ 7 DIAS', 540, 480, '700 110px Syne', WHITE, 'center'));
+  const bw = 124, gap = 13, x0 = 540 - (7 * bw + 6 * gap) / 2, yy = 530;
+  for (let i = 0; i < 7; i++) {
+    const t0 = beatAt('v02', 2 + i), x = x0 + i * (bw + gap), last = i === 6; if (t < t0) continue;
+    scaled(x + bw / 2, yy + 65, pop(t, t0, 0.25), 1, () => {
+      ctx.fillStyle = last ? YEL : 'rgba(18,18,18,0.92)'; ctx.strokeStyle = last ? YEL : 'rgba(255,204,41,0.45)'; ctx.lineWidth = 2;
+      ctx.beginPath(); ctx.roundRect(x, yy, bw, 130, 14); ctx.fill(); ctx.stroke();
+      txt(WD[i], x + bw / 2, yy + 36, '700 22px Inter', last ? INK : GREY, 'center'); txt(DAYS[i], x + bw / 2, yy + 100, '700 54px Syne', last ? INK : WHITE, 'center');
+    });
+  }
+  if (t >= L.offer.s) {
+    const t0 = wordT(L, 'offer', 6);
+    ['everflame', 'void', 'blackout', 'egypt', 'rhythm'].forEach((k, i) => { const pos = [[170, -0.08], [910, 0.08], [355, -0.04], [725, 0.04], [540, 0]][[0, 1, 2, 3, 4][i]];
+      kit(k, pos[0], 780 + (i === 4 ? -10 : 0), (i === 4 ? 250 : 215) * eback(prog(t, t0 + i * 0.06, t0 + i * 0.06 + 0.3)), pos[1], { spot: 0.2 }); });
+    scaled(540, 945, pop(t, wordT(L, 'offer', 12), 0.4), 1, () => glowTxt(OFF.pct, 540, 990, '700 116px Syne', YEL, 50, 0.6, 'center'));
+  }
+  if (t >= L.price.s - 0.1 && t < L.cta.s - 0.1) priceLine(540, 1075, 0.8, enter(t, L.price.s - 0.1, 0.3));
+  if (t >= L.cta.s - 0.1) ctaPulse(t, L.cta.s - 0.1, 1075, 'GARANTIR ANTES DE DOMINGO  →', TRK.v02.beat * 2, 660, 72, 29);
+  captions(t, VO, 1212, 930, 38);
+}
+window.ready = (async () => { await loadCommon(); await render(0); return true; })();
+window.renderAt = t => render(t);
+
+</script>
+</body>
+</html>

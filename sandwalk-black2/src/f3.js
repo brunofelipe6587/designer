@@ -1,0 +1,29 @@
+// F3 · Outfit check — female voice (Thalita) + Outfit Check instrumental (v02). The pieces tick in on their words over
+// the women's plays; the 15% OFF chip and the kit land on the fourth line; price and CTA close.
+const L = LNS(VO), DUR = 13.6;
+const CUTS = [0, ...cutGrid('v02', 2, 0.5, DUR)];
+const SEQ = [['h1', 0], ['m1', 0.2], ['m7', 0.1], ['h2', 0], ['m6', 0], ['m5', 0], ['h3', 0], ['x2', 0], ['m2', 0], ['m8', 0], ['m10', 0], ['m9', 0], ['o1', 0], ['x4', 0], ['m4', 0]];
+async function render(t) {
+  W = 1080; H = 1920;
+  const late = t >= L.i4.s - 0.1, d = late ? enter(t, L.i4.s - 0.1, 0.4) : 0;
+  await montage(t, CUTS, SEQ, { dim: 0.12 + 0.35 * d });
+  vfade(0, 760, 0.75, 0); vfade(900, 1920, 0, 0.88);
+  scaled(260, 330, pop(t, 0.05), 1, () => seal(70, 330, 'BLACK SAND WALK', 28, -0.04));
+  scaled(300, 430, pop(t, L.hook.w[0].s, 0.3), 1, () => txt('OUTFIT CHECK', 70, 460, '700 92px Syne', WHITE));
+  scaled(300, 540, pop(t, L.hook.w[2].s, 0.3), 1, () => glowTxt('DA AREIA', 70, 555, '700 92px Syne', YEL, 30, 0.45));
+  const items = [['i1', 'Manga longa'], ['i2', 'Manga curta'], ['i3', 'Shorts'], ['i4', OFF.pct]];
+  items.forEach(([k, label], i) => {
+    const t0 = L[k].s - 0.05, y = 650 + i * 80, last = i === 3; if (t < t0) return;
+    const u = eback(prog(t, t0, t0 + 0.3)), x = 70 - 380 * (1 - u);
+    ctx.fillStyle = last ? YEL : 'rgba(0,0,0,0.62)'; ctx.beginPath(); ctx.roundRect(x, y - 50, last ? 330 : 380, 70, 16); ctx.fill();
+    txt('✓', x + 30, y - 2, '800 38px Inter', last ? INK : YEL); txt(label, x + 86, y - 2, `800 ${last ? 38 : 36}px Inter`, last ? INK : WHITE);
+  });
+  if (t >= L.i4.s - 0.1) kit('blackout', 800, 770, 360 * eback(prog(t, L.i4.s - 0.1, L.i4.s + 0.3)), 0.04, { spot: 0.25 });
+  if (t >= L.cta.s - 0.1) {
+    priceLine(540, 985, 0.9, enter(t, L.cta.s - 0.1, 0.3));
+    ctaPulse(t, L.cta.s + 0.3, 1068, 'QUERO MEU KIT  →', TRK.v02.beat * 2, 560, 76, 31);
+  }
+  captions(t, VO, 1212, 900, 40);
+}
+window.ready = (async () => { await loadCommon(); await render(0); return true; })();
+window.renderAt = t => render(t);

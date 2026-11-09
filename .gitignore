@@ -69,3 +69,8 @@ sandwalk-black/ads/audio/
 sandwalk-black/ads/frames/
 sandwalk-black/ads/build/
 sandwalk-black/ads/out/*_silent.mp4
+sandwalk-black2/audio/
+sandwalk-black2/build/still_*.png
+sandwalk-black2/build/log_*.txt
+sandwalk-black2/build/vo_*.log
+sandwalk-black2/out/*_silent.mp4

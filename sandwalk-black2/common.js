@@ -344,3 +344,28 @@ function snapVO(VO, tr) {
   const b = TRK[tr].beat, ph = TRK[tr].ph, q = t => ph + Math.round((t - ph) / b) * b;
   return VO.map(l => ({ ...l, s: q(l.s), e: q(l.e), w: l.w.map(w => ({ ...w, s: q(w.s), e: q(w.e) })) }));
 }
+// boutique-window card: arched top, soft gradient, thin gold edge, the kit lit inside, name (and optional tag) below
+function archCard(k, cx, top, w, h, { tag = '', nameSize = 26 } = {}) {
+  const x = cx - w / 2, r = w / 2;
+  const path = () => { ctx.beginPath(); ctx.moveTo(x, top + h); ctx.lineTo(x, top + r); ctx.arc(cx, top + r, r, Math.PI, 0); ctx.lineTo(x + w, top + h); ctx.closePath(); };
+  ctx.save(); ctx.shadowColor = 'rgba(0,0,0,0.6)'; ctx.shadowBlur = 30 * FX; ctx.shadowOffsetY = 14 * FX;
+  const g = ctx.createLinearGradient(0, top, 0, top + h); g.addColorStop(0, '#3B2A31'); g.addColorStop(0.5, '#1F171D'); g.addColorStop(1, '#0D0B0D');
+  path(); ctx.fillStyle = g; ctx.fill(); ctx.restore();
+  // inner glow where the kit sits
+  ctx.save(); path(); ctx.clip();
+  const ig = ctx.createRadialGradient(cx, top + h * 0.6, 10, cx, top + h * 0.6, w * 0.8); ig.addColorStop(0, 'rgba(255,205,200,0.30)'); ig.addColorStop(1, 'rgba(255,214,190,0)');
+  ctx.fillStyle = ig; ctx.fillRect(x, top, w, h);
+  ctx.restore();
+  path(); ctx.strokeStyle = 'rgba(232,196,140,0.75)'; ctx.lineWidth = 2.5; ctx.stroke();
+  // floor shadow + kit
+  ctx.save(); ctx.globalAlpha = 0.5; const fs = ctx.createRadialGradient(cx, top + h - 26, 4, cx, top + h - 26, w * 0.42); fs.addColorStop(0, 'rgba(0,0,0,0.9)'); fs.addColorStop(1, 'rgba(0,0,0,0)');
+  ctx.fillStyle = fs; ctx.beginPath(); ctx.ellipse(cx, top + h - 26, w * 0.42, 16, 0, 0, Math.PI * 2); ctx.fill(); ctx.restore();
+  kit(k, cx, top + h * 0.57, w * 0.93, 0, { spot: 0, rimA: 0.35 });
+  txt(KIT_NAME[k].toUpperCase(), cx, top + h + nameSize * 1.9, `700 ${nameSize}px Syne`, '#E8C48C', 'center');
+  if (tag) pill(tag, cx, top - 4, nameSize * 0.78, true, 'center');
+}
+// soft rose-gold haze behind the window cards
+function roseHaze(cx, cy, rx, a = 0.16) {
+  const g = ctx.createRadialGradient(cx, cy, 10, cx, cy, rx); g.addColorStop(0, `rgba(255,170,190,${a})`); g.addColorStop(0.5, `rgba(255,190,150,${a * 0.4})`); g.addColorStop(1, 'rgba(255,170,190,0)');
+  ctx.fillStyle = g; ctx.fillRect(cx - rx, cy - rx, rx * 2, rx * 2);
+}

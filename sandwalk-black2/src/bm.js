@@ -7,9 +7,11 @@ function render() {
   bgBlack([[480, 640, 0.20, 700], [480, 1380, 0.14, 650]], false);
   seal(480, 120, 'BLACK SAND WALK', 38, -0.03, YEL, INK, 'center');
   txt('DE 09 A 15/11', 480, 204, '700 26px Inter', '#BDBDBD', 'center');
-  kit('void', 240, 700, 370, -0.07, { spot: 0.22 });
-  kit('everflame', 720, 700, 370, 0.07, { spot: 0.22 });
-  kit('blackout', 480, 650, 480, 0, { spot: 0.34, reflect: true });
+  // the 3 best sellers, each in its own arched window, aligned (Blackout in the middle, a little taller)
+  roseHaze(480, 640, 560);
+  archCard('void', 170, 360, 280, 470);
+  archCard('everflame', 790, 360, 280, 470);
+  archCard('blackout', 480, 320, 300, 510, { tag: 'MAIS VENDIDO' });
   txt('KITS FEMININOS', 480, 1110, '700 84px Syne', WHITE, 'center');
   glowTxt(OFF.pct, 480, 1320, '700 186px Syne', YEL, 60, 0.55, 'center');
   ctx.font = '600 40px Inter'; const a = 'de ' + OFF.from, aw = ctx.measureText(a).width; ctx.font = '700 76px Syne'; const b = 'por ' + OFF.to, bw = ctx.measureText(b).width;

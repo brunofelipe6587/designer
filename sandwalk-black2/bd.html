@@ -1,0 +1,36 @@
+<!doctype html>
+<html lang="pt-br">
+<head>
+<meta charset="utf-8">
+<title>Black Sand Walk bd</title>
+<link href="fonts/fonts.css" rel="stylesheet">
+<style>html, body { margin: 0; background: #000; } canvas { display: block; }</style>
+</head>
+<body>
+<canvas id="c" width="1920" height="960"></canvas>
+<script src="common.js"></script>
+<script>
+W = 1920; H = 960; ctx = document.getElementById('c').getContext('2d');
+// Home banner, desktop 1920×960 — week 2 (kits femininos 15% OFF), same clean style as the approved week-1 desktop:
+// the 3 best-selling kits on the left, a centred offer column on the right, CTA clear of the bottom (cookie bar).
+const COL = 1480;
+function render() {
+  bgBlack([[560, 470, 0.20, 700], [COL, 430, 0.14, 650]], false);
+  kit('void', 320, 520, 400, -0.07, { spot: 0.22 });
+  kit('everflame', 770, 520, 400, 0.07, { spot: 0.22 });
+  kit('blackout', 545, 470, 500, 0, { spot: 0.34, reflect: true });
+  seal(COL, 112, 'BLACK SAND WALK', 34, -0.03, YEL, INK, 'center');
+  txt('DE 09 A 15/11', COL, 186, '700 24px Inter', '#BDBDBD', 'center');
+  txt('KITS FEMININOS', COL, 300, '700 76px Syne', WHITE, 'center');
+  glowTxt(OFF.pct, COL, 465, '700 168px Syne', YEL, 50, 0.55, 'center');
+  ctx.font = '600 34px Inter'; const a = 'de ' + OFF.from, aw = ctx.measureText(a).width; ctx.font = '700 64px Syne'; const b = 'por ' + OFF.to, bw = ctx.measureText(b).width;
+  const x0 = COL - (aw + 22 + bw) / 2;
+  strike(a, x0, 575, '600 34px Inter'); glowTxt(b, x0 + aw + 22, 577, '700 64px Syne', YEL, 30, 0.45);
+  txt('Manga longa + manga curta + shorts', COL, 635, '600 28px Inter', '#CFCFCF', 'center');
+  cta('APROVEITAR 15% OFF  →', COL, 760, 600, 96, 34);
+}
+window.ready = (async () => { await loadCommon(); render(); return true; })();
+
+</script>
+</body>
+</html>

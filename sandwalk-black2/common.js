@@ -369,3 +369,16 @@ function roseHaze(cx, cy, rx, a = 0.16) {
   const g = ctx.createRadialGradient(cx, cy, 10, cx, cy, rx); g.addColorStop(0, `rgba(255,170,190,${a})`); g.addColorStop(0.5, `rgba(255,190,150,${a * 0.4})`); g.addColorStop(1, 'rgba(255,170,190,0)');
   ctx.fillStyle = g; ctx.fillRect(cx - rx, cy - rx, rx * 2, rx * 2);
 }
+// a kit on its own: soft spotlight behind, floor shadow right under it, gold name below, optional tag above
+// bottom = the shared floor line (all kits stand on it, so shadows and names line up)
+function kitSpot(k, cx, bottom, w, { tag = '', nameSize = 26 } = {}) {
+  const img = IMG['s_' + k], kh = w * img.height / img.width, cy = bottom - kh / 2;
+  const sp = ctx.createRadialGradient(cx, cy, 10, cx, cy, w * 0.72); sp.addColorStop(0, 'rgba(255,214,200,0.22)'); sp.addColorStop(0.5, 'rgba(255,190,170,0.07)'); sp.addColorStop(1, 'rgba(255,190,170,0)');
+  ctx.fillStyle = sp; ctx.fillRect(cx - w, cy - w, w * 2, w * 2);
+  const fy = cy + kh / 2 + 8;
+  ctx.save(); ctx.globalAlpha = 0.6; const fs = ctx.createRadialGradient(cx, fy, 4, cx, fy, w * 0.42); fs.addColorStop(0, 'rgba(0,0,0,0.9)'); fs.addColorStop(1, 'rgba(0,0,0,0)');
+  ctx.fillStyle = fs; ctx.beginPath(); ctx.ellipse(cx, fy, w * 0.42, 14, 0, 0, Math.PI * 2); ctx.fill(); ctx.restore();
+  kit(k, cx, cy, w, 0, { spot: 0, rimA: 0.4 });
+  txt(KIT_NAME[k].toUpperCase(), cx, fy + nameSize * 2, `700 ${nameSize}px Syne`, '#E8C48C', 'center');
+  if (tag) pill(tag, cx, cy - kh / 2 - nameSize * 1.1, nameSize * 0.8, true, 'center');
+}

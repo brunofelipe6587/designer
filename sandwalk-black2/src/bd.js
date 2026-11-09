@@ -1,13 +1,13 @@
 // Home banner, desktop 1920×960 — week 2 (kits femininos 15% OFF), same clean style as the approved week-1 desktop:
 // the 3 best-selling kits on the left, a centred offer column on the right, CTA clear of the bottom (cookie bar).
-const COL = 1480;
+const COL = 1500;
 function render() {
   bgBlack([[560, 470, 0.20, 700], [COL, 430, 0.14, 650]], false);
-  // the 3 best sellers, each in its own arched window, aligned (Blackout in the middle, a little taller)
+  // the 3 best sellers, side by side, aligned, each on its own soft light (Blackout in the middle, a little taller)
   roseHaze(545, 470, 560);
-  archCard('void', 235, 200, 280, 520);
-  archCard('everflame', 855, 200, 280, 520);
-  archCard('blackout', 545, 160, 300, 560, { tag: 'MAIS VENDIDO' });
+  kitSpot('void', 210, 650, 305);
+  kitSpot('everflame', 880, 650, 305);
+  kitSpot('blackout', 545, 650, 350, { tag: 'MAIS VENDIDO' });
   seal(COL, 112, 'BLACK SAND WALK', 34, -0.03, YEL, INK, 'center');
   txt('DE 09 A 15/11', COL, 186, '700 24px Inter', '#BDBDBD', 'center');
   txt('KITS FEMININOS', COL, 300, '700 76px Syne', WHITE, 'center');

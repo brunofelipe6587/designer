@@ -29,7 +29,7 @@ Kit completo com manga longa, manga curta e shorts pra jogar futevôlei com esti
 👉 Toque em "Comprar agora".
 ```
 
-## F3 · Outfit check (e estático 05)
+## F3 · Outfit check — só música, sem voz (e estático 05)
 ```
 ✅ Outfit check da areia na BLACK SAND WALK (09 a 15/11): kit feminino com 15% OFF, de R$ 189,70 por R$ 161,25.
 ☑️ Manga longa ☑️ Manga curta ☑️ Shorts
@@ -47,7 +47,7 @@ São 3 peças: manga longa, manga curta e shorts, com 15% OFF.
 👉 Toque em "Comprar agora".
 ```
 
-## F5 · Qual estampa é a sua (e estático 03)
+## F5 · Qual estampa é a sua — só música, sem voz (e estático 03)
 ```
 🎨 BLACK SAND WALK, de 09 a 15/11: 15% OFF em todos os kits femininos (de R$ 189,70 por R$ 161,25).
 Blackout, Void, Ever Flame, Egypt, Rhythm of the Street, Vivid… qual é a sua cara?

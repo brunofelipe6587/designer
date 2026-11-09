@@ -339,3 +339,8 @@ function medal(x, y, n, r = 38) {
   ctx.fillStyle = n === 1 ? YEL : n === 2 ? '#D9D9D9' : '#E0A36B'; ctx.beginPath(); ctx.arc(x, y, r, 0, Math.PI * 2); ctx.fill(); ctx.restore();
   txt(n + 'º', x, y + 3, `700 ${r * 0.9}px Syne`, INK, 'center', 'middle');
 }
+// music-only versions: keep a video's script timing but move every line/word start to the nearest beat of its track
+function snapVO(VO, tr) {
+  const b = TRK[tr].beat, ph = TRK[tr].ph, q = t => ph + Math.round((t - ph) / b) * b;
+  return VO.map(l => ({ ...l, s: q(l.s), e: q(l.e), w: l.w.map(w => ({ ...w, s: q(w.s), e: q(w.e) })) }));
+}

@@ -1,6 +1,7 @@
-// F3 · Outfit check — female voice (Thalita) + Outfit Check instrumental (v02). The pieces tick in on their words over
+// F3 · Outfit check — music only (Outfit Check instrumental, v02); the narration script only sets the timing, snapped to
+// the beat. The pieces tick in on their words over
 // the women's plays; the 15% OFF chip and the kit land on the fourth line; price and CTA close.
-const L = LNS(VO), DUR = 13.6;
+const SVO = snapVO(VO, 'v02'), L = LNS(SVO), DUR = 13.6;
 const CUTS = [0, ...cutGrid('v02', 2, 0.5, DUR)];
 const SEQ = [['h1', 0], ['m1', 0.2], ['m7', 0.1], ['h2', 0], ['m6', 0], ['m5', 0], ['h3', 0], ['x2', 0], ['m2', 0], ['m8', 0], ['m10', 0], ['m9', 0], ['o1', 0], ['x4', 0], ['m4', 0]];
 async function render(t) {
@@ -22,8 +23,8 @@ async function render(t) {
   if (t >= L.cta.s - 0.1) {
     priceLine(540, 985, 0.9, enter(t, L.cta.s - 0.1, 0.3));
     ctaPulse(t, L.cta.s + 0.3, 1068, 'QUERO MEU KIT  →', TRK.v02.beat * 2, 560, 76, 31);
+    ctx.save(); ctx.globalAlpha = enter(t, L.cta.s + 0.6, 0.3); txt('Kits femininos com 15% OFF · só até 15/11', 540, 1170, '700 30px Inter', WHITE, 'center'); ctx.restore();
   }
-  captions(t, VO, 1212, 900, 40);
 }
 window.ready = (async () => { await loadCommon(); await render(0); return true; })();
 window.renderAt = t => render(t);

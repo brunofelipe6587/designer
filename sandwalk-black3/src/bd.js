@@ -1,0 +1,23 @@
+// Home banner, desktop 1920×960 — week 3 (16 a 21/11): progressive discount on the kits, men's and women's mixed.
+// Same layout as the approved week-2 desktop: the 3 best sellers on the left, a centred offer column on the right,
+// CTA clear of the bottom (cookie bar).
+const COL = 1460;
+function render() {
+  bgBlack([[545, 470, 0.20, 700], [COL, 430, 0.14, 650]], false);
+  kitSpot('m_void', 205, 655, 305);
+  kitSpot('m_everflame', 885, 655, 305);
+  kitSpot('blackout', 545, 655, 345, { tag: 'MAIS VENDIDO' });
+  seal(COL, 78, 'BLACK SAND WALK', 32, -0.03, YEL, INK, 'center');
+  txt('DE ' + OFF.dates.toUpperCase(), COL, 144, '700 23px Inter', '#BDBDBD', 'center');
+  glowTxt('ATÉ 20% OFF', COL, 266, fit('ATÉ 20% OFF', 700, 132, 'Syne', 760), YEL, 50, 0.55, 'center');
+  txt('EM KITS', COL, 338, '700 62px Syne', WHITE, 'center');
+  txt('Quanto mais kits, maior o desconto', COL, 392, '600 29px Inter', '#E6E6E6', 'center');
+  ladder(COL, 622, 228, 16, [152, 176, 204], 0.95);
+  const note = 'Kits masculinos e femininos: pode misturar · desconto automático na sacola';
+  txt(note, COL, 668, fit(note, 600, 22, 'Inter', 760), '#BDBDBD', 'center');
+  // urgency + button on one row
+  ctx.font = '800 26px Inter'; const uw = ctx.measureText('SÓ ATÉ ' + OFF.until).width + 26 * 1.5, bw = 420, gap = 22, x0 = COL - (uw + gap + bw) / 2;
+  pill('SÓ ATÉ ' + OFF.until, x0, 760, 26, false, 'left');
+  cta('COMPRAR KITS  →', x0 + uw + gap + bw / 2, 760, bw, 90, 32);
+}
+window.ready = (async () => { await loadCommon(); render(); return true; })();

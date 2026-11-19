@@ -1,0 +1,212 @@
+<!doctype html>
+<html lang="pt-br">
+<head>
+<meta charset="utf-8">
+<title>HGG Djavan M UGC Voz</title>
+<link href="fonts/fontsC.css" rel="stylesheet">
+<script src="build/vo_m.js"></script>
+<style>html, body { margin: 0; background: #000; } canvas { display: block; }</style>
+</head>
+<body>
+<canvas id="c" width="1080" height="1920"></canvas>
+<script>
+// Creative M — UGC with a male AI voice-over (pt-BR) on the client's real footage. The voice pre-qualifies the click
+// (what it is, how it's made, price, instalments, same-day shipping) so the session that lands on the product page
+// already knows the offer. Cut on the Djavan F timeline so F's "Eu Te Devoro" track fits under the voice (ducked).
+const W = 1080, H = 1920, DUR = 22.0, FPS_SRC = 30;
+const ctx = document.getElementById('c').getContext('2d');
+const COUNT = { n1: 400, n2: 395 };
+const clamp = (x, a = 0, b = 1) => Math.min(b, Math.max(a, x));
+const lerp = (a, b, t) => a + (b - a) * t;
+const eio = t => t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
+const eout = t => 1 - Math.pow(1 - t, 3);
+const eback = t => { const c1 = 1.8, c3 = c1 + 1; return 1 + c3 * Math.pow(t - 1, 3) + c1 * Math.pow(t - 1, 2); };
+const prog = (t, a, b) => clamp((t - a) / (b - a));
+const env = (t, a, b, fin = 0.15, fout = 0.15) => (t < a || t > b) ? 0 : Math.min(eout(prog(t, a, a + fin)), 1 - eio(prog(t, b - fout, b)));
+
+const HIT = 12.30;
+const Wd = window.VO.words, at = i => Wd[i].t;
+// shots: [t0, t1, video, srcStart, speed, z0, z1, blend]
+const SHOTS = [
+  [0.00, 1.17, 'n2', 9.00, 1.0, 1.10, 1.18, 0],   // cold open: the print
+  [1.17, 2.56, 'n1', 5.90, 0.60, 1.06, 1.12, 1],  // tee on the hanger, HGG tag
+  [2.56, 5.34, 'n2', 0.70, 0.75, 1.06, 1.14, 1],  // transfer sheet laid on the tee
+  [5.34, 8.12, 'n2', 2.80, 0.80, 1.06, 1.16, 1],  // hands smoothing the transfer
+  [8.12, 11.60, 'n2', 5.34, 0.57, 1.04, 1.14, 1], // pressed print on the table (stops before the source's white whip)
+  [11.60, 12.30, 'n2', 9.90, 1.0, 1.15, 1.35, 1], // fast zoom = whip
+  [12.30, 15.78, 'n2', 11.62, 0.40, 1.20, 1.06, 1],// price: sharp hero close
+  [15.78, 18.56, 'n1', 0.10, 0.80, 1.08, 1.18, 0],// wide studio
+  [18.56, 22.00, 'n2', 8.30, 0.35, 1.04, 1.12, 1],// end card over slow-mo close
+];
+
+
+
+// burned-in stickers in source footage (1080x1920 coords) — replaced by our own link sticker
+
+const cache = new Map();
+function frameImg(v, idx) {
+  const n = clamp(idx, 1, COUNT[v]), key = v + n;
+  if (!cache.has(key)) {
+    const im = new Image(); im.src = `ugc/frames/${v}/${String(n).padStart(4, '0')}.jpg`;
+    cache.set(key, im.decode().then(() => im));
+    if (cache.size > 40) cache.delete(cache.keys().next().value);
+  }
+  return cache.get(key);
+}
+function shake(t, amp) {
+  return [amp * (Math.sin(t * 37) * 0.6 + Math.sin(t * 23 + 1) * 0.4), amp * (Math.sin(t * 31 + 2) * 0.6 + Math.sin(t * 19) * 0.4)];
+}
+function handheld(t) { return [4 * Math.sin(1.3 * t) + 2 * Math.sin(3.1 * t + 1), 4 * Math.sin(1.1 * t + 2) + 2 * Math.sin(2.7 * t)]; }
+
+function linkSticker(x, y, w, h, line1, line2) {
+  ctx.save();
+  ctx.shadowColor = 'rgba(0,0,0,0.25)'; ctx.shadowBlur = 18; ctx.shadowOffsetY = 4;
+  ctx.fillStyle = '#fff'; ctx.beginPath(); ctx.roundRect(x, y, w, h, Math.min(h / 2, 30)); ctx.fill();
+  ctx.shadowColor = 'transparent';
+  // link icon
+  const ix = x + 52, iy = y + h / 2;
+  ctx.strokeStyle = '#2F80ED'; ctx.lineWidth = 7; ctx.lineCap = 'round';
+  ctx.save(); ctx.translate(ix, iy); ctx.rotate(-Math.PI / 4);
+  ctx.beginPath(); ctx.roundRect(-22, -11, 26, 22, 11); ctx.stroke(); ctx.beginPath(); ctx.roundRect(-4, -11, 26, 22, 11); ctx.stroke();
+  ctx.restore();
+  ctx.fillStyle = '#111'; ctx.textAlign = 'left'; ctx.textBaseline = 'middle';
+  if (line2) {
+    ctx.font = '600 30px Montserrat'; ctx.fillText(line1, x + 96, iy - 22);
+    ctx.font = '800 42px Montserrat'; ctx.fillText(line2, x + 96, iy + 20);
+  } else { ctx.font = '700 44px Montserrat'; ctx.fillText(line1, x + 96, iy + 2); }
+  ctx.restore();
+}
+
+// feathered blur over the burned-in captions of the n1 reel (fully covered y≈335–520). Only n1 takes where the
+// captions sit above the print are used (hanger shots), so the print itself is never blurred.
+const OFF = document.createElement('canvas'); OFF.width = W; OFF.height = H; const octx = OFF.getContext('2d');
+function softCover(img) {
+  octx.globalCompositeOperation = 'source-over'; octx.clearRect(0, 0, W, H);
+  octx.filter = 'blur(30px)'; octx.drawImage(img, 0, 0, W, H); octx.filter = 'none';
+  const sh = octx.createLinearGradient(0, 250, 0, 570); sh.addColorStop(0, 'rgba(0,0,0,0.25)'); sh.addColorStop(0.5, 'rgba(0,0,0,0.5)'); sh.addColorStop(1, 'rgba(0,0,0,0.25)');
+  octx.fillStyle = sh; octx.fillRect(0, 0, W, H);
+  octx.globalCompositeOperation = 'destination-in';
+  const m = octx.createLinearGradient(0, 250, 0, 570); m.addColorStop(0, 'rgba(0,0,0,0)'); m.addColorStop(0.266, 'rgba(0,0,0,1)'); m.addColorStop(0.844, 'rgba(0,0,0,1)'); m.addColorStop(1, 'rgba(0,0,0,0)');
+  octx.fillStyle = m; octx.fillRect(0, 0, W, H); octx.globalCompositeOperation = 'source-over';
+  ctx.drawImage(OFF, 0, 0);
+}
+
+async function drawFootage(t) {
+  let si = 0; for (let i = 0; i < SHOTS.length; i++) if (t >= SHOTS[i][0]) si = i;
+  const [t0, t1, v, s0, sp, z0, z1, blend] = SHOTS[si];
+  const lt = t - t0;
+  const srcT = s0 + lt * sp;
+  const f = srcT * FPS_SRC + 1;
+  const ia = Math.floor(f);
+  const imgs = [await frameImg(v, ia)];
+  if (blend) imgs.push(await frameImg(v, ia + 1)); // speed-ramp motion blur (frame blend)
+  // camera: eased zoom + punch-in on cut + handheld + impact shake
+  let z = lerp(z0, z1, eio(prog(t, t0, t1)));
+  z *= 1 + 0.09 * (1 - eout(prog(t, t0, t0 + 0.2))) * (si > 0 ? 1 : 0);
+  if (t >= HIT) z *= 1 + 0.10 * (1 - eout(prog(t, HIT, HIT + 0.45)));
+  const [hx, hy] = handheld(t);
+  const imp = t >= HIT ? (1 - prog(t, HIT, HIT + 0.45)) : 0;
+  const [sx, sy] = shake(t, 22 * imp);
+  ctx.save();
+  ctx.translate(540 + hx + sx, 960 + hy + sy); ctx.scale(z, z); ctx.translate(-540, -960);
+  ctx.imageSmoothingEnabled = true; ctx.imageSmoothingQuality = 'high';
+  ctx.globalAlpha = 1; ctx.drawImage(imgs[0], 0, 0, W, H);
+  if (imgs[1]) { ctx.globalAlpha = 0.45; ctx.drawImage(imgs[1], 0, 0, W, H); ctx.globalAlpha = 1; }
+  // n1 = the client's reel: blur + darken its burned-in lyric captions (top-left), moving with the footage
+  if (v === 'n1') softCover(imgs[0]);
+  ctx.restore();
+  return si;
+}
+
+// ---------- text helpers (TikTok-style) ----------
+function strokeText(str, x, y, o = {}) {
+  const { size = 82, color = '#fff', sw = 14, scale = 1, alpha = 1 } = o;
+  if (alpha <= 0 || scale <= 0) return;
+  ctx.save(); ctx.globalAlpha = alpha; ctx.translate(x, y); ctx.scale(scale, scale);
+  ctx.font = `900 ${size}px Montserrat`; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.lineJoin = 'round';
+  const w = ctx.measureText(str).width; if (w > 980) ctx.scale(980 / w, 980 / w);
+  ctx.shadowColor = 'rgba(0,0,0,0.35)'; ctx.shadowBlur = 16; ctx.shadowOffsetY = 6;
+  ctx.lineWidth = sw; ctx.strokeStyle = '#000'; ctx.strokeText(str, 0, 0);
+  ctx.shadowColor = 'transparent'; ctx.fillStyle = color; ctx.fillText(str, 0, 0); ctx.restore();
+}
+function boxText(str, x, y, o = {}) {
+  const { size = 46, alpha = 1, bg = '#fff', color = '#000', scale = 1 } = o;
+  if (alpha <= 0) return;
+  ctx.save(); ctx.globalAlpha = alpha; ctx.translate(x, y); ctx.scale(scale, scale);
+  ctx.font = `800 ${size}px Montserrat`; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+  const w = ctx.measureText(str).width + 52, h = size + 34;
+  ctx.shadowColor = 'rgba(0,0,0,0.25)'; ctx.shadowBlur = 20; ctx.shadowOffsetY = 6;
+  ctx.fillStyle = bg; ctx.beginPath(); ctx.roundRect(-w / 2, -h / 2, w, h, 16); ctx.fill();
+  ctx.shadowColor = 'transparent'; ctx.fillStyle = color; ctx.fillText(str, 0, 3); ctx.restore();
+}
+const CH = [
+  [0, 2, 'FÃ DE DJAVAN,', 'y'], [3, 4, 'PARA TUDO'], [5, 7, 'E OLHA ISSO!'],
+  [8, 11, 'ESSA É A CAMISETA'], [12, 13, 'DO DJAVAN', 'y'], [14, 16, 'DA HGG STYLE'],
+  [17, 20, 'A ESTAMPA É APLICADA'], [21, 22, 'NA HORA', 'y'], [23, 25, 'EM ALTA DEFINIÇÃO'],
+  [26, 27, 'NÃO DESBOTA', 'y'], [28, 29, 'NA LAVAGEM'], [30, 34, 'ALGODÃO FIO 30.1'], [35, 36, 'CAIMENTO OVERSIZED', 'y'],
+  [37, 38, 'SAI POR'], [39, 43, 'R$ 59,90', 'big'], [44, 46, 'OU 6X'], [47, 48, 'SEM JUROS', 'big'],
+  [49, 53, 'PEDIDO ATÉ 13H'], [54, 57, 'SAI NO MESMO DIA', 'y'],
+  [58, 60, 'TOCA NO BOTÃO'], [61, 64, 'E GARANTE A SUA!', 'y'],
+];
+function captions(t, y) {
+  for (let i = 0; i < CH.length; i++) {
+    const [a, b, txt, st] = CH[i], t0 = at(a) - 0.04;
+    const t1 = i + 1 < CH.length ? Math.min(at(CH[i + 1][0]) - 0.04, at(b) + Wd[b].d + 0.6) : at(b) + 1.2;
+    if (t < t0 || t >= t1) continue;
+    const p = prog(t, t0, t0 + 0.16), sc = lerp(1.35, 1, eback(p));
+    const big = st === 'big', yel = st === 'y' || big;
+    strokeText(txt, 540, y, { size: big ? 120 : 84, color: yel ? '#FFD60A' : '#fff', scale: sc, sw: big ? 18 : 14 });
+  }
+}
+function logo(alpha) { if (alpha <= 0) return; ctx.save(); ctx.globalAlpha = alpha; ctx.shadowColor = 'rgba(0,0,0,0.6)'; ctx.shadowBlur = 16; ctx.drawImage(IMG_LOGO, 60, 120, 143, 66); ctx.restore(); }
+
+async function render(t) {
+  ctx.setTransform(1, 0, 0, 1, 0, 0);
+  ctx.fillStyle = '#000'; ctx.fillRect(0, 0, W, H);
+  await drawFootage(t);
+  const v = ctx.createRadialGradient(540, 900, 700, 540, 900, 1300); v.addColorStop(0, 'rgba(0,0,0,0)'); v.addColorStop(1, 'rgba(0,0,0,0.25)');
+  ctx.fillStyle = v; ctx.fillRect(0, 0, W, H);
+  logo(1);
+  // hook box (top) — product + artist from frame 1
+  const ha = 1 - prog(t, 4.8, 5.0); // hook box (top), gone before the price pill takes the same spot
+  boxText('a camiseta do Djavan que todo fã quer', 540, 300, { alpha: ha, size: 40, scale: t < 0.02 ? 1 : lerp(0.85, 1, eback(prog(t, 0, 0.3))) });
+  // price pill during the price line
+  { const e = env(t, 12.7, 16.0, 0.25, 0.2); if (e > 0) boxText('6x de R$ 9,98 sem juros', 540, 300, { alpha: e, size: 40, scale: lerp(0.9, 1, e) }); }
+  // captions sit lower on the hero-close shots so the printed signature stays clear
+  const hero = t < 1.17 || (t >= 12.3 && t < 15.78);
+  if (t < 18.56) captions(t, hero ? 1650 : 1460);
+  // end card
+  if (t >= 18.56) {
+    const a = eout(prog(t, 18.6, 19.05));
+    ctx.save(); ctx.globalAlpha = a; ctx.translate(0, (1 - a) * 80);
+    ctx.shadowColor = 'rgba(0,0,0,0.3)'; ctx.shadowBlur = 40; ctx.shadowOffsetY = 12;
+    ctx.fillStyle = '#fff'; ctx.beginPath(); ctx.roundRect(70, 1300, 940, 380, 40); ctx.fill(); ctx.shadowColor = 'transparent';
+    ctx.fillStyle = '#0d0b0a'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+    ctx.font = '800 34px Montserrat'; ctx.fillText('Camiseta Streetwear Djavan Oceano', 540, 1360);
+    ctx.font = '900 92px Montserrat'; ctx.fillText('R$ 59,90', 430, 1450);
+    ctx.fillStyle = '#E8473F'; ctx.font = '800 34px Montserrat'; ctx.fillText('6x R$ 9,98', 800, 1430);
+    ctx.fillStyle = 'rgba(13,11,10,0.6)'; ctx.font = '700 28px Montserrat'; ctx.fillText('sem juros', 800, 1475);
+    ctx.restore();
+    const cb = eback(prog(t, 19.0, 19.4)), pulse = 1 + 0.03 * Math.sin((t - 19.4) * 7) * clamp((t - 19.5) * 2);
+    if (cb > 0) { ctx.save(); ctx.translate(540, 1590); ctx.scale(cb * pulse, cb * pulse);
+      ctx.fillStyle = '#0d0b0a'; ctx.beginPath(); ctx.roundRect(-400, -58, 800, 116, 58); ctx.fill();
+      ctx.fillStyle = '#fff'; ctx.font = '900 44px Montserrat'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.letterSpacing = '2px';
+      ctx.fillText('COMPRAR AGORA  →', 0, 3); ctx.restore(); }
+    boxText('Envio no mesmo dia (pedidos até 13h)', 540, 1760, { alpha: eout(prog(t, 19.3, 19.7)), size: 30, bg: '#FFD60A' });
+    captions(t, 1170);
+  }
+  // progress bar
+  ctx.fillStyle = 'rgba(255,255,255,0.18)'; ctx.fillRect(0, H - 10, W, 10);
+  ctx.fillStyle = '#FFD60A'; ctx.fillRect(0, H - 10, W * (t / DUR), 10);
+}
+
+let IMG_LOGO;
+window.ready = (async () => {
+  IMG_LOGO = new Image(); IMG_LOGO.src = 'build/logo_white.svg'; await IMG_LOGO.decode();
+  for (const f of ['900 40px Montserrat', '800 40px Montserrat', '700 40px Montserrat']) await document.fonts.load(f);
+  await document.fonts.ready; await render(0); return true;
+})();
+window.renderAt = t => render(t);
+</script>
+</body>
+</html>

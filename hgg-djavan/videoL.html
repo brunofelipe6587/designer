@@ -1,0 +1,279 @@
+<!doctype html>
+<html lang="pt-br">
+<head>
+<meta charset="utf-8">
+<title>HGG Djavan L Fã de Djavan</title>
+<link href="fonts/fontsC.css" rel="stylesheet">
+<style>html, body { margin: 0; background: #000; } canvas { display: block; }</style>
+</head>
+<body>
+<canvas id="c" width="1080" height="1920"></canvas>
+<script>
+// Creative L — "Fã de Djavan": the V1 winner's hook and rhythm (best cost per purchase in the account) rebuilt
+// with the client's real footage; cut on V1's exact timeline so V1's "Oceano" soundtrack fits as is.
+// Cinematic look (dark, clean type, lyric line, "OCEANO" punch on the hit), product photo + price on the offer.
+const W = 1080, H = 1920, DUR = 23.2, FPS_SRC = 30;
+const ctx = document.getElementById('c').getContext('2d');
+const COUNT = { n1: 400, n2: 395 };
+const clamp = (x, a = 0, b = 1) => Math.min(b, Math.max(a, x));
+const lerp = (a, b, t) => a + (b - a) * t;
+const eio = t => t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
+const eout = t => 1 - Math.pow(1 - t, 3);
+const eback = t => { const c1 = 1.8, c3 = c1 + 1; return 1 + c3 * Math.pow(t - 1, 3) + c1 * Math.pow(t - 1, 2); };
+const prog = (t, a, b) => clamp((t - a) / (b - a));
+const env = (t, a, b, fin = 0.15, fout = 0.15) => (t < a || t > b) ? 0 : Math.min(eout(prog(t, a, a + fin)), 1 - eio(prog(t, b - fout, b)));
+
+// song cues (Oceano 1:37.9 cut): "Vem" 0.66 · "amo" 5.4 · "Você deságua" 8.5 · "oceano" 12.3 · "Esqueço" 14.64
+const HIT = 12.3;
+// shots: [t0, t1, video, srcStart, speed, z0, z1, blend]
+const SHOTS = [
+  [0.00, 3.20, 'n2', 9.00, 0.30, 1.04, 1.16, 1],  // hook: sharp close, slow push-in
+  [3.20, 5.40, 'n2', 2.70, 0.95, 1.06, 1.14, 1],  // hands smoothing the transfer
+  [5.40, 7.10, 'n2', 5.40, 0.95, 1.04, 1.12, 1],  // pressed print on the table
+  [7.10, 8.30, 'n1', 5.90, 0.80, 1.06, 1.12, 1],  // tee on the hanger, HGG tag
+  [8.30, 12.30, 'n1', 0.10, 0.52, 1.02, 1.22, 1], // wide studio, slow push-in under the lyric
+  [12.30, 14.00, 'n2', 11.62, 0.65, 1.24, 1.08, 1],// HIT "oceano": hero close
+  [14.00, 17.00, 'n2', 8.30, 0.55, 1.06, 1.16, 1],// hero close, details
+  [17.00, 18.20, 'n2', 0.70, 1.0, 1.06, 1.12, 0], // transfer sheet: made to order
+];
+
+
+
+
+const cache = new Map();
+function frameImg(v, idx) {
+  const n = clamp(idx, 1, COUNT[v]), key = v + n;
+  if (!cache.has(key)) {
+    const im = new Image(); im.src = `ugc/frames/${v}/${String(n).padStart(4, '0')}.jpg`;
+    cache.set(key, im.decode().then(() => im));
+    if (cache.size > 40) cache.delete(cache.keys().next().value);
+  }
+  return cache.get(key);
+}
+function shake(t, amp) {
+  return [amp * (Math.sin(t * 37) * 0.6 + Math.sin(t * 23 + 1) * 0.4), amp * (Math.sin(t * 31 + 2) * 0.6 + Math.sin(t * 19) * 0.4)];
+}
+function handheld(t) { return [4 * Math.sin(1.3 * t) + 2 * Math.sin(3.1 * t + 1), 4 * Math.sin(1.1 * t + 2) + 2 * Math.sin(2.7 * t)]; }
+
+function linkSticker(x, y, w, h, line1, line2) {
+  ctx.save();
+  ctx.shadowColor = 'rgba(0,0,0,0.25)'; ctx.shadowBlur = 18; ctx.shadowOffsetY = 4;
+  ctx.fillStyle = '#fff'; ctx.beginPath(); ctx.roundRect(x, y, w, h, Math.min(h / 2, 30)); ctx.fill();
+  ctx.shadowColor = 'transparent';
+  // link icon
+  const ix = x + 52, iy = y + h / 2;
+  ctx.strokeStyle = '#2F80ED'; ctx.lineWidth = 7; ctx.lineCap = 'round';
+  ctx.save(); ctx.translate(ix, iy); ctx.rotate(-Math.PI / 4);
+  ctx.beginPath(); ctx.roundRect(-22, -11, 26, 22, 11); ctx.stroke(); ctx.beginPath(); ctx.roundRect(-4, -11, 26, 22, 11); ctx.stroke();
+  ctx.restore();
+  ctx.fillStyle = '#111'; ctx.textAlign = 'left'; ctx.textBaseline = 'middle';
+  if (line2) {
+    ctx.font = '600 30px Montserrat'; ctx.fillText(line1, x + 96, iy - 22);
+    ctx.font = '800 42px Montserrat'; ctx.fillText(line2, x + 96, iy + 20);
+  } else { ctx.font = '700 44px Montserrat'; ctx.fillText(line1, x + 96, iy + 2); }
+  ctx.restore();
+}
+
+// feathered blur over the burned-in captions of the n1 reel (fully covered y≈335–520). Only n1 takes where the
+// captions sit above the print are used (hanger shots), so the print itself is never blurred.
+const OFF = document.createElement('canvas'); OFF.width = W; OFF.height = H; const octx = OFF.getContext('2d');
+function softCover(img) {
+  octx.globalCompositeOperation = 'source-over'; octx.clearRect(0, 0, W, H);
+  octx.filter = 'blur(30px)'; octx.drawImage(img, 0, 0, W, H); octx.filter = 'none';
+  const sh = octx.createLinearGradient(0, 250, 0, 570); sh.addColorStop(0, 'rgba(0,0,0,0.25)'); sh.addColorStop(0.5, 'rgba(0,0,0,0.5)'); sh.addColorStop(1, 'rgba(0,0,0,0.25)');
+  octx.fillStyle = sh; octx.fillRect(0, 0, W, H);
+  octx.globalCompositeOperation = 'destination-in';
+  const m = octx.createLinearGradient(0, 250, 0, 570); m.addColorStop(0, 'rgba(0,0,0,0)'); m.addColorStop(0.266, 'rgba(0,0,0,1)'); m.addColorStop(0.844, 'rgba(0,0,0,1)'); m.addColorStop(1, 'rgba(0,0,0,0)');
+  octx.fillStyle = m; octx.fillRect(0, 0, W, H); octx.globalCompositeOperation = 'source-over';
+  ctx.drawImage(OFF, 0, 0);
+}
+
+async function drawFootage(t) {
+  let si = 0; for (let i = 0; i < SHOTS.length; i++) if (t >= SHOTS[i][0]) si = i;
+  const [t0, t1, v, s0, sp, z0, z1, blend] = SHOTS[si];
+  const lt = t - t0;
+  const srcT = s0 + lt * sp;
+  const f = srcT * FPS_SRC + 1;
+  const ia = Math.floor(f);
+  const imgs = [await frameImg(v, ia)];
+  if (blend) imgs.push(await frameImg(v, ia + 1)); // speed-ramp motion blur (frame blend)
+  // camera: eased zoom + punch-in on cut + handheld + impact shake
+  let z = lerp(z0, z1, eio(prog(t, t0, t1)));
+  z *= 1 + 0.09 * (1 - eout(prog(t, t0, t0 + 0.2))) * (si > 0 ? 1 : 0);
+  if (t >= HIT) z *= 1 + 0.10 * (1 - eout(prog(t, HIT, HIT + 0.45)));
+  const [hx, hy] = handheld(t);
+  const imp = t >= HIT ? (1 - prog(t, HIT, HIT + 0.45)) : 0;
+  const [sx, sy] = shake(t, 22 * imp);
+  ctx.save();
+  ctx.translate(540 + hx + sx, 960 + hy + sy); ctx.scale(z, z); ctx.translate(-540, -960);
+  ctx.imageSmoothingEnabled = true; ctx.imageSmoothingQuality = 'high';
+  ctx.globalAlpha = 1; ctx.drawImage(imgs[0], 0, 0, W, H);
+  if (imgs[1]) { ctx.globalAlpha = 0.45; ctx.drawImage(imgs[1], 0, 0, W, H); ctx.globalAlpha = 1; }
+  // n1 = the client's reel: blur + darken its burned-in lyric captions (top-left), moving with the footage
+  if (v === 'n1') softCover(imgs[0]);
+  ctx.restore();
+  return si;
+}
+
+// ---------- typography ----------
+function stroked(str, x, y, o = {}) {
+  const { size = 96, color = '#fff', scale = 1, alpha = 1, sw = 16, rot = 0, maxW = 1000, align = 'center' } = o;
+  if (alpha <= 0 || scale <= 0) return;
+  ctx.save(); ctx.globalAlpha = alpha; ctx.translate(x, y); ctx.rotate(rot); ctx.scale(scale, scale);
+  ctx.font = `900 ${size}px Montserrat`; ctx.textAlign = align; ctx.textBaseline = 'middle'; ctx.lineJoin = 'round';
+  const w = ctx.measureText(str).width; if (w > maxW) ctx.scale(maxW / w, maxW / w);
+  ctx.shadowColor = 'rgba(0,0,0,0.45)'; ctx.shadowBlur = 24; ctx.shadowOffsetY = 8;
+  ctx.lineWidth = sw; ctx.strokeStyle = '#000'; ctx.strokeText(str, 0, 0);
+  ctx.shadowColor = 'transparent'; ctx.fillStyle = color; ctx.fillText(str, 0, 0);
+  ctx.restore();
+}
+function chip(str, x, y, o = {}) {
+  const { size = 40, alpha = 1, bg = '#FFD60A', color = '#000', scale = 1, align = 'center' } = o;
+  if (alpha <= 0 || scale <= 0) return;
+  ctx.save(); ctx.globalAlpha = alpha; ctx.translate(x, y); ctx.scale(scale, scale);
+  ctx.font = `800 ${size}px Montserrat`; ctx.textBaseline = 'middle';
+  const w = ctx.measureText(str).width + 56, h = size + 36, bx = align === 'left' ? 0 : -w / 2;
+  ctx.shadowColor = 'rgba(0,0,0,0.35)'; ctx.shadowBlur = 22; ctx.shadowOffsetY = 8;
+  ctx.fillStyle = bg; ctx.beginPath(); ctx.roundRect(bx, -h / 2, w, h, 18); ctx.fill();
+  ctx.shadowColor = 'transparent'; ctx.fillStyle = color; ctx.textAlign = 'center'; ctx.fillText(str, bx + w / 2, 3);
+  ctx.restore();
+}
+const pop = (t, a, d = 0.28) => t < a ? 0 : eback(prog(t, a, a + d));
+function check(str, x, y, t, a) { // checklist row with tick
+  const p = pop(t, a, 0.3); if (p <= 0) return;
+  ctx.save(); ctx.translate(x, y); ctx.scale(p, p);
+  ctx.fillStyle = '#FFD60A'; ctx.beginPath(); ctx.arc(0, 0, 34, 0, Math.PI * 2); ctx.fill();
+  ctx.strokeStyle = '#000'; ctx.lineWidth = 8; ctx.lineCap = 'round'; ctx.lineJoin = 'round';
+  ctx.beginPath(); ctx.moveTo(-14, 1); ctx.lineTo(-3, 12); ctx.lineTo(16, -10); ctx.stroke();
+  ctx.restore();
+  stroked(str, x + 60, y + 2, { size: 58, scale: p, align: 'left', sw: 13 });
+}
+function logo(alpha) {
+  if (alpha <= 0) return;
+  ctx.save(); ctx.globalAlpha = alpha;
+  ctx.shadowColor = 'rgba(0,0,0,0.6)'; ctx.shadowBlur = 16;
+  ctx.drawImage(IMG_LOGO, 60, 120, 136 * 1.05, 63 * 1.05);
+  ctx.restore();
+}
+
+const ACC = '#E97E78';
+function clean(str, x, y, o = {}) {
+  const { size = 60, weight = 800, color = '#fff', align = 'center', alpha = 1, spacing = 0, family = 'Montserrat', italic = false, dy = 0, maxW = 1000, scale = 1 } = o;
+  if (alpha <= 0 || scale <= 0) return;
+  ctx.save(); ctx.globalAlpha = alpha; ctx.translate(x, y + dy); ctx.scale(scale, scale);
+  ctx.font = `${italic ? 'italic ' : ''}${weight} ${size}px "${family}"`; ctx.letterSpacing = spacing + 'px';
+  ctx.textAlign = align; ctx.textBaseline = 'middle';
+  const w = ctx.measureText(str).width; if (w > maxW) ctx.scale(maxW / w, maxW / w);
+  ctx.shadowColor = 'rgba(0,0,0,0.55)'; ctx.shadowBlur = 22; ctx.shadowOffsetY = 4;
+  ctx.fillStyle = color; ctx.fillText(str, 0, 0); ctx.restore();
+}
+function callout(label, ax, ay, lx, ly, e, dir) { // dot on the product + line + label pill
+  if (e <= 0) return;
+  ctx.save(); ctx.globalAlpha = e;
+  ctx.fillStyle = ACC; ctx.beginPath(); ctx.arc(ax, ay, 9 * eback(clamp(e)), 0, Math.PI * 2); ctx.fill();
+  ctx.strokeStyle = 'rgba(255,255,255,0.9)'; ctx.lineWidth = 3;
+  const mx = lerp(ax, lx, eout(e)), my = lerp(ay, ly, eout(e));
+  ctx.beginPath(); ctx.moveTo(ax, ay); ctx.lineTo(mx, my); ctx.stroke();
+  ctx.font = '800 34px Montserrat'; ctx.letterSpacing = '2px'; const w = ctx.measureText(label).width + 48;
+  const bx = dir > 0 ? lx : lx - w;
+  ctx.fillStyle = '#fff'; ctx.beginPath(); ctx.roundRect(bx, ly - 32, w, 64, 32); ctx.fill();
+  ctx.fillStyle = '#0b0b0c'; ctx.textAlign = 'left'; ctx.textBaseline = 'middle'; ctx.fillText(label, bx + 24, ly + 2);
+  ctx.restore();
+}
+function letterbox(a) { if (a <= 0) return; ctx.fillStyle = `rgba(0,0,0,${a})`; ctx.fillRect(0, 0, W, 120); ctx.fillRect(0, H - 120, W, 120); }
+function lyric(str, t, a, b, y) { const e = env(t, a, b, 0.5, 0.4); clean(str, 540, y, { family: 'Playfair Display', italic: true, weight: 500, size: 50, alpha: e, dy: (1 - e) * 14, maxW: 960 }); }
+function grade() { // cinematic grade: darker edges, lifted blacks
+  const v = ctx.createRadialGradient(540, 960, 520, 540, 960, 1250); v.addColorStop(0, 'rgba(0,0,0,0)'); v.addColorStop(1, 'rgba(0,0,0,0.6)');
+  ctx.fillStyle = v; ctx.fillRect(0, 0, W, H);
+}
+function flash(t, at, d = 0.2, max = 0.6) { const p = prog(t, at - 0.01, at + d); if (p <= 0 || p >= 1) return; ctx.fillStyle = `rgba(255,255,255,${max * (1 - eout(p))})`; ctx.fillRect(0, 0, W, H); }
+function drawProduct(img, cx, cy, s, ay) { ctx.save(); ctx.imageSmoothingQuality = 'high'; ctx.translate(540, ay); ctx.scale(s / 2, s / 2); ctx.translate(-cx * 2, -cy * 2); ctx.drawImage(img, 0, 0); ctx.restore(); }
+
+async function render(t) {
+  ctx.setTransform(1, 0, 0, 1, 0, 0);
+  ctx.fillStyle = '#000'; ctx.fillRect(0, 0, W, H);
+  const OFFER = 18.2, CTA = 20.4;
+  if (t < OFFER) {
+    await drawFootage(t);
+    grade();
+    let g = ctx.createLinearGradient(0, 0, 0, 640); g.addColorStop(0, 'rgba(0,0,0,0.6)'); g.addColorStop(1, 'rgba(0,0,0,0)'); ctx.fillStyle = g; ctx.fillRect(0, 0, W, 640);
+    g = ctx.createLinearGradient(0, 1250, 0, H); g.addColorStop(0, 'rgba(0,0,0,0)'); g.addColorStop(1, 'rgba(0,0,0,0.75)'); ctx.fillStyle = g; ctx.fillRect(0, 1250, W, H - 1250);
+    letterbox(0.9);
+    logo(1);
+    // HOOK (0–3.2): V1's winning question, product + price pill from frame 1
+    const h = env(t, -1, 3.2, 0.01, 0.25);
+    clean('FÃ DE DJAVAN?', 540, 330, { size: 96, weight: 900, alpha: h, spacing: 1, scale: t < 0.02 ? 1 : lerp(1.08, 1, eout(prog(t, 0, 0.3))) });
+    clean('ISSO AQUI É PRA VOCÊ.', 540, 440, { size: 56, weight: 700, color: ACC, alpha: h * env(t, 0.5, 3.2, 0.3, 0.25), spacing: 1 });
+    { const e = h * eout(prog(t, 0.9, 1.3));
+      if (e > 0) { ctx.save(); ctx.globalAlpha = e; ctx.font = '800 36px Montserrat'; ctx.letterSpacing = '1px'; const s = 'Camiseta Djavan Oceano  ·  R$ 59,90', w = ctx.measureText(s).width + 60;
+        ctx.fillStyle = 'rgba(255,255,255,0.95)'; ctx.beginPath(); ctx.roundRect(540 - w / 2, 1640 - 36 + (1 - e) * 20, w, 72, 36); ctx.fill();
+        ctx.fillStyle = '#0b0b0c'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillText(s, 540, 1642 + (1 - e) * 20); ctx.restore(); } }
+    // TOUR (3.2–8.3): callouts on the real process
+    callout('ESTAMPA EXCLUSIVA', 560, 760, 120, 420, env(t, 3.35, 5.3, 0.35, 0.2), 1);
+    callout('DTF EM ALTA DEFINIÇÃO', 600, 900, 960, 520, env(t, 5.5, 7.0, 0.35, 0.2), -1);
+    callout('100% ALGODÃO FIO 30.1', 520, 1250, 120, 1460, env(t, 7.2, 8.25, 0.3, 0.2), 1);
+    // LYRIC (8.5–12.3) + HIT
+    lyric('"você deságua em mim, e eu oceano"', t, 8.5, 12.25, 1560);
+    const oe = t >= HIT - 0.06 ? eback(prog(t, HIT - 0.06, HIT + 0.45)) : 0;
+    if (oe > 0 && t < 17.0) { ctx.save(); ctx.globalAlpha = clamp(oe) * env(t, HIT - 0.06, 17.0, 0.01, 0.3) * 0.95; ctx.translate(540, 360); const sc = lerp(1.3, 1, clamp(oe)); ctx.scale(sc, sc);
+      ctx.font = '900 200px Montserrat'; ctx.letterSpacing = '6px'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.lineWidth = 3; ctx.strokeStyle = ACC; ctx.strokeText('OCEANO', 0, 0); ctx.restore(); }
+    const ne = env(t, HIT + 0.25, 14.0, 0.3, 0.2);
+    clean('CAMISETA STREETWEAR', 540, 1665, { size: 56, weight: 900, alpha: ne, dy: (1 - ne) * 20, spacing: 4 });
+    clean('DJAVAN · OCEANO · MPB', 540, 1735, { size: 36, weight: 600, color: 'rgba(255,255,255,0.8)', alpha: ne, dy: (1 - ne) * 20, spacing: 6 });
+    flash(t, HIT, 0.22, 0.45);
+    // DETAILS (14–17)
+    callout('NÃO DESBOTA NA LAVAGEM', 600, 1000, 120, 520, env(t, 14.2, 16.95, 0.35, 0.25), 1);
+    { const e = env(t, 14.7, 16.95, 0.35, 0.25);
+      if (e > 0) { ctx.save(); ctx.globalAlpha = e; ctx.font = '800 34px Montserrat'; ctx.letterSpacing = '2px'; const s = 'OVERSIZED  ·  TAMANHOS M, G E GG', w = ctx.measureText(s).width + 56;
+        ctx.fillStyle = '#fff'; ctx.beginPath(); ctx.roundRect(540 - w / 2, 1400 - 34 + (1 - e) * 20, w, 68, 34); ctx.fill();
+        ctx.fillStyle = '#0b0b0c'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillText(s, 540, 1402 + (1 - e) * 20); ctx.restore(); } }
+    lyric('"esqueço que amar é quase uma dor"', t, 14.64, 16.95, 1560);
+    // MADE TO ORDER (17–18.2)
+    const me = env(t, 17.0, 18.2, 0.25, 0.15);
+    clean('PRODUZIDA AQUI NA HGG', 540, 400, { size: 62, weight: 900, alpha: me, dy: (1 - me) * 20 });
+    clean('enviada no mesmo dia (pedidos até 13h)', 540, 480, { size: 38, weight: 700, color: ACC, alpha: me, dy: (1 - me) * 20 });
+    flash(t, 14.0, 0.15, 0.25); flash(t, 17.0, 0.15, 0.25);
+  } else {
+    // OFFER (18.2–23.2): product photo + full price info — V1's offer layout
+    const p = prog(t, OFFER, OFFER + 0.6);
+    const bg = ctx.createLinearGradient(0, 0, 0, H); bg.addColorStop(0, '#1b1a1d'); bg.addColorStop(0.55, '#0a0a0b'); bg.addColorStop(1, '#050505'); ctx.fillStyle = bg; ctx.fillRect(0, 0, W, H);
+    const r = ctx.createRadialGradient(540, 640, 40, 540, 640, 820); r.addColorStop(0, 'rgba(120,118,128,0.42)'); r.addColorStop(0.45, 'rgba(70,68,76,0.22)'); r.addColorStop(1, 'rgba(0,0,0,0)'); ctx.fillStyle = r; ctx.fillRect(0, 0, W, H);
+    const bob = Math.sin((t - OFFER) * 2.2) * 8;
+    drawProduct(IMG.frente, 583, 760, lerp(0.9, 0.56, eio(p)), lerp(900, 640, eio(p)) + bob * eio(p));
+    grade();
+    const le = env(t, OFFER + 0.2, DUR + 1, 0.35, 0.25);
+    if (le > 0) { ctx.save(); ctx.globalAlpha = le; ctx.drawImage(IMG_LOGO, 540 - 116, 120, 232, 107); ctx.restore(); }
+    const a = d => env(t, OFFER + d, DUR + 1, 0.35, 0.25);
+    clean('POR APENAS', 540, 1060, { size: 36, weight: 700, color: 'rgba(255,255,255,0.72)', alpha: a(0.35), spacing: 8 });
+    const pe = prog(t, OFFER + 0.7, OFFER + 1.15);
+    if (pe > 0) clean('R$ 59,90', 540, 1175, { size: 160, weight: 900, alpha: clamp(pe * 3), scale: lerp(1.5, 1, eback(pe)), spacing: -2 });
+    clean('ou 6x de R$ 9,98 sem juros', 540, 1300, { size: 48, weight: 800, color: ACC, alpha: a(1.6), spacing: 0.5 });
+    clean('TAMANHOS M  ·  G  ·  GG', 540, 1370, { size: 32, weight: 700, color: 'rgba(255,255,255,0.72)', alpha: a(1.9), spacing: 3 });
+    const a5 = a(2.25);
+    if (a5 > 0) { ctx.save(); ctx.globalAlpha = a5; ctx.setLineDash([10, 8]); ctx.strokeStyle = 'rgba(255,255,255,0.6)'; ctx.lineWidth = 2.5; ctx.beginPath(); ctx.roundRect(150, 1428, 780, 70, 14); ctx.stroke(); ctx.restore();
+      clean('ENVIO NO MESMO DIA  ·  PEDIDOS ATÉ 13H', 540, 1464, { size: 28, weight: 800, alpha: a5, spacing: 1, maxW: 740 }); }
+    const ce = eback(prog(t, CTA, CTA + 0.5));
+    if (ce > 0) { const pulse = 1 + 0.035 * Math.sin((t - CTA) * 7) * clamp((t - CTA - 0.5) * 2);
+      ctx.save(); ctx.translate(540, 1590); ctx.scale(ce * pulse, ce * pulse); ctx.shadowColor = 'rgba(233,126,120,0.55)'; ctx.shadowBlur = 40;
+      ctx.fillStyle = '#fff'; ctx.beginPath(); ctx.roundRect(-380, -58, 760, 116, 58); ctx.fill(); ctx.shadowColor = 'transparent';
+      ctx.fillStyle = '#0b0b0c'; ctx.font = '900 44px Montserrat'; ctx.letterSpacing = '2px'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillText('GARANTA A SUA  →', 0, 3); ctx.restore(); }
+    clean('COMPRA 100% SEGURA  ·  TROCA FÁCIL', 540, 1700, { size: 28, weight: 700, color: 'rgba(255,255,255,0.72)', alpha: a(2.6), spacing: 2 });
+    flash(t, OFFER, 0.2, 0.35);
+  }
+  // progress bar (retention cue)
+  ctx.fillStyle = 'rgba(255,255,255,0.12)'; ctx.fillRect(0, H - 8, W, 8);
+  ctx.fillStyle = ACC; ctx.fillRect(0, H - 8, W * (t / DUR), 8);
+}
+
+const IMG = {};
+let IMG_LOGO;
+window.ready = (async () => {
+  IMG_LOGO = new Image(); IMG_LOGO.src = 'build/logo_white.svg'; await IMG_LOGO.decode();
+  await new Promise((ok, er) => { const i = new Image(); i.onload = () => { IMG.frente = i; ok(); }; i.onerror = er; i.src = 'build/frente_2x.png'; });
+  for (const f of ['900 40px Montserrat', '800 40px Montserrat', '700 40px Montserrat', '600 40px Montserrat', 'italic 500 40px "Playfair Display"']) await document.fonts.load(f);
+  await document.fonts.ready; await render(0); return true;
+})();
+window.renderAt = t => render(t);
+</script>
+</body>
+</html>

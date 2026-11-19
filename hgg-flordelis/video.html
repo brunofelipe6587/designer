@@ -162,22 +162,22 @@ const T = { hookEnd: 3.2, tourEnd: 8.3, ocean: 12.3, model: 14.0, back: 17.0, of
 
 // flat front camera: [t, cx, cy, s, ay]
 const FLAT = [
-  [0.0, 640, 700, 2.15, 1090],
-  [3.0, 640, 690, 1.9, 1090],
-  [3.6, 640, 590, 2.45, 960],  // cap / eyes
-  [4.9, 645, 600, 2.55, 960],
-  [5.4, 625, 935, 2.6, 900],   // necklace
-  [6.6, 625, 940, 2.66, 900],
-  [7.1, 685, 1010, 2.4, 960],  // signature
-  [8.3, 685, 1005, 2.48, 960],
-  [10.6, 620, 755, 0.80, 930], // full shirt reveal (print centre locked)
-  [14.0, 620, 755, 0.84, 930],
+  [0.0, 620, 740, 2.15, 1090],
+  [3.0, 620, 730, 1.9, 1090],
+  [3.6, 640, 660, 2.45, 960],  // cap / eyes
+  [4.9, 650, 670, 2.55, 960],
+  [5.4, 615, 950, 2.6, 900],   // necklace
+  [6.6, 615, 955, 2.66, 900],
+  [7.1, 632, 1040, 2.4, 960],  // signature
+  [8.3, 632, 1035, 2.48, 960],
+  [10.6, 605, 797, 0.80, 930], // full shirt reveal (print centre locked)
+  [14.0, 605, 797, 0.84, 930],
 ];
 // model front, matched so the print stays in place at the cut
 const MODEL = [
-  [14.0, 606, 792, 1.23, 930],
-  [15.0, 606, 770, 1.30, 960],
-  [17.0, 606, 750, 1.36, 960],
+  [14.0, 613, 797, 1.07, 930],
+  [15.0, 613, 760, 1.12, 960],
+  [17.0, 613, 740, 1.18, 960],
 ];
 
 function render(t) {
@@ -213,9 +213,9 @@ function render(t) {
 
     // S2 detail tour callouts (anchors follow the camera)
     const S = (px, py) => toScreen(px, py, cx, cy, s, ay);
-    { const [x, y] = S(470, 520); callout('ESTAMPA EXCLUSIVA', x, y, 120, 330, env(t, 3.75, 5.15), 1); }
-    { const [x, y] = S(720, 975); callout('DTF EM ALTA DEFINIÇÃO', x, y, 960, 520, env(t, 5.55, 6.95), -1); }
-    { const [x, y] = S(520, 1045); callout('RESISTENTE À LAVAGEM', x, y, 120, 430, env(t, 7.2, 8.4), 1); }
+    { const [x, y] = S(470, 560); callout('ESTAMPA EXCLUSIVA', x, y, 120, 330, env(t, 3.75, 5.15), 1); }
+    { const [x, y] = S(680, 955); callout('DTF EM ALTA DEFINIÇÃO', x, y, 960, 520, env(t, 5.55, 6.95), -1); }
+    { const [x, y] = S(480, 1050); callout('RESISTENTE À LAVAGEM', x, y, 120, 430, env(t, 7.2, 8.4), 1); }
 
     // lyric line during the pull-back
     lyric('"você deságua em mim, e eu oceano"', t, 8.5, 13.9, 1600);
@@ -238,9 +238,9 @@ function render(t) {
     bottomShade(1500, 0.9);
     vignette();
     const S = (px, py) => toScreen(px, py, cx, cy, s, ay);
-    { const [x, y] = S(600, 548); callout('GOLA REFORÇADA', x, y, 150, 470, env(t, 14.5, 17.0), 1); }
-    { const [x, y] = S(960, 880); callout('CAIMENTO OVERSIZED', x, y, 1010, 690, env(t, 15.0, 17.0), -1); }
-    { const [x, y] = S(520, 1230); callout('100% ALGODÃO FIO 30.1', x, y, 90, 1450, env(t, 15.5, 17.0), 1); }
+    { const [x, y] = S(600, 395); callout('GOLA REFORÇADA', x, y, 150, 470, env(t, 14.5, 17.0), 1); }
+    { const [x, y] = S(1030, 800); callout('CAIMENTO OVERSIZED', x, y, 1010, 690, env(t, 15.0, 17.0), -1); }
+    { const [x, y] = S(440, 1170); callout('100% ALGODÃO FIO 30.1', x, y, 90, 1450, env(t, 15.5, 17.0), 1); }
     lyric('"esqueço que amar é quase uma dor"', t, 14.64, 16.95, 1640);
   } else if (t < T.offer) {
     // ===== S5: back view, whip in =====

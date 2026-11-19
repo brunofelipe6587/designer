@@ -28,13 +28,13 @@ const env = (t, a, b, fin = 0.15, fout = 0.15) => (t < a || t > b) ? 0 : Math.mi
 const HIT = 12.30;
 // shots: [t0, img, keys [[t, cx, cy, s]...]] — cx, cy in 1200x1600 photo coords placed at screen centre
 const SHOTS = [
-  [0.00, 'frente', [[0.00, 620, 740, 1.55], [1.17, 620, 730, 1.68]]],                       // hook: the print
-  [1.17, 'modelo', [[1.17, 606, 860, 1.3], [2.56, 606, 840, 1.4]]],                         // worn
+  [0.00, 'frente', [[0.00, 605, 760, 1.5], [1.17, 605, 750, 1.62]]],                       // hook: the print
+  [1.17, 'modelo', [[1.17, 613, 860, 1.2], [2.56, 613, 840, 1.3]]],                         // worn
   [2.56, 'costasModelo', [[2.56, 610, 820, 1.25], [5.34, 610, 790, 1.45]]],                 // fabric / back
-  [5.34, 'frente', [[5.34, 690, 690, 2.8], [8.12, 680, 680, 2.5]]],                         // portrait detail
-  [8.12, 'frente', [[8.12, 690, 1010, 2.35], [11.6, 690, 1000, 2.55]]],                     // signature detail
-  [11.6, 'frente', [[11.6, 690, 1000, 2.55], [12.30, 640, 720, 4.2]]],                      // whip-in before the hit
-  [HIT, 'modelo', [[HIT, 606, 840, 1.0], [15.78, 606, 860, 1.12]]],                         // REVEAL on "Teu olhar"
+  [5.34, 'frente', [[5.34, 690, 740, 2.8], [8.12, 680, 730, 2.5]]],                         // portrait detail
+  [8.12, 'frente', [[8.12, 632, 1040, 2.35], [11.6, 632, 1035, 2.55]]],                     // signature detail
+  [11.6, 'frente', [[11.6, 632, 1035, 2.55], [12.30, 650, 740, 4.2]]],                      // whip-in before the hit
+  [HIT, 'modelo', [[HIT, 613, 830, 0.92], [15.78, 613, 850, 1.02]]],                         // REVEAL on "Teu olhar"
   [15.78, 'costasModelo', [[15.78, 610, 1000, 1.15], [18.56, 610, 980, 1.22]]],            // back / oversized fit
   [18.56, 'frente', [[18.56, 600, 1250, 0.62], [22.0, 600, 1245, 0.65]]],                   // offer
 ];

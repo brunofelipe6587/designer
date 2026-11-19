@@ -1,0 +1,91 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<title>Marca Fabrício Veículos</title>
+<link rel="stylesheet" href="../fonts/fonts.css">
+<style>
+  :root { --ciano: #19d3f5; --navy: #04185f; }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html, body { background: transparent; }
+  body { color: #fff; font-family: 'Montserrat', sans-serif; overflow: hidden; }
+  .art { position: relative; overflow: hidden; }
+  .fundo {
+    position: absolute; inset: 0;
+    background:
+      radial-gradient(ellipse at 50% 42%, #1240c8 0%, #0b33b0 32%, #082894 58%, #04185f 100%);
+  }
+  /* feixes de luz como na faixada */
+  .luz { position: absolute; border-radius: 50%; background: radial-gradient(circle, rgba(220,250,255,1) 0, rgba(80,210,255,.75) 12%, rgba(40,120,255,0) 60%); }
+  .feixe { position: absolute; height: 4px; background: linear-gradient(90deg, rgba(120,230,255,0), rgba(190,245,255,.95) 50%, rgba(120,230,255,0)); transform-origin: center; filter: blur(.6px); }
+  .center { position: absolute; display: flex; flex-direction: column; align-items: center; }
+  .logo { display: block; filter: drop-shadow(0 8px 14px rgba(0,10,60,.55)); }
+  .slogan { font-family: 'Kaushan Script', cursive; white-space: nowrap; text-shadow: 0 3px 8px rgba(0,10,60,.7); }
+  .linha { height: 4px; border-radius: 4px; background: linear-gradient(90deg, rgba(25,211,245,0), var(--ciano) 25%, var(--ciano) 75%, rgba(25,211,245,0)); box-shadow: 0 0 10px rgba(25,211,245,.6); }
+  .pill { border: 4px solid var(--ciano); border-radius: 60px; display: flex; align-items: center; justify-content: center; gap: 18px;
+    box-shadow: 0 0 16px rgba(25,211,245,.55), inset 0 0 12px rgba(25,211,245,.25); background: rgba(4,24,95,.35); }
+  .pill span { font-weight: 800; white-space: nowrap; letter-spacing: .5px; }
+  .pill .dot { width: 12px; height: 12px; border-radius: 50%; background: var(--ciano); box-shadow: 0 0 8px rgba(25,211,245,.8); }
+  .contatos { display: flex; align-items: center; gap: 46px; }
+  .ct { display: flex; align-items: center; gap: 14px; font-weight: 800; white-space: nowrap; text-shadow: 0 3px 8px rgba(0,10,60,.7); }
+  .barras { position: absolute; display: flex; flex-direction: column; gap: 12px; }
+  .barras i { display: block; height: 16px; background: var(--ciano); box-shadow: 0 0 10px rgba(25,211,245,.5); }
+</style>
+</head>
+<body>
+<div id="root"></div>
+<script>
+const C = '#19d3f5';
+const ICON = {
+  whats: (h) => `<svg width="${h}" height="${h}" viewBox="0 0 100 100"><path d="M50 8C27 8 8.5 26.4 8.5 49.2c0 7.9 2.2 15.2 6.1 21.5L8 92l22.1-6.4c6 3.3 12.9 5.1 19.9 5.1 23 0 41.5-18.5 41.5-41.4S73 8 50 8z" fill="none" stroke="${C}" stroke-width="7" stroke-linejoin="round"/><path d="M36 30c-1.5 0-3.6.6-5.3 2.5-1.8 2-5 5-5 12.2s5.2 14.1 5.9 15.1c.7 1 10.1 16.2 25 22 12.4 4.8 14.9 3.9 17.6 3.6 2.7-.2 8.7-3.5 9.9-7 1.2-3.4 1.2-6.4.9-7-.4-.6-1.3-1-2.7-1.7-1.5-.7-8.7-4.3-10-4.8-1.4-.5-2.3-.7-3.3.7-1 1.5-3.8 4.8-4.6 5.8-.9 1-1.7 1.1-3.2.4-1.5-.7-6.2-2.3-11.8-7.3-4.4-3.9-7.3-8.7-8.2-10.2-.9-1.5-.1-2.3.6-3 .7-.7 1.5-1.7 2.2-2.6.7-.9 1-1.5 1.5-2.5.5-1 .2-1.9-.1-2.6-.4-.7-3.2-7.9-4.5-10.8-1.1-2.6-2.3-2.7-3.3-2.7z" fill="${C}" transform="translate(50 50) scale(.62) translate(-56 -56)"/></svg>`,
+  insta: (h) => `<svg width="${h}" height="${h}" viewBox="0 0 100 100"><rect x="8" y="8" width="84" height="84" rx="24" fill="none" stroke="${C}" stroke-width="9"/><circle cx="50" cy="50" r="19" fill="none" stroke="${C}" stroke-width="9"/><circle cx="74" cy="26" r="6" fill="${C}"/></svg>`,
+  pin: (h) => `<svg width="${h * .72}" height="${h}" viewBox="0 0 72 100"><path d="M36 2C17.2 2 3 16.4 3 34.6 3 58 36 98 36 98s33-40 33-63.4C69 16.4 54.8 2 36 2z" fill="${C}"/><circle cx="36" cy="34" r="12.5" fill="#071f86"/></svg>`,
+};
+const D = {
+  slogan: 'Realizando seu sonho sobre rodas!',
+  servicos: ['COMPRA', 'VENDA', 'TROCA', 'FINANCIA'],
+  whats: '88 99966-4337', insta: '@fabricioveiculoscariri', local: 'Juazeiro do Norte - CE',
+};
+const luz = (x, y, r) => `<div class="luz" style="left:${x - r}px;top:${y - r}px;width:${2 * r}px;height:${2 * r}px"></div>`;
+const feixe = (x, y, w, ang) => `<div class="feixe" style="left:${x - w / 2}px;top:${y}px;width:${w}px;transform:rotate(${ang}deg)"></div>`;
+
+const K = {
+  // foto de perfil: o conteúdo fica dentro do círculo inscrito (recorte do Facebook/Google/Linktree)
+  perfil: (opt) => {
+    const W = 1080, lw = opt.slogan ? 780 : 840;
+    return { W, H: W, html: `<div class="fundo"></div>${luz(930, 150, 120)}${feixe(860, 205, 420, -24)}
+      <div class="center" style="left:0;right:0;top:${opt.slogan ? 360 : 400}px">
+        <img class="logo" src="../assets/logo_fabricio_azul.svg" style="width:${lw}px">
+        ${opt.slogan ? `<div class="slogan" style="font-size:52px;margin-top:22px">${D.slogan}</div><div class="linha" style="width:560px;margin-top:14px"></div>` : ''}
+      </div>` };
+  },
+  // capa do Facebook 1640x924: no computador aparece a faixa central de 1640x624; no celular aparece tudo
+  capa: () => {
+    const W = 1640, H = 924;
+    const barras = (x) => `<div class="barras" style="left:${x}px;top:330px">${[0, 1, 2].map(() => '<i style="width:96px"></i>').join('')}</div>`;
+    return { W, H, html: `<div class="fundo"></div>${luz(1585, 85, 150)}${feixe(1470, 128, 420, -20)}${luz(60, 860, 110)}${feixe(190, 858, 380, -16)}
+      ${barras(150)}${barras(1394)}
+      <div class="center" style="left:0;right:0;top:178px">
+        <img class="logo" src="../assets/logo_fabricio_azul.svg" style="width:820px">
+        <div class="slogan" style="font-size:54px;margin-top:14px">${D.slogan}</div>
+        <div class="linha" style="width:640px;margin-top:12px"></div>
+        <div class="pill" style="margin-top:26px;padding:12px 40px"><span style="font-size:36px">${D.servicos.join('</span><i class="dot"></i><span style="font-size:36px">')}</span></div>
+        <div class="contatos" style="margin-top:26px">
+          <div class="ct" style="font-size:40px">${ICON.whats(48)}${D.whats}</div>
+          <div class="ct" style="font-size:34px">${ICON.insta(42)}${D.insta}</div>
+          <div class="ct" style="font-size:34px">${ICON.pin(46)}${D.local}</div>
+        </div>
+      </div>` };
+  },
+};
+
+window.render = async (kind, opt = {}) => {
+  const { W, H, html } = K[kind](opt);
+  document.getElementById('root').innerHTML = `<div class="art" style="width:${W}px;height:${H}px">${html}</div>`;
+  await document.fonts.ready;
+  await Promise.all([...document.images].map((im) => (im.complete ? 0 : new Promise((r) => { im.onload = im.onerror = r; }))));
+  return { W, H };
+};
+</script>
+</body>
+</html>

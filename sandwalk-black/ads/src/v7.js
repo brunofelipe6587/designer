@@ -4,7 +4,7 @@ const DUR = 16.4, LN = Object.fromEntries(VO.map(l => [l.k, l]));
 const S = k => LN[k].s - 0.12;   // scene starts just before its line
 const GRID = ['blackout', 'hupi_fire', 'graffiti', 'shadow', 'splash', 'allblack', 'pincelada_fluor', 'stars', 'shadow_laranja'];
 const FR = '../../sandwalk-ftvpreta/frames/';
-const DAYS = ['02', '03', '04', '05', '06', '07', '08'], WD = ['SEG', 'TER', 'QUA', 'QUI', 'SEX', 'SÁB', 'DOM'];
+const DAYS = ['22', '23', '24', '25', '26', '27', '28', '29', '30'], WD = ['DOM', 'SEG', 'TER', 'QUA', 'QUI', 'SEX', 'SÁB', 'DOM', 'SEG'];
 function captions(t) {
   const line = VO.find(l => t >= l.s - 0.05 && t <= l.e + 0.25); if (!line) return;
   const words = line.w.map(w => w.w), fonts = '800 46px Inter';
@@ -53,10 +53,10 @@ async function render(t) {
     });
   }
   if (sc === 'date') {
-    scaled(540, 330, pop(t, S('date')), 1, () => txt('SÓ ATÉ 08/11', 540, 380, '700 120px Syne', WHITE, 'center'));
-    const bw = 128, gap = 12, x0 = 540 - (7 * bw + 6 * gap) / 2;
-    for (let i = 0; i < 7; i++) {
-      const x = x0 + i * (bw + gap), last = i === 6;
+    scaled(540, 330, pop(t, S('date')), 1, () => txt('SÓ ATÉ 30/11', 540, 380, '700 120px Syne', WHITE, 'center'));
+    const bw = 104, gap = 9, x0 = 540 - (9 * bw + 8 * gap) / 2;
+    for (let i = 0; i < 9; i++) {
+      const x = x0 + i * (bw + gap), last = i === 8;
       scaled(x + bw / 2, 560, pop(t, S('date') + 0.1 + i * 0.07, 0.25), 1, () => {
         ctx.fillStyle = last ? YEL : '#151515'; ctx.strokeStyle = last ? YEL : 'rgba(255,204,41,0.45)'; ctx.lineWidth = 2;
         ctx.beginPath(); ctx.roundRect(x, 485, bw, 150, 14); ctx.fill(); ctx.stroke();

@@ -8,7 +8,7 @@
 set -euo pipefail
 cd "$(dirname "$0")"
 VJ=src/audio/baile_do_vj.mp3; VOID=../../sandwalk-void/src/v01_studio.mov; EVER=../../sandwalk-everflame/src/v01_studio.mp4
-declare -A NAME=([v1]=Lances [v2]=Bicicleta [v3]=Contador [v4]=Montagem [v5]=So7Dias [v6]=Matematica [v7]=Narracao)
+declare -A NAME=([v1]=Lances [v2]=Bicicleta [v3]=Contador [v4]=Montagem [v5]=So9Dias [v6]=Matematica [v7]=Narracao)
 norm() { echo "loudnorm=I=-14:TP=-1.5:LRA=11,aresample=48000"; }
 for v in ${@:-v1 v2 v3 v4 v5 v6 v7}; do
   [ -f out/${v}_silent.mp4 ] || { echo "skip $v (no render)"; continue; }
@@ -25,7 +25,7 @@ for v in ${@:-v1 v2 v3 v4 v5 v6 v7}; do
     v6) win $EVER 4.49 ;;
     v7) [ -f audio/vo_black7.wav ] || python3 make_vo.py black7
         ffmpeg -v error -y -i audio/vo_black7.wav -i $VOID -filter_complex "\
-[1:a]aresample=48000,equalizer=f=2000:t=q:w=1.2:g=-8,volume='if(lt(t,15.3),0.17,0.75)':eval=frame,apad,atrim=0:$D,afade=t=out:st=$(echo "$D-0.6" | bc):d=0.6[bed];\
+[1:a]aresample=48000,equalizer=f=2000:t=q:w=1.2:g=-8,volume='if(lt(t,15.35),0.17,0.75)':eval=frame,apad,atrim=0:$D,afade=t=out:st=$(echo "$D-0.6" | bc):d=0.6[bed];\
 [0:a]aresample=48000[vo];[vo][bed]amix=inputs=2:normalize=0:duration=longest,apad,atrim=0:$D,$(norm)[o]" -map "[o]" -ac 2 audio/mix_$v.wav ;;
   esac
   ffmpeg -v error -y -i out/${v}_silent.mp4 -i audio/mix_$v.wav -map 0:v -map 1:a -c:v libx264 -preset slow -crf 19 -pix_fmt yuv420p \

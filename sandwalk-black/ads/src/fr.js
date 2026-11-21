@@ -34,7 +34,7 @@ function drawFrame() {
   seal(540, y0, 'BLACK SAND WALK', 26, -0.03, YEL, INK, 'center');
   ctx.font = '700 70px Syne'; const a = '3 SUNGAS POR ', aw = ctx.measureText(a).width, bw = ctx.measureText('R$ 179').width, x0 = 540 - (aw + bw) / 2;
   txt(a, x0, y0 + 110, '700 70px Syne', WHITE); txt('R$ 179', x0 + aw, y0 + 110, '700 70px Syne', YEL);
-  ctx.font = '600 30px Inter'; const s1 = 'De R$ 209,70', s2 = '  ·  Só até 08/11';
+  ctx.font = '600 30px Inter'; const s1 = 'De R$ 209,70', s2 = '  ·  Só até 30/11';
   const w1 = ctx.measureText(s1).width, w2 = ctx.measureText(s2).width, x1 = 540 - (w1 + w2) / 2;
   strike(s1, x1, y0 + 168, '600 30px Inter', '#9A9A9A', '#BDBDBD'); txt(s2, x1 + w1, y0 + 168, '700 30px Inter', WHITE);
 }

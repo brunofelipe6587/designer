@@ -1,14 +1,14 @@
-// E5 · Urgência: 7 days on a calendar strip, "só até 08/11", sungas fanned out.
+// E5 · Urgência: 9 days on a calendar strip, "só até 30/11", sungas fanned out.
 function render() {
   bgBlack([[540, 700, 0.18, 700]]);
-  tape(0, 120, 1080, 40, YEL, INK, 'SÓ ATÉ 08/11  •  BLACK SAND WALK  •  ', 56, 26);
+  tape(0, 120, 1080, 40, YEL, INK, 'SÓ ATÉ 30/11  •  BLACK SAND WALK  •  ', 56, 26);
   logo(540, 170, 260, 'center');
-  txt('SÓ 7 DIAS', 540, 370, '700 128px Syne', WHITE, 'center');
-  // calendar strip 02–08/11
-  const days = ['02', '03', '04', '05', '06', '07', '08'], wd = ['SEG', 'TER', 'QUA', 'QUI', 'SEX', 'SÁB', 'DOM'];
-  const bw = 124, gap = 13, x0 = 540 - (7 * bw + 6 * gap) / 2;
-  for (let i = 0; i < 7; i++) {
-    const x = x0 + i * (bw + gap), y = 430, last = i === 6;
+  txt('SÓ 9 DIAS', 540, 370, '700 128px Syne', WHITE, 'center');
+  // calendar strip 22–30/11
+  const days = ['22', '23', '24', '25', '26', '27', '28', '29', '30'], wd = ['DOM', 'SEG', 'TER', 'QUA', 'QUI', 'SEX', 'SÁB', 'DOM', 'SEG'];
+  const bw = 104, gap = 9, x0 = 540 - (9 * bw + 8 * gap) / 2;
+  for (let i = 0; i < 9; i++) {
+    const x = x0 + i * (bw + gap), y = 430, last = i === 8;
     ctx.fillStyle = last ? YEL : '#151515'; ctx.strokeStyle = last ? YEL : 'rgba(255,204,41,0.45)'; ctx.lineWidth = 2;
     ctx.beginPath(); ctx.roundRect(x, y, bw, 140, 14); ctx.fill(); ctx.stroke();
     txt(wd[i], x + bw / 2, y + 38, '700 22px Inter', last ? INK : GREY, 'center');

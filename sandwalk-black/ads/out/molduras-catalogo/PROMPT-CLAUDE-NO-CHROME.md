@@ -32,7 +32,7 @@ PARTE 2: Campanha da Black (agendada)
    nome dela e espere eu confirmar que é essa.
 8. Duplique a campanha (deixe a original como está). Nome da cópia: "[BLACK S1] Catálogo Sungas - moldura 3 por 179".
 9. No conjunto de anúncios da cópia:
-   - Programação: início 02/11/2026 às 00:00 e término 08/11/2026 às 23:59 (fuso de Brasília).
+   - Programação: início 22/11/2026 às 00:00 e término 30/11/2026 às 23:59 (fuso de Brasília).
    - Conjunto de produtos: sungas (me pergunte se houver mais de um conjunto de sungas).
 10. No anúncio da cópia:
    - Em Criativo do anúncio, procure "Modelo de imagem" → Escolher modelo → "Black Sand Walk - Sungas 3 por 179".

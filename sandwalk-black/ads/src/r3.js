@@ -22,7 +22,7 @@ function render() {
   ctx.fillStyle = INK; ctx.beginPath(); ctx.roundRect(540 - 320, 1162, 640, 84, 14); ctx.fill();
   txt('GARANTIR AS MINHAS  →', 540, 1206, '800 33px Inter', YEL, 'center', 'middle');
   txt('Estampas pra todo estilo, do básico ao colorido', 540, 1330, '600 30px Inter', INK, 'center');
-  txt('Válido de 02 a 08/11 ou enquanto durar o estoque', 540, 1385, '600 22px Inter', 'rgba(10,10,10,0.75)', 'center');
+  txt('Válido de 22 a 30/11 ou enquanto durar o estoque', 540, 1385, '600 22px Inter', 'rgba(10,10,10,0.75)', 'center');
   tape(0, 1760, 1080, 1690, INK, YEL, 'BLACK SAND WALK  •  3 SUNGAS POR R$ 179  •  ', 54, 25);
 }
 window.ready = (async () => { await loadCommon(); render(); return true; })();

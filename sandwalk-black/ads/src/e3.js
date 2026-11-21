@@ -26,6 +26,6 @@ function render() {
   // CTA in black on yellow
   ctx.fillStyle = INK; ctx.beginPath(); ctx.roundRect(540 - 330, 1225, 660, 88, 14); ctx.fill();
   txt('GARANTIR AS MINHAS  →', 540, 1271, '800 34px Inter', YEL, 'center', 'middle');
-  txt('Válido de 02 a 08/11 ou enquanto durar o estoque', 540, 1340, '600 20px Inter', 'rgba(10,10,10,0.75)', 'center');
+  txt('Válido de 22 a 30/11 ou enquanto durar o estoque', 540, 1340, '600 20px Inter', 'rgba(10,10,10,0.75)', 'center');
 }
 window.ready = (async () => { await loadCommon(); render(); return true; })();

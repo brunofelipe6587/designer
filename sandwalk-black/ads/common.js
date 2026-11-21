@@ -1,5 +1,5 @@
 // Shared drawing kit for the Black Sand Walk (semana 1, sungas) ad creatives.
-// Offer: 3 sungas por R$ 179 · de R$ 209,70 · economize R$ 30 · válido de 02 a 08/11 ou enquanto durar o estoque.
+// Offer: 3 sungas por R$ 179 · de R$ 209,70 · economize R$ 30 · válido de 22 a 30/11 ou enquanto durar o estoque.
 // Brand: black + #FFCC29, Syne bold for titles, Inter for support/buttons, wide white SAND WALK logo.
 // Partner athletes are drawn from the approved cutouts (../build/cut*.png) with their ORIGINAL pixels: no filter,
 // no colour change on them — only a blurred tinted copy behind as rim light.
@@ -167,7 +167,7 @@ function logo(x, y, w, align = 'left', alpha = 1) {
   ctx.save(); ctx.globalAlpha = alpha; ctx.drawImage(IMG.logo, align === 'center' ? x - w / 2 : align === 'right' ? x - w : x, y, w, w * 30 / 480); ctx.restore();
 }
 function footer(y, size = 24, color = '#8C8C8C', x = W / 2, align = 'center') {
-  txt('Válido de 02 a 08/11 ou enquanto durar o estoque', x, y, `500 ${size}px Inter`, color, align);
+  txt('Válido de 22 a 30/11 ou enquanto durar o estoque', x, y, `500 ${size}px Inter`, color, align);
 }
 function vignette(a = 0.6, cy = H * 0.45) {
   const g = ctx.createRadialGradient(W / 2, cy, W * 0.3, W / 2, cy, W * 1.05); g.addColorStop(0, 'rgba(0,0,0,0)'); g.addColorStop(1, `rgba(0,0,0,${a})`);

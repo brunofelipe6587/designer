@@ -1,13 +1,13 @@
-// R5 · Só 7 dias — Reels/Stories 1080×1920 (essentials inside y 270–1250).
+// R5 · Só 9 dias — Reels/Stories 1080×1920 (essentials inside y 270–1250).
 function render() {
   bgBlack([[540, 760, 0.18, 760]]);
-  tape(0, 180, 1080, 100, YEL, INK, 'SÓ ATÉ 08/11  •  BLACK SAND WALK  •  ', 56, 26);
+  tape(0, 180, 1080, 100, YEL, INK, 'SÓ ATÉ 30/11  •  BLACK SAND WALK  •  ', 56, 26);
   logo(540, 30, 220, 'center', 0);
-  txt('SÓ 7 DIAS', 540, 400, '700 128px Syne', WHITE, 'center');
-  const days = ['02', '03', '04', '05', '06', '07', '08'], wd = ['SEG', 'TER', 'QUA', 'QUI', 'SEX', 'SÁB', 'DOM'];
-  const bw = 124, gap = 13, x0 = 540 - (7 * bw + 6 * gap) / 2;
-  for (let i = 0; i < 7; i++) {
-    const x = x0 + i * (bw + gap), y = 450, last = i === 6;
+  txt('SÓ 9 DIAS', 540, 400, '700 128px Syne', WHITE, 'center');
+  const days = ['22', '23', '24', '25', '26', '27', '28', '29', '30'], wd = ['DOM', 'SEG', 'TER', 'QUA', 'QUI', 'SEX', 'SÁB', 'DOM', 'SEG'];
+  const bw = 104, gap = 9, x0 = 540 - (9 * bw + 8 * gap) / 2;
+  for (let i = 0; i < 9; i++) {
+    const x = x0 + i * (bw + gap), y = 450, last = i === 8;
     ctx.fillStyle = last ? YEL : '#151515'; ctx.strokeStyle = last ? YEL : 'rgba(255,204,41,0.45)'; ctx.lineWidth = 2;
     ctx.beginPath(); ctx.roundRect(x, y, bw, 140, 14); ctx.fill(); ctx.stroke();
     txt(wd[i], x + bw / 2, y + 38, '700 22px Inter', last ? INK : GREY, 'center');
@@ -22,6 +22,6 @@ function render() {
   strike('De R$ 209,70', 540, 1125, '600 32px Inter', GREY, '#D8D8D8', 'center');
   cta('GARANTIR AS MINHAS  →', 540, 1200, 640, 84, 33);
   txt('ou enquanto durar o estoque', 540, 1330, '500 24px Inter', '#8C8C8C', 'center');
-  tape(0, 1760, 1080, 1690, '#141414', 'rgba(255,204,41,0.65)', 'SÓ ATÉ 08/11  •  BLACK SAND WALK  •  ', 54, 25);
+  tape(0, 1760, 1080, 1690, '#141414', 'rgba(255,204,41,0.65)', 'SÓ ATÉ 30/11  •  BLACK SAND WALK  •  ', 54, 25);
 }
 window.ready = (async () => { await loadCommon(); render(); return true; })();

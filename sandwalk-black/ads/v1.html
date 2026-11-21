@@ -70,7 +70,7 @@ async function render(t) {
   if (t >= OUTRO) {
     ['allblack', 'graffiti', 'blackout', 'hupi_fire'].forEach((k, i) => { const p = pop(t, OUTRO + i * BEAT * 0.5, 0.35); scaled(165 + i * 250, 1480, p, 1, () => sunga(k, 165 + i * 250, 1480, 220, (i - 1.5) * 0.05, { spot: 0.22 })); });
   }
-  tape(0, 1780, 1080, 1700, '#121212', 'rgba(255,204,41,0.5)', 'SÓ ATÉ 08/11  •  BLACK SAND WALK  •  ', 50, 24, t * 60);
+  tape(0, 1780, 1080, 1700, '#121212', 'rgba(255,204,41,0.5)', 'SÓ ATÉ 30/11  •  BLACK SAND WALK  •  ', 50, 24, t * 60);
   flash(t, 0, 0.25, 0.6); flash(t, DROP, 0.22, 0.85); flash(t, CAR, 0.15, 0.4); flash(t, OUTRO, 0.15, 0.4, '255,204,41');
 }
 window.ready = (async () => { await loadCommon(); await render(0); return true; })();

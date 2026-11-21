@@ -8,7 +8,7 @@ SCRIPTS = {'black7': [
     ('offer', 'Três sungas por cento e setenta e nove reais.'),
     ('anchor', 'Você economiza trinta reais.'),
     ('style', 'Tem estampa pra todo estilo, do básico ao colorido.'),
-    ('date', 'Mas é só até oito de novembro, ou enquanto durar o estoque.'),
+    ('date', 'Mas é só até trinta de novembro, ou enquanto durar o estoque.'),
     ('cta', 'Toca no botão e garante as suas!'),
 ]}
 LINES = SCRIPTS[V]

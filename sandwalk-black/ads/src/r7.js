@@ -23,7 +23,7 @@ function receipt(x, y, w, h, rot) {
   txt('TOTAL', L, 548, '800 30px Inter', '#1A1A1A');
   txt('R$ 179', R, 560, '700 70px Syne', '#1A1A1A', 'right');
   for (let i = 0, bx = L; bx < R; i++) { const bw = 2 + Math.floor(hash(i) * 5); if (hash(i + 99) > 0.35) { ctx.fillStyle = '#1A1A1A'; ctx.fillRect(bx, 600, bw, 70); } bx += bw + 2; }
-  txt('VÁLIDO DE 02 A 08/11', C, 712, '700 20px Inter', '#555', 'center');
+  txt('VÁLIDO DE 22 A 30/11', C, 712, '700 20px Inter', '#555', 'center');
   ctx.restore();
 }
 function render() {

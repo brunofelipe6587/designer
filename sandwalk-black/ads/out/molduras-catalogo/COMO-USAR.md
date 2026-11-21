@@ -37,4 +37,4 @@ Janela do produto (x, y, largura, altura, em pixels):
 **Moldura antiga (frames):** se ainda estiver disponível na conta, use o `moldura-1x1` (PNG transparente, menor que
 1 MB, 1080×1080) em "Adicionar moldura → Personalizada".
 
-Oferta usada: 3 sungas por R$ 179 · de R$ 209,70 · só até 08/11.
+Oferta usada: 3 sungas por R$ 179 · de R$ 209,70 · só até 30/11.

@@ -9,7 +9,7 @@ function render() {
   ctx.fillStyle = YEL; ctx.fillRect(0, CUT - 2, 1100, 5);
   // offer column
   seal(COL, 112, 'BLACK SAND WALK', 34, -0.03, YEL, INK, 'center');
-  txt('DE 02 A 08/11', COL, 186, '700 24px Inter', '#BDBDBD', 'center');
+  txt('DE 22 A 30/11', COL, 186, '700 24px Inter', '#BDBDBD', 'center');
   txt('3 SUNGAS POR', COL, 290, '700 70px Syne', WHITE, 'center');
   glowTxt('R$ 179', COL, 455, '700 168px Syne', YEL, 50, 0.5, 'center');
   ctx.font = '600 32px Inter'; const dw = ctx.measureText('De R$ 209,70').width; ctx.font = '800 27px Inter';

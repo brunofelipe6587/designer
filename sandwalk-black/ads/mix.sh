@@ -9,7 +9,7 @@ set -euo pipefail
 cd "$(dirname "$0")"
 VJ=src/audio/baile_do_vj.mp3; VOID=../../sandwalk-void/src/v01_studio.mov; EVER=../../sandwalk-everflame/src/v01_studio.mp4
 declare -A NAME=([v1]=Lances [v2]=Bicicleta [v3]=Contador [v4]=Montagem [v5]=So9Dias [v6]=Matematica [v7]=Narracao)
-norm() { echo "loudnorm=I=-14:TP=-1.5:LRA=11,aresample=48000"; }
+norm() { echo "loudnorm=I=-14:TP=-2:LRA=11,aresample=48000,alimiter=limit=0.68:level=disabled"; }
 for v in ${@:-v1 v2 v3 v4 v5 v6 v7}; do
   [ -f out/${v}_silent.mp4 ] || { echo "skip $v (no render)"; continue; }
   D=$(ffprobe -v error -show_entries format=duration -of csv=p=0 out/${v}_silent.mp4)

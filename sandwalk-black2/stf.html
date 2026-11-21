@@ -24,11 +24,6 @@ function priceRow(cx, y, size = 1) {
 }
 function piecesLine(y, color = '#CFCFCF', size = 30) { txt('Manga longa + manga curta + shorts', 540, y, `600 ${size}px Inter`, color, 'center'); }
 function datesPill(y, filled = false) { pill('SÓ DE ' + OFF.dates.toUpperCase(), 540, y, 26, filled, 'center'); }
-function medal(x, y, n) {
-  ctx.save(); ctx.shadowColor = 'rgba(0,0,0,0.5)'; ctx.shadowBlur = 16 * FX;
-  ctx.fillStyle = n === 1 ? YEL : n === 2 ? '#D9D9D9' : '#E0A36B'; ctx.beginPath(); ctx.arc(x, y, 38, 0, Math.PI * 2); ctx.fill(); ctx.restore();
-  txt(n + 'º', x, y + 3, '700 34px Syne', INK, 'center', 'middle');
-}
 const S = {
   // 1 · 15% OFF hero with the 3 best sellers
   1() {
@@ -42,8 +37,8 @@ const S = {
     kit('blackout', 540, ky, kw, 0, { spot: 0.32 });
     priceRow(540, Y(1000, 1050)); piecesLine(Y(1050, 1100));
     cta('COMPRAR COM 15% OFF  →', 540, Y(1140, 1195), 640, 88, 33);
-    if (RL) { txt('Válido de 09 a 15/11', 540, 1300, '600 26px Inter', '#9A9A9A', 'center'); ['egypt', 'rhythm', 'vivid', 'brasil'].forEach((k, i) => kit(k, 165 + i * 250, 1480, 200, (i - 1.5) * 0.04, { spot: 0.18 })); }
-    else txt('Válido de 09 a 15/11', 540, 1240, '600 26px Inter', '#9A9A9A', 'center');
+    if (RL) { txt('Válido de 22 a 30/11', 540, 1300, '600 26px Inter', '#9A9A9A', 'center'); ['egypt', 'rhythm', 'vivid', 'brasil'].forEach((k, i) => kit(k, 165 + i * 250, 1480, 200, (i - 1.5) * 0.04, { spot: 0.18 })); }
+    else txt('Válido de 22 a 30/11', 540, 1240, '600 26px Inter', '#9A9A9A', 'center');
   },
   // 2 · the 3 best sellers on a podium
   2() {
@@ -75,7 +70,7 @@ const S = {
     seal(540, Y(128, 310), 'BLACK SAND WALK', 26, -0.03, YEL, INK, 'center');
     glowTxt(OFF.pct, 540, Y(270, 430), '700 120px Syne', YEL, 40, 0.55, 'center');
     txt('NOS KITS FEMININOS', 540, Y(330, 488), '700 44px Syne', WHITE, 'center');
-    const ks = KITS.slice(0, 9), cw = 300, ch = Y(232, 196), gap = 14, gx = 540 - (3 * cw + 2 * gap) / 2, gy = Y(370, 520);
+    const ks = KITS.slice(0, 9), cw = 300, ch = Y(232, 178), gap = 14, gx = 540 - (3 * cw + 2 * gap) / 2, gy = Y(370, 520);
     ks.forEach((k, i) => {
       const c = i % 3, r = Math.floor(i / 3), x = gx + c * (cw + gap), y = gy + r * (ch + gap);
       ctx.fillStyle = '#121212'; ctx.beginPath(); ctx.roundRect(x, y, cw, ch, 16); ctx.fill();
@@ -85,7 +80,7 @@ const S = {
     const yb = gy + 3 * ch + 2 * gap;
     priceRow(540, yb + Y(70, 60), 0.85);
     cta('ESCOLHER O MEU  →', 540, Y(yb + 140, 1205), 600, 80, 32);
-    txt('Válido de 09 a 15/11', 540, Y(1305, 1300), '600 24px Inter', '#9A9A9A', 'center');
+    txt('Válido de 22 a 30/11', 540, Y(1305, 1300), '600 24px Inter', '#9A9A9A', 'center');
   },
   // 4 · the best seller alone, price per piece
   4() {
@@ -100,7 +95,7 @@ const S = {
     priceRow(540, Y(960, 1010));
     txt('3 peças: sai R$ 53,75 cada', 540, Y(1018, 1068), '700 34px Inter', WHITE, 'center');
     cta('QUERO O KIT BLACKOUT  →', 540, Y(1115, 1180), 640, 86, 32);
-    txt('Manga longa + manga curta + shorts · válido de 09 a 15/11', 540, Y(1200, 1290), '600 22px Inter', '#9A9A9A', 'center');
+    txt('Manga longa + manga curta + shorts · válido de 22 a 30/11', 540, Y(1200, 1290), '600 22px Inter', '#9A9A9A', 'center');
   },
   // 5 · outfit check over a still from the women's futevôlei footage
   async 5() {
@@ -120,7 +115,7 @@ const S = {
     kit('blackout', 820, Y(860, 960), 330, 0.04, { spot: 0.1 });
     priceRow(540, Y(1060, 1130));
     cta('QUERO MEU KIT  →', 540, Y(1160, 1205), 600, 84, 33);
-    txt('Kits femininos com 15% OFF · de 09 a 15/11', 540, Y(1260, 1300), '600 24px Inter', '#BDBDBD', 'center');
+    txt('Kits femininos com 15% OFF · de 22 a 30/11', 540, Y(1260, 1300), '600 24px Inter', '#BDBDBD', 'center');
   },
   // 6 · yellow pattern break
   6() {
@@ -141,19 +136,19 @@ const S = {
     txt('Manga longa + manga curta + shorts', 540, Y(955, 1085), '600 30px Inter', INK, 'center');
     ctx.fillStyle = INK; ctx.beginPath(); ctx.roundRect(540 - 310, Y(1010, 1150), 620, 88, 14); ctx.fill();
     txt('APROVEITAR 15% OFF  →', 540, Y(1056, 1196), '800 33px Inter', YEL, 'center', 'middle');
-    txt('Válido de 09 a 15/11', 540, Y(1140, 1300), '700 24px Inter', 'rgba(10,10,10,0.75)', 'center');
+    txt('Válido de 22 a 30/11', 540, Y(1140, 1300), '700 24px Inter', 'rgba(10,10,10,0.75)', 'center');
     if (!RL) { ['egypt', 'vivid', 'brasil', 'megawave', 'phoenix'].forEach((k, i) => { ctx.fillStyle = INK; ctx.beginPath(); ctx.roundRect(40 + i * 204, 1180, 186, 140, 14); ctx.fill(); kit(k, 133 + i * 204, 1250, 150, 0, { spot: 0.15, rimA: 0.3 }); }); }
     else { ['egypt', 'vivid', 'brasil', 'megawave'].forEach((k, i) => { ctx.fillStyle = INK; ctx.beginPath(); ctx.roundRect(50 + i * 250, 1380, 230, 230, 18); ctx.fill(); kit(k, 165 + i * 250, 1495, 200, 0, { spot: 0.15, rimA: 0.3 }); }); }
   },
-  // 7 · urgency: the 7 days of the week
+  // 7 · urgency: the 9 days of the offer (22–30/11)
   7() {
     bgBlack([[540, Y(760, 860), 0.18, 760]]);
     logo(540, Y(46, 110), 230, 'center');
-    txt('SÓ 7 DIAS', 540, Y(220, 400), '700 120px Syne', WHITE, 'center');
-    const days = ['09', '10', '11', '12', '13', '14', '15'], wd = ['SEG', 'TER', 'QUA', 'QUI', 'SEX', 'SÁB', 'DOM'];
-    const bw = 124, gap = 13, x0 = 540 - (7 * bw + 6 * gap) / 2, yy = Y(270, 450);
-    for (let i = 0; i < 7; i++) {
-      const x = x0 + i * (bw + gap), last = i === 6;
+    txt('SÓ 9 DIAS', 540, Y(220, 400), '700 120px Syne', WHITE, 'center');
+    const days = ['22', '23', '24', '25', '26', '27', '28', '29', '30'], wd = ['DOM', 'SEG', 'TER', 'QUA', 'QUI', 'SEX', 'SÁB', 'DOM', 'SEG'];
+    const bw = 102, gap = 9, x0 = 540 - (9 * bw + 8 * gap) / 2, yy = Y(270, 450);
+    for (let i = 0; i < 9; i++) {
+      const x = x0 + i * (bw + gap), last = i === 8;
       ctx.fillStyle = last ? YEL : '#151515'; ctx.strokeStyle = last ? YEL : 'rgba(255,204,41,0.45)'; ctx.lineWidth = 2;
       ctx.beginPath(); ctx.roundRect(x, yy, bw, 130, 14); ctx.fill(); ctx.stroke();
       txt(wd[i], x + bw / 2, yy + 36, '700 22px Inter', last ? INK : GREY, 'center'); txt(days[i], x + bw / 2, yy + 100, '700 54px Syne', last ? INK : WHITE, 'center');
@@ -164,8 +159,8 @@ const S = {
     txt('KITS FEMININOS', 540, Y(860, 960), '700 58px Syne', WHITE, 'center');
     glowTxt(OFF.pct, 540, Y(990, 1075), '700 130px Syne', YEL, 50, 0.6, 'center');
     priceRow(540, Y(1065, 1140), 0.8);
-    cta('GARANTIR ANTES DE DOMINGO  →', 540, Y(1160, 1205), 680, 84, 31);
-    txt('Válido de 09 a 15/11', 540, Y(1260, 1300), '600 24px Inter', '#9A9A9A', 'center');
+    cta('GARANTIR ATÉ 30/11  →', 540, Y(1160, 1205), 680, 84, 31);
+    txt('Válido de 22 a 30/11', 540, Y(1260, 1300), '600 24px Inter', '#9A9A9A', 'center');
   },
 };
 window.ready = (async () => { await loadCommon(); await S[C](); return true; })();

@@ -30,7 +30,7 @@ async function render(t) {
     });
     priceLine(540, 1110, 0.85, enter(t, t0 + 0.6, 0.3));
     if (t >= L.cta.s - 0.1) ctaPulse(t, L.cta.s - 0.1, 1190, 'ESCOLHER O MEU  →', TRK.v02.beat * 2, 560, 72, 30);
-    else { ctx.save(); ctx.globalAlpha = enter(t, t0 + 0.8, 0.3); txt('Só até domingo, 15/11', 540, 1190, '700 30px Inter', WHITE, 'center'); ctx.restore(); }
+    else { ctx.save(); ctx.globalAlpha = enter(t, t0 + 0.8, 0.3); txt('Só até 30/11', 540, 1190, '700 30px Inter', WHITE, 'center'); ctx.restore(); }
   }
 }
 window.ready = (async () => { await loadCommon(); await render(0); return true; })();

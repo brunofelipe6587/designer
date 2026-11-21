@@ -8,7 +8,7 @@ cd "$(dirname "$0")"
 V02=../sandwalk-voidfem/src/v02_insta.mp4; BIP=../sandwalk-voidfem/src/v03_insta.mp4
 declare -A TR=([f1]=V02 [f2]=BIP [f3]=V02 [f4]=BIP [f5]=V02 [f6]=BIP [f7]=V02)
 declare -A MUSIC_ONLY=([f3]=1 [f5]=1)   # no voice: the track alone, full level
-declare -A NAME=([f1]=MaisVendidos [f2]=ParaTudo [f3]=OutfitCheck_SoMusica [f4]=QuantoCusta [f5]=QualEstampa_SoMusica [f6]=FeitoPraQuemJoga [f7]=So7Dias)
+declare -A NAME=([f1]=MaisVendidos [f2]=ParaTudo [f3]=OutfitCheck_SoMusica [f4]=QuantoCusta [f5]=QualEstampa_SoMusica [f6]=FeitoPraQuemJoga [f7]=So9Dias)
 for v in ${@:-f1 f2 f3 f4 f5 f6 f7}; do
   [ -f out/${v}_silent.mp4 ] || { echo "skip $v"; continue; }
   D=$(ffprobe -v error -show_entries format=duration -of csv=p=0 out/${v}_silent.mp4)

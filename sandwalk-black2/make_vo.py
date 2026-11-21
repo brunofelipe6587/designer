@@ -11,12 +11,12 @@ SCRIPTS = {
     ('n2', 'Em segundo, o Void.'),
     ('n1', 'E o campeão: Blackout!'),
     ('offer', 'Na Black, todos os kits femininos estão com quinze por cento off.'),
-    ('cta', 'Só até domingo, dia quinze.')]),
+    ('cta', 'Só até dia trinta.')]),
  'f2': ('pt-BR-ThalitaMultilingualNeural', [
     ('hook', 'Para tudo: a Black Sand Walk chegou pra elas!'),
     ('offer', 'Quinze por cento off nos kits femininos.'),
     ('pieces', 'Manga longa, manga curta e shorts, por cento e sessenta e um e vinte e cinco.'),
-    ('cta', 'Corre, que é só até dia quinze!')]),
+    ('cta', 'Corre, que é só até dia trinta!')]),
  'f3': ('pt-BR-ThalitaMultilingualNeural', [
     ('hook', 'Outfit check da areia!'),
     ('i1', 'Manga longa.'),
@@ -29,23 +29,23 @@ SCRIPTS = {
     ('old', 'Era cento e oitenta e nove e setenta.'),
     ('new', 'Na Black, sai por cento e sessenta e um e vinte e cinco.'),
     ('per', 'Dá cinquenta e três e setenta e cinco por peça.'),
-    ('cta', 'Só até domingo, dia quinze.')]),
+    ('cta', 'Só até dia trinta.')]),
  'f5': ('pt-BR-ThalitaMultilingualNeural', [
     ('hook', 'Qual estampa é a sua cara?'),
     ('list', 'Blackout, Void, Ever Flame, Egypt, Rhythm, Vivid...'),
     ('offer', 'Todos os kits femininos com quinze por cento off.'),
-    ('cta', 'Escolhe o seu no site, até domingo.')]),
+    ('cta', 'Escolhe o seu no site, até dia trinta.')]),
  'f6': ('pt-BR-ThalitaMultilingualNeural', [
     ('hook', 'Feito pra quem joga de verdade.'),
     ('b1', 'Tecido leve, que respira e seca rápido.'),
     ('b2', 'Caimento que valoriza o corpo e acompanha cada movimento.'),
     ('b3', 'Três peças, pra usar juntas ou separadas.'),
-    ('offer', 'E na Black: quinze por cento off. Só até domingo!')]),
+    ('offer', 'E na Black: quinze por cento off. Só até dia trinta!')]),
  'f7': ('pt-BR-FranciscaNeural', [
-    ('hook', 'Atenção: são só sete dias!'),
-    ('offer', 'De nove a quinze de novembro, os kits femininos da Sand Walk estão com quinze por cento off.'),
+    ('hook', 'Atenção: são só nove dias!'),
+    ('offer', 'De vinte e dois a trinta de novembro, os kits femininos da Sand Walk estão com quinze por cento off.'),
     ('price', 'Kit completo por cento e sessenta e um e vinte e cinco.'),
-    ('cta', 'Depois de domingo, volta ao preço normal.')]),
+    ('cta', 'Depois do dia trinta, volta ao preço normal.')]),
 }
 VOICE, LINES = SCRIPTS[V]
 import os; os.environ['VOICE'] = VOICE

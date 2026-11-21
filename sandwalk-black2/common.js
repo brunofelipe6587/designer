@@ -21,7 +21,7 @@ const KITS = ['blackout', 'void', 'everflame', 'egypt', 'rhythm', 'vivid', 'bras
 const KIT_NAME = { blackout: 'Blackout', void: 'Void', everflame: 'Ever Flame', egypt: 'Egypt', rhythm: 'Rhythm of the Street',
   vivid: 'Vivid', brasil: 'Brasil', megawave: 'Mega Wave', phoenix: 'Phoenix', vintagemap: 'Vintage Map' };
 // offer (week 2): 15% off on the women's kits
-const OFF = { pct: '15% OFF', from: 'R$ 189,70', to: 'R$ 161,25', dates: '09 a 15/11', datesLong: 'de 09 a 15/11' };
+const OFF = { pct: '15% OFF', from: 'R$ 189,70', to: 'R$ 161,25', dates: '22 a 30/11', datesLong: 'de 22 a 30/11' };
 const SUNGAS = KITS;
 // athletes: crops in source px that keep the approved framing (cut1: head/shoulders only, the child's gap stays out;
 // cut2: faded above the waist so the third-party swimwear never shows)

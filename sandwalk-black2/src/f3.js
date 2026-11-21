@@ -23,7 +23,7 @@ async function render(t) {
   if (t >= L.cta.s - 0.1) {
     priceLine(540, 985, 0.9, enter(t, L.cta.s - 0.1, 0.3));
     ctaPulse(t, L.cta.s + 0.3, 1068, 'QUERO MEU KIT  →', TRK.v02.beat * 2, 560, 76, 31);
-    ctx.save(); ctx.globalAlpha = enter(t, L.cta.s + 0.6, 0.3); txt('Kits femininos com 15% OFF · só até 15/11', 540, 1170, '700 30px Inter', WHITE, 'center'); ctx.restore();
+    ctx.save(); ctx.globalAlpha = enter(t, L.cta.s + 0.6, 0.3); txt('Kits femininos com 15% OFF · só até 30/11', 540, 1170, '700 30px Inter', WHITE, 'center'); ctx.restore();
   }
 }
 window.ready = (async () => { await loadCommon(); await render(0); return true; })();

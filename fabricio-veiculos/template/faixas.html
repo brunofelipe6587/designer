@@ -87,6 +87,12 @@
   .seg.ent .v1 { font-size: 92px; }
   .seg.ent .v1 .rs { font-size: .7em; margin-right: 6px; }
 
+  /* selo opcional do carro (ex.: REPASSE) */
+  .selo-tag { display: inline-block; background: var(--acc, #f40000); color: var(--selo-txt, #fff); font-weight: 900; font-style: italic;
+    font-size: 30px; line-height: 1; padding: 5px 14px 3px; transform: skewX(-10deg); box-shadow: 0 3px 8px rgba(0,0,0,.45); white-space: nowrap; }
+  .item .selo-row { margin-top: 8px; }
+  .seg.selo .selo-tag { font-size: 64px; padding: 12px 26px 8px; }
+
   /* ---------- identidade azul (tema: "azul") ---------- */
   .azul .tx-shadow { text-shadow: 0 3px 6px rgba(0,10,60,.75); }
   .azul .panel .bg {
@@ -134,7 +140,7 @@ const TEMAS = {
     valor: [[0, '#ff2424'], [.5, '#e00000'], [1, '#7a0000']] },
   azul: { acc: '#19d3f5', ink: '#071f86', logo: 'logo_fabricio_azul.svg', tag: '#06207e', faixa: '#071f86', valorBorda: '#8ff0ff',
     valor: [[0, '#38e3ff'], [.45, '#0fb4e8'], [1, '#0a5cc0']],
-    slogan: 'Realizando seu sonho sobre rodas!', contato: { whats: '88 99966-4337', insta: '@fabricioveiculoscariri' } },
+    seloTxt: '#061d6b', slogan: 'Realizando seu sonho sobre rodas!', contato: { whats: '88 99966-4337', insta: '@fabricioveiculoscariri' } },
 };
 let tema = TEMAS.vermelho;
 const T = () => tema;
@@ -158,7 +164,7 @@ function feedItem(kind, d) {
   }
   if (kind === 'modelo') {
     const [a, b] = lines(d.modelo).map(up);
-    return `<div class="item mod">${ICONS.car(84)}<div class="txt tx-shadow"><div class="lbl">MODELO</div><div class="v1 fit">${esc(a)}</div>${b ? `<div class="v2 fit">${esc(b)}</div>` : ''}</div></div>`;
+    return `<div class="item mod">${ICONS.car(84)}<div class="txt tx-shadow"><div class="lbl">MODELO</div><div class="v1 fit">${esc(a)}</div>${b ? `<div class="v2 fit">${esc(b)}</div>` : ''}${d.selo ? `<div class="selo-row"><span class="selo-tag">${esc(up(d.selo))}</span></div>` : ''}</div></div>`;
   }
   if (kind === 'ano') {
     return `<div class="item big">${ICONS.calendar(98)}<div class="txt tx-shadow"><div class="lbl">ANO</div><div class="v1 fit">${esc(d.ano)}</div></div></div>`;
@@ -232,6 +238,7 @@ function storiesSeg(kind, d) {
     const icon = String(d.marca || '').toLowerCase().includes('chevrolet') ? ICONS.chevrolet(52) : ICONS.car(96);
     return `<div class="seg mod">${icon}<div class="txt tx-shadow">${top ? `<div class="lbl">${esc(top)}</div>` : ''}<div class="v1">${esc(a)}</div>${b ? `<div class="vs">${esc(b)}</div>` : ''}</div></div>`;
   }
+  if (kind === 'selo') return `<div class="seg selo"><span class="selo-tag">${esc(up(d.selo))}</span></div>`;
   if (kind === 'km') return `<div class="seg">${ICONS.speedo(104)}<div class="txt tx-shadow"><div class="lbl">KM</div><div class="v1">${esc(d.km)}<span class="vs" style="font-size:44px">KM</span></div></div></div>`;
   if (kind === 'valor') return `<div class="seg">${ICONS.moneyCircle(118)}<div class="txt tx-shadow"><div class="lbl">VALOR</div><div class="v1 price"><span class="rs">R$</span><span class="num">${esc(d.valor)},</span><span class="cents">${esc(d.centavos ?? '00')}</span></div></div></div>`;
   if (kind === 'entrada') {
@@ -242,7 +249,8 @@ function storiesSeg(kind, d) {
 }
 
 function renderStories(d) {
-  const order = d.ordem_stories ?? ['localizacao', 'ano', 'modelo', 'valor', 'entrada'];
+  const order = [...(d.ordem_stories ?? ['localizacao', 'ano', 'modelo', 'valor', 'entrada'])];
+  if (d.selo && !order.includes('selo')) order.splice(order.indexOf('modelo') + 1, 0, 'selo');
   const segs = order.filter((k) => d[k]).map((k) => storiesSeg(k, d)).join('');
   return `<div class="stage stories ${d.tema ?? ''}"><div class="band" id="band">
     <svg class="shape" viewBox="0 0 2000 250">
@@ -282,6 +290,7 @@ window.render = async (mode, d) => {
   tema = TEMAS[d.tema] ?? TEMAS.vermelho;
   RED = tema.acc; INK = tema.ink;
   document.documentElement.style.setProperty('--acc', tema.acc);
+  document.documentElement.style.setProperty('--selo-txt', tema.seloTxt ?? '#fff');
   document.getElementById('root').innerHTML = mode === 'feed' ? renderFeed(d) : renderStories(d);
   await document.fonts.ready;
   await Promise.all([...document.images].map((im) => im.complete ? 0 : new Promise((r) => { im.onload = im.onerror = r; })));

@@ -9,7 +9,7 @@ fs.mkdirSync(OUT, { recursive: true });
 const ESCALA = 2;
 
 (async () => {
-  const b = await chromium.launch({ executablePath: '/opt/pw-browsers/chromium-1194/chrome-linux/chrome', args: ['--allow-file-access-from-files'] });
+  const b = await chromium.launch({ executablePath: process.env.CHROME || '/opt/pw-browsers/chromium', args: ['--allow-file-access-from-files'] });
   const pecas = [
     ['perfil', {}, 'Fabricio_Perfil_Logo'],
     ['perfil', { slogan: true }, 'Fabricio_Perfil_Logo_Slogan'],

@@ -9,7 +9,7 @@ const crypto = require('crypto');
 const path = require('path');
 const fs = require('fs');
 
-const CHROME = '/opt/pw-browsers/chromium-1194/chrome-linux/chrome';
+const CHROME = process.env.CHROME || '/opt/pw-browsers/chromium';
 const ROOT = path.join(__dirname, '..');
 const C = JSON.parse(fs.readFileSync(path.join(__dirname, 'campanha.json'), 'utf8'));
 const OUT = path.join(ROOT, 'out', 'black-friday');

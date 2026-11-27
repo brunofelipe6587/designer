@@ -6,7 +6,7 @@ const { execFileSync } = require('child_process');
 const path = require('path');
 const fs = require('fs');
 
-const CHROME = '/opt/pw-browsers/chromium-1194/chrome-linux/chrome';
+const CHROME = process.env.CHROME || '/opt/pw-browsers/chromium';
 const SIZE = { feed: { w: 1080, h: 1350, videoX: 312 }, stories: { w: 1080, h: 1920 } };
 const FPS = 30;
 

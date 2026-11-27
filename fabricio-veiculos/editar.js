@@ -1,12 +1,13 @@
 // Edição padrão Fabrício Veículos: um vídeo cru -> FEED 4:5 (painel lateral) + STORIES 9:16 (faixa).
-// Uso: node editar.js carros/<pasta-do-carro> [--so-faixas] [--provas]
+// Uso: node editar.js carros/<pasta-do-carro> [--so-faixas] [--provas] [--tema azul]
+//   --tema gera na identidade indicada em out/<pasta>/<tema>/, sem mexer na versão padrão.
 //   A pasta tem info.json e o vídeo cru (qualquer .mp4/.mov). Saída em out/<pasta>/.
 const { chromium } = require('/opt/node-tools/node_modules/playwright');
 const { execFileSync } = require('child_process');
 const path = require('path');
 const fs = require('fs');
 
-const CHROME = '/opt/pw-browsers/chromium-1194/chrome-linux/chrome';
+const CHROME = process.env.CHROME || '/opt/pw-browsers/chromium';
 const FEED = { w: 1080, h: 1350, videoX: 312 };   // vídeo cru ocupa da borda do painel até a direita
 const STORIES = { w: 1080, h: 1920 };
 
@@ -15,7 +16,10 @@ const onlyOverlays = process.argv.includes('--so-faixas');
 const proofs = process.argv.includes('--provas') || onlyOverlays;
 const info = JSON.parse(fs.readFileSync(path.join(dir, 'info.json'), 'utf8'));
 const slug = path.basename(dir);
-const out = path.join(__dirname, 'out', slug);
+const ti = process.argv.indexOf('--tema');
+const temaArg = ti > 0 ? process.argv[ti + 1] : null;
+if (temaArg) info.tema = temaArg;
+const out = path.join(__dirname, 'out', slug, ...(temaArg ? [temaArg] : []));
 fs.mkdirSync(out, { recursive: true });
 const raw = info.video ? path.join(dir, info.video)
   : fs.readdirSync(dir).filter((f) => /\.(mp4|mov|m4v|webm)$/i.test(f)).map((f) => path.join(dir, f))[0];
@@ -58,7 +62,7 @@ function proof(mode, framePng) {
   const fps = info.fps || 30;
   const enc = ['-c:v', 'libx264', '-preset', 'medium', '-crf', '19', '-maxrate', '6M', '-bufsize', '12M', '-profile:v', 'high', '-pix_fmt', 'yuv420p',
     '-r', String(fps), '-c:a', 'aac', '-b:a', '160k', '-ar', '48000', '-movflags', '+faststart'];
-  const name = (info.nome_arquivo || slug).replace(/[^\w.-]+/g, '_');
+  const name = ((info.nome_arquivo || slug) + (temaArg ? '_' + temaArg.toUpperCase() : '')).replace(/[^\w.-]+/g, '_');
 
   // foco do enquadramento (0 = esquerda/topo, 0.5 = centro, 1 = direita/base)
   const fx = info.foco_x ?? 0.5, fy = info.foco_y ?? 0.5;

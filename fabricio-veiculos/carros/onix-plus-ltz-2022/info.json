@@ -1,0 +1,13 @@
+{
+  "localizacao": ["Juazeiro", "do Norte - CE"],
+  "marca": "Chevrolet",
+  "modelo": ["Onix Plus", "LTZ Sedan"],
+  "modelo_stories": ["Onix Plus", "LTZ Sedan"],
+  "ano": "2022",
+  "valor": "68.990",
+  "centavos": "00",
+  "entrada": "20 mil",
+  "ordem_feed": ["localizacao", "modelo", "ano"],
+  "nome_arquivo": "Onix_Plus_LTZ_2022",
+  "prova_t": 1.0
+}
